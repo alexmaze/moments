@@ -20,6 +20,14 @@
     "save": "保存",
     "saving": "保存中...",
     "saveSuccess": "资料已更新!",
-    "saveError": "保存失败。"
+    "saveError": "保存失败。",
+    "avatarChange": "更换头像",
+    "avatarCropTitle": "裁剪头像",
+    "avatarConfirm": "确认",
+    "avatarCancel": "取消",
+    "avatarUploading": "上传中...",
+    "avatarZoom": "缩放",
+    "avatarSuccess": "头像已更新!",
+    "avatarError": "头像更新失败。"
   }
 }

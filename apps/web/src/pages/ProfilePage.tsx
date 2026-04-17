@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { getUserProfileApi } from '@/api/users.api';
 import { useUserPosts } from '@/hooks/usePosts';
 import { useAuthStore } from '@/store/auth.store';
+import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import EditProfileDialog from '@/components/profile/EditProfileDialog';
 import PostCard from '@/components/feed/PostCard';
@@ -17,6 +18,8 @@ export default function ProfilePage() {
   const [editOpen, setEditOpen] = useState(false);
 
   const isOwnProfile = currentUser?.username === username;
+
+  const avatarUpload = useAvatarUpload({ username: username! });
 
   const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ['userProfile', username],
@@ -72,7 +75,15 @@ export default function ProfilePage() {
         {t('back')}
       </button>
 
-      <ProfileHeader profile={profile} />
+      <ProfileHeader
+        profile={profile}
+        isOwner={isOwnProfile}
+        onAvatarEdit={avatarUpload.triggerFilePicker}
+        isAvatarUploading={avatarUpload.isUploading}
+      />
+
+      {/* Hidden file input + crop dialog for ProfileHeader avatar edit */}
+      {isOwnProfile && avatarUpload.fileInputElement}
 
       {/* Edit profile button */}
       {isOwnProfile && currentUser && (

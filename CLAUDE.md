@@ -180,17 +180,18 @@ src/
 │   ├── usePosts.ts       # TanStack Query hooks for feed/post CRUD
 │   ├── useComments.ts    # TanStack Query hooks for comments
 │   └── useMediaUpload.ts # Parallel upload state machine with progress tracking
+│       useAvatarUpload.tsx # Avatar upload flow: file pick → crop → resize → upload
 ├── components/
 │   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # PostComposer, MediaUploader
-│   └── profile/      # ProfileHeader, EditProfileDialog
+│   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
 │   └── dto.ts        # Frontend TS interfaces mirroring API response shapes
-└── lib/              # Utility helpers
+└── lib/              # Utility helpers (utils, cropImage)
 ```
 
 ### State management
@@ -262,6 +263,12 @@ pnpm db:migrate    # applies it to the database
 2. Create post with `mediaIds` array → server atomically attaches and marks `attached`
 
 This means orphaned uploads (status `pending`) can accumulate and need periodic cleanup.
+
+### Avatar upload
+- **Frontend flow**: File picker → `react-easy-crop` square crop dialog → Canvas API resize to 512×512 JPEG → `POST /api/users/me/avatar` (multipart, 10MB limit)
+- **Backend**: Reuses `MediaService.uploadFile()` → stores file → updates `users.avatarUrl` via `UsersService.updateAvatar()`
+- **Entry points**: ProfileHeader hover overlay (quick edit) + EditProfileDialog avatar section (both use independent `useAvatarUpload` hook instances)
+- **State update**: `uploadAvatarApi` returns updated `UserDto` → `setCurrentUser()` + `invalidateQueries(['userProfile'])` propagates the change everywhere
 
 ### No test suite
 The `apps/server/test/` directory is empty. There are no automated tests. Rely on TypeScript type checking and manual testing.

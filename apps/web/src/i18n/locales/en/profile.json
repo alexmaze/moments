@@ -17,10 +17,17 @@
     "bioPlaceholder": "Tell us about yourself...",
     "languageLabel": "Language",
     "languageAuto": "Follow browser",
-    "languageAuto": "Follow browser",
     "save": "Save",
     "saving": "Saving...",
     "saveSuccess": "Profile updated!",
-    "saveError": "Failed to save profile."
+    "saveError": "Failed to save profile.",
+    "avatarChange": "Change Avatar",
+    "avatarCropTitle": "Crop Avatar",
+    "avatarConfirm": "Confirm",
+    "avatarCancel": "Cancel",
+    "avatarUploading": "Uploading...",
+    "avatarZoom": "Zoom",
+    "avatarSuccess": "Avatar updated!",
+    "avatarError": "Failed to update avatar."
   }
 }
