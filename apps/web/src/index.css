@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "lightgallery/css/lightgallery.css";
+@import "lightgallery/css/lg-zoom.css";
+@import "lightgallery/css/lg-video.css";
 
 @layer base {
   :root {

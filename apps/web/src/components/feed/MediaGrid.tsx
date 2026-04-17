@@ -2,9 +2,10 @@ import type { PostMediaDto } from '@/types/dto';
 
 interface MediaGridProps {
   items: PostMediaDto[];
+  onItemClick?: (index: number) => void;
 }
 
-export default function MediaGrid({ items }: MediaGridProps) {
+export default function MediaGrid({ items, onItemClick }: MediaGridProps) {
   if (items.length === 0) return null;
 
   const gridClass =
@@ -16,12 +17,34 @@ export default function MediaGrid({ items }: MediaGridProps) {
 
   return (
     <div className={`${gridClass} gap-1 mt-3`}>
-      {items.map((item) => (
+      {items.map((item, i) => (
         <div
           key={item.id}
-          className={`relative overflow-hidden rounded-lg bg-muted ${
+          onClick={
+            onItemClick
+              ? (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onItemClick(i);
+                }
+              : undefined
+          }
+          role={onItemClick ? 'button' : undefined}
+          tabIndex={onItemClick ? 0 : undefined}
+          onKeyDown={
+            onItemClick
+              ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onItemClick(i);
+                  }
+                }
+              : undefined
+          }
+          className={`group relative overflow-hidden rounded-lg bg-muted ${
             items.length === 1 ? 'max-h-96' : 'aspect-square'
-          }`}
+          } ${onItemClick ? 'cursor-pointer' : ''}`}
         >
           {item.type === 'video' ? (
             <>
@@ -54,6 +77,11 @@ export default function MediaGrid({ items }: MediaGridProps) {
                 items.length === 1 ? 'max-h-96' : 'h-full'
               }`}
             />
+          )}
+
+          {/* Hover darkening overlay — only when interactive */}
+          {onItemClick && (
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           )}
         </div>
       ))}

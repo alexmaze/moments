@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Layer | Technology |
 |---|---|
 | Frontend | React 19 + Vite 8 + Tailwind CSS v4 + TanStack Query v5 |
-| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) |
+| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) + lightGallery (media lightbox) |
 | Backend | NestJS 11 + Drizzle ORM + PostgreSQL 16 |
 | Auth | JWT (Passport.js — local + JWT strategies) |
 | Media | Local filesystem storage + sharp (images) + ffmpeg (video thumbnails) |
@@ -184,7 +184,7 @@ src/
 ├── components/
 │   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
-│   ├── feed/         # FeedList, PostCard, MediaGrid
+│   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # PostComposer, MediaUploader
 │   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog
@@ -286,6 +286,16 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Dialog**: For general-purpose modals (EditProfileDialog, PostComposer). Supports `hideCloseButton` prop when the content has its own close mechanism.
 - **AlertDialog**: For destructive confirmations (delete post, delete comment). Uses `AlertDialogAction` (destructive style) + `AlertDialogCancel` pattern. Prevents closing on overlay click — requires explicit user action.
 - **Convention**: Never use `window.confirm()` or `window.alert()`. Always use `AlertDialog` for confirmations and `toast` for notifications.
+
+### Media Lightbox (图片/视频查看器)
+- **Library**: `lightgallery` (v2.9) — image/video lightbox with zoom, pan, and keyboard navigation.
+- **Plugins used**: `lgZoom` (scroll-wheel/pinch zoom, drag pan) + `lgVideo` (HTML5 `<video>` playback).
+- **Component**: `@/components/feed/MediaLightbox.tsx` — wraps lightGallery in `dynamic` mode, exposes `openGallery(index)` via `forwardRef` + `useImperativeHandle`.
+- **Conversion utility**: `@/lib/mediaToLightGallery.ts` — converts `PostMediaDto[]` to lightGallery's `GalleryItem[]` format.
+- **Integration**: `PostCard` holds a ref to `MediaLightbox`; `MediaGrid` accepts `onItemClick` callback. Clicking a media cell calls `e.stopPropagation()` (blocks `<Link>` navigation) then `openGallery(index)`.
+- **CSS imports**: `lightgallery/css/lightgallery.css`, `lg-zoom.css`, `lg-video.css` — imported in `index.css`.
+- **Trigger**: Both Feed page and Detail page support lightbox (via PostCard). Click media → lightbox; click text → navigate to detail page.
+- **Keyboard**: ← → arrows switch slides, ESC closes. Scroll-wheel zooms when viewing images.
 
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`

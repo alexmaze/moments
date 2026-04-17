@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { PostDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
+import { mediaToLightGallerySlides } from '@/lib/mediaToLightGallery';
 import MediaGrid from './MediaGrid';
+import MediaLightbox from './MediaLightbox';
+import type { MediaLightboxHandle } from './MediaLightbox';
 import CommentSection from '@/components/post/CommentSection';
 import {
   AlertDialog,
@@ -30,6 +33,14 @@ export default function PostCard({ post }: PostCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isOwner = currentUser?.id === post.author.id;
+
+  // Lightbox
+  const lightboxRef = useRef<MediaLightboxHandle>(null);
+  const slides = useMemo(() => mediaToLightGallerySlides(post.media), [post.media]);
+
+  const handleMediaClick = (index: number) => {
+    lightboxRef.current?.openGallery(index);
+  };
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -107,7 +118,7 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Media */}
-        <MediaGrid items={post.media} />
+        <MediaGrid items={post.media} onItemClick={handleMediaClick} />
       </Link>
 
       {/* Footer */}
@@ -169,6 +180,11 @@ export default function PostCard({ post }: PostCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Media lightbox */}
+      {post.media.length > 0 && (
+        <MediaLightbox ref={lightboxRef} slides={slides} />
+      )}
     </div>
   );
 }
