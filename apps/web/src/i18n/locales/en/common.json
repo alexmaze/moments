@@ -10,6 +10,10 @@
     "message": "Page not found",
     "goHome": "Go home"
   },
+  "toast": {
+    "error": "Something went wrong. Please try again.",
+    "networkError": "Network error. Check your connection."
+  },
   "zod": {
     "required": "This field is required",
     "tooSmallString": "Must be at least {{minimum}} characters",

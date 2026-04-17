@@ -1,9 +1,20 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { CommentDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface CommentItemProps {
   comment: CommentDto;
@@ -16,11 +27,11 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
   const currentUser = useAuthStore((s) => s.currentUser);
   const deleteComment = useDeleteComment();
   const isOwner = currentUser?.id === comment.author.id;
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const handleDelete = () => {
-    if (confirm(t('comments.deleteConfirm'))) {
-      deleteComment.mutate({ commentId: comment.id, postId });
-    }
+  const handleDeleteConfirm = () => {
+    deleteComment.mutate({ commentId: comment.id, postId });
+    setDeleteOpen(false);
   };
 
   return (
@@ -56,7 +67,7 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
 
           {isOwner && (
             <button
-              onClick={handleDelete}
+              onClick={() => setDeleteOpen(true)}
               className="ml-auto rounded p-1 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
               title={t('comments.deleteTitle')}
             >
@@ -71,6 +82,22 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
           {comment.content}
         </p>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('comments.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('comments.deleteConfirmDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('comments.deleteConfirmCancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              {t('comments.deleteConfirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

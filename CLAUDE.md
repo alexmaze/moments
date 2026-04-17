@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Layer | Technology |
 |---|---|
 | Frontend | React 19 + Vite 8 + Tailwind CSS v4 + TanStack Query v5 |
+| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) |
 | Backend | NestJS 11 + Drizzle ORM + PostgreSQL 16 |
 | Auth | JWT (Passport.js — local + JWT strategies) |
 | Media | Local filesystem storage + sharp (images) + ffmpeg (video thumbnails) |
@@ -180,11 +181,12 @@ src/
 │   ├── useComments.ts    # TanStack Query hooks for comments
 │   └── useMediaUpload.ts # Parallel upload state machine with progress tracking
 ├── components/
+│   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # PostComposer, MediaUploader
-│   └── profile/      # ProfileHeader, EditProfileDialog, EditProfileDialog
+│   └── profile/      # ProfileHeader, EditProfileDialog
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
 │   └── dto.ts        # Frontend TS interfaces mirroring API response shapes
@@ -264,6 +266,20 @@ This means orphaned uploads (status `pending`) can accumulate and need periodic 
 ### No test suite
 The `apps/server/test/` directory is empty. There are no automated tests. Rely on TypeScript type checking and manual testing.
 
+### Toast notifications
+- **Library**: `sonner` — lightweight toast library, module-level `toast()` function (no React context needed).
+- **Provider**: `<Toaster />` from `@/components/ui/sonner.tsx`, mounted in `App.tsx`.
+- **Theme**: Styled to match the project's HSL design tokens (bg-card, text-foreground, border-border).
+- **Usage in hooks**: Import `{ toast } from 'sonner'` + `i18n from '@/i18n'`, call `toast.success(i18n.t('namespace:key'))` or `toast.error(...)` directly in mutation callbacks.
+- **Convention**: Success toasts for create/delete operations, error toasts for all failures, short-duration (2s) error toasts for high-frequency actions (e.g., like toggle).
+
+### Dialog & AlertDialog
+- **Library**: `@radix-ui/react-dialog` and `@radix-ui/react-alert-dialog` — headless primitives providing accessibility (ESC close, focus trap, scroll lock, portal rendering).
+- **Wrappers**: `@/components/ui/dialog.tsx` and `@/components/ui/alert-dialog.tsx` — styled with Tailwind CSS, matching project theme tokens.
+- **Dialog**: For general-purpose modals (EditProfileDialog, PostComposer). Supports `hideCloseButton` prop when the content has its own close mechanism.
+- **AlertDialog**: For destructive confirmations (delete post, delete comment). Uses `AlertDialogAction` (destructive style) + `AlertDialogCancel` pattern. Prevents closing on overlay click — requires explicit user action.
+- **Convention**: Never use `window.confirm()` or `window.alert()`. Always use `AlertDialog` for confirmations and `toast` for notifications.
+
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`
 - **Supported locales**: `en` (English), `zh-CN` (Simplified Chinese)
@@ -289,3 +305,25 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - Multi-stage Dockerfile: `deps` → `builder` → `runner` (node:22-alpine + ffmpeg).
 - Two volumes: `postgres_data` (database) and `uploads_data` (media files).
 - `BASE_URL` env var controls the hostname embedded in media `publicUrl` fields — must match the public-facing URL.
+
+## TODO 工作流
+
+项目根目录的 `TODO.md` 是任务跟踪文件，遵循以下工作流：
+
+### 记录想法
+当用户随口提到想法、需求、bug 等，主动追加到 `TODO.md` 对应优先级分类下：
+- 格式：`- [ ] 简要描述 #tag` （tag 如 `#feature` `#bug` `#infra` `#ui` `#refactor` `#docs`）
+- 如果用户没指定优先级，根据内容判断后向用户确认
+- 同一次对话中多条想法可以批量添加
+
+### 启动任务
+当用户说「做下一个 TODO」「下一项」「继续」等意图时：
+1. 读取 `TODO.md`，找到未完成条目中优先级最高（P0 > P1 > P2 > P3）、排列最靠前的一项
+2. 向用户确认即将开始的任务
+3. 正常走 Plan → 实现流程
+4. 完成后将条目从原位置移到 `## Done` 区域，标记为 `- [x]` 并附上完成日期
+
+### 注意事项
+- 添加/修改 TODO 条目后无需 commit，除非用户明确要求
+- 每次开始任务前先 `Read TODO.md` 确认最新状态
+- 如果某个 TODO 过于模糊，先向用户澄清再开始

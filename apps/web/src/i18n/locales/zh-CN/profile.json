@@ -18,6 +18,8 @@
     "languageLabel": "语言",
     "languageAuto": "跟随浏览器",
     "save": "保存",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "saveSuccess": "资料已更新!",
+    "saveError": "保存失败。"
   }
 }

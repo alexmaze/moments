@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { updateProfileApi } from '@/api/users.api';
 import { useAuthStore } from '@/store/auth.store';
 import { detectBrowserLocale } from '@/store/locale.store';
 import i18n from '@/i18n';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { UserDto, SupportedLocale } from '@/types/dto';
 
 interface EditProfileDialogProps {
@@ -35,7 +42,11 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
         }
       }
       queryClient.invalidateQueries({ queryKey: ['userProfile', profile.username] });
+      toast.success(t('edit.saveSuccess'));
       onClose();
+    },
+    onError: () => {
+      toast.error(t('edit.saveError'));
     },
   });
 
@@ -48,25 +59,12 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
     });
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-24 px-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-md z-10 bg-card rounded-xl shadow-lg border border-border">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-sm font-medium text-foreground">{t('edit.title')}</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 hover:bg-accent transition-colors text-muted-foreground"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('edit.title')}</DialogTitle>
+        </DialogHeader>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
@@ -130,7 +128,7 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

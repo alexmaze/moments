@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { PostDto } from '@/types/dto';
@@ -6,6 +7,16 @@ import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import MediaGrid from './MediaGrid';
 import CommentSection from '@/components/post/CommentSection';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface PostCardProps {
   post: PostDto;
@@ -16,6 +27,7 @@ export default function PostCard({ post }: PostCardProps) {
   const currentUser = useAuthStore((s) => s.currentUser);
   const toggleLike = useToggleLike();
   const deletePost = useDeletePost();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isOwner = currentUser?.id === post.author.id;
 
@@ -25,12 +37,15 @@ export default function PostCard({ post }: PostCardProps) {
     toggleLike.mutate(post.id);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm(t('postCard.deleteConfirm'))) {
-      deletePost.mutate(post.id);
-    }
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deletePost.mutate(post.id);
+    setDeleteOpen(false);
   };
 
   return (
@@ -71,7 +86,7 @@ export default function PostCard({ post }: PostCardProps) {
 
         {isOwner && (
           <button
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             className="rounded-lg p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
             title={t('postCard.deleteTitle')}
           >
@@ -138,6 +153,22 @@ export default function PostCard({ post }: PostCardProps) {
           variant="inline"
         />
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('postCard.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('postCard.deleteConfirmDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('postCard.deleteConfirmCancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              {t('postCard.deleteConfirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

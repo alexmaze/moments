@@ -19,6 +19,8 @@
     "languageAuto": "Follow browser",
     "languageAuto": "Follow browser",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "saveSuccess": "Profile updated!",
+    "saveError": "Failed to save profile."
   }
 }

@@ -5,6 +5,8 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 import {
   getCommentsApi,
   createCommentApi,
@@ -215,6 +217,7 @@ export function useCreateComment() {
           context.prevDetail,
         );
       }
+      toast.error(i18n.t("post:comments.createError"));
     },
 
     onSettled: (_data, _err, { postId }) => {
@@ -316,6 +319,11 @@ export function useDeleteComment() {
           context.prevDetail,
         );
       }
+      toast.error(i18n.t("post:comments.deleteError"));
+    },
+
+    onSuccess: () => {
+      toast.success(i18n.t("post:comments.deleteSuccess"));
     },
 
     onSettled: (_data, _err, { postId }) => {

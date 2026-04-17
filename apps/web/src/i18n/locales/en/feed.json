@@ -9,7 +9,10 @@
     "cancel": "Cancel",
     "title": "New Post",
     "submit": "Post",
-    "placeholder": "What's on your mind?"
+    "placeholder": "What's on your mind?",
+    "postSuccess": "Post published!",
+    "postError": "Failed to publish. Please try again.",
+    "uploadError": "File upload failed."
   },
   "uploader": {
     "dropzone": "Drop photos or videos here, or tap to browse",
@@ -17,6 +20,13 @@
   },
   "postCard": {
     "deleteConfirm": "Delete this post?",
-    "deleteTitle": "Delete post"
+    "deleteTitle": "Delete post",
+    "deleteSuccess": "Post deleted.",
+    "deleteError": "Failed to delete post.",
+    "likeError": "Action failed. Please try again.",
+    "deleteConfirmTitle": "Delete this post?",
+    "deleteConfirmDesc": "This action cannot be undone.",
+    "deleteConfirmAction": "Delete",
+    "deleteConfirmCancel": "Cancel"
   }
 }

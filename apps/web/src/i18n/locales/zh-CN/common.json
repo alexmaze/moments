@@ -10,6 +10,10 @@
     "message": "页面不存在",
     "goHome": "回到首页"
   },
+  "toast": {
+    "error": "操作失败，请重试。",
+    "networkError": "网络错误，请检查连接。"
+  },
   "zod": {
     "required": "此项为必填项",
     "tooSmallString": "至少需要 {{minimum}} 个字符",

@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 import { uploadMediaApi } from "@/api/media.api";
 
 export interface UploadItem {
@@ -74,6 +76,7 @@ export function useMediaUpload(maxFiles = 9) {
                   : i,
               ),
             );
+            toast.error(i18n.t("feed:composer.uploadError"));
           });
       }
     },

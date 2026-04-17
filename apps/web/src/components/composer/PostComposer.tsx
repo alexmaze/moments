@@ -35,7 +35,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-lg border border-border">
+    <>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <button
@@ -75,6 +75,6 @@ export default function PostComposer({ onClose }: PostComposerProps) {
           removeItem={removeItem}
         />
       </div>
-    </div>
+    </>
   );
 }

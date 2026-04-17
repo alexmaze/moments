@@ -4,6 +4,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 import {
   getFeedApi,
   getPostApi,
@@ -46,6 +48,10 @@ export function useCreatePost() {
     mutationFn: createPostApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      toast.success(i18n.t("feed:composer.postSuccess"));
+    },
+    onError: () => {
+      toast.error(i18n.t("feed:composer.postError"));
     },
   });
 }
@@ -57,6 +63,10 @@ export function useDeletePost() {
     mutationFn: deletePostApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      toast.success(i18n.t("feed:postCard.deleteSuccess"));
+    },
+    onError: () => {
+      toast.error(i18n.t("feed:postCard.deleteError"));
     },
   });
 }
@@ -123,6 +133,7 @@ export function useToggleLike() {
           context.previousDetail,
         );
       }
+      toast.error(i18n.t("feed:postCard.likeError"), { duration: 2000 });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });

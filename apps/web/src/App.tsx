@@ -8,9 +8,12 @@ import FeedPage from '@/pages/FeedPage';
 import PostDetailPage from '@/pages/PostDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   return (
+    <>
+    <Toaster />
     <Routes>
       <Route element={<GuestLayout />}>
         <Route path="/login" element={<LoginPage />} />
@@ -25,6 +28,7 @@ function App() {
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   );
 }
 

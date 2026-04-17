@@ -9,7 +9,10 @@
     "cancel": "取消",
     "title": "发布动态",
     "submit": "发布",
-    "placeholder": "分享你的想法..."
+    "placeholder": "分享你的想法...",
+    "postSuccess": "动态已发布!",
+    "postError": "发布失败，请重试。",
+    "uploadError": "文件上传失败。"
   },
   "uploader": {
     "dropzone": "拖拽图片或视频到此处，或点击选择",
@@ -17,6 +20,13 @@
   },
   "postCard": {
     "deleteConfirm": "确定要删除这条动态吗？",
-    "deleteTitle": "删除动态"
+    "deleteTitle": "删除动态",
+    "deleteSuccess": "动态已删除。",
+    "deleteError": "删除失败。",
+    "likeError": "操作失败，请重试。",
+    "deleteConfirmTitle": "删除这条动态？",
+    "deleteConfirmDesc": "此操作无法撤销。",
+    "deleteConfirmAction": "删除",
+    "deleteConfirmCancel": "取消"
   }
 }

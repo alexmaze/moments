@@ -9,6 +9,13 @@
     "loading": "Loading...",
     "loadMore": "Load more comments",
     "deleteConfirm": "Delete this comment?",
-    "deleteTitle": "Delete comment"
+    "deleteTitle": "Delete comment",
+    "createError": "Failed to post comment.",
+    "deleteSuccess": "Comment deleted.",
+    "deleteError": "Failed to delete comment.",
+    "deleteConfirmTitle": "Delete this comment?",
+    "deleteConfirmDesc": "This action cannot be undone.",
+    "deleteConfirmAction": "Delete",
+    "deleteConfirmCancel": "Cancel"
   }
 }

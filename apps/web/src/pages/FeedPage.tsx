@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import FeedList from '@/components/feed/FeedList';
 import PostComposer from '@/components/composer/PostComposer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 export default function FeedPage() {
   const { t } = useTranslation('feed');
@@ -38,19 +39,12 @@ export default function FeedPage() {
       </button>
 
       {/* Composer dialog */}
-      {composerOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-24 px-4">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={closeComposer}
-          />
-          {/* Composer */}
-          <div className="relative w-full max-w-lg z-10">
-            <PostComposer onClose={closeComposer} />
-          </div>
-        </div>
-      )}
+      <Dialog open={composerOpen} onOpenChange={(v) => { if (!v) closeComposer(); }}>
+        <DialogContent hideCloseButton>
+          <DialogTitle className="sr-only">{t('composer.title')}</DialogTitle>
+          <PostComposer onClose={closeComposer} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

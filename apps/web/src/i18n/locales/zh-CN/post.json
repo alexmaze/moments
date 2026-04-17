@@ -9,6 +9,13 @@
     "loading": "加载中...",
     "loadMore": "加载更多评论",
     "deleteConfirm": "确定要删除这条评论吗？",
-    "deleteTitle": "删除评论"
+    "deleteTitle": "删除评论",
+    "createError": "评论发布失败。",
+    "deleteSuccess": "评论已删除。",
+    "deleteError": "删除评论失败。",
+    "deleteConfirmTitle": "删除这条评论？",
+    "deleteConfirmDesc": "此操作无法撤销。",
+    "deleteConfirmAction": "删除",
+    "deleteConfirmCancel": "取消"
   }
 }
