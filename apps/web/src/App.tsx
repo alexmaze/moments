@@ -9,8 +9,11 @@ import PostDetailPage from '@/pages/PostDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Toaster } from '@/components/ui/sonner';
+import { useTheme } from '@/hooks/useTheme';
 
 function App() {
+  useTheme();
+
   return (
     <>
     <Toaster />

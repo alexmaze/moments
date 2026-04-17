@@ -90,6 +90,7 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       locale: user.locale,
+      theme: user.theme,
       createdAt: user.createdAt.toISOString(),
     };
   }

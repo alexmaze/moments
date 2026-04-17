@@ -1,5 +1,7 @@
 export type SupportedLocale = 'en' | 'zh-CN';
 
+export type SupportedTheme = 'light' | 'dark';
+
 export interface UserDto {
   id: string;
   username: string;
@@ -7,6 +9,7 @@ export interface UserDto {
   avatarUrl: string | null;
   bio: string | null;
   locale: SupportedLocale | null;
+  theme: SupportedTheme | null;
   createdAt: string;
 }
 

@@ -33,6 +33,7 @@ export class UsersService {
       avatarUrl: user.avatarUrl,
       bio: user.bio,
       locale: user.locale,
+      theme: user.theme,
       postCount: postCountResult.count,
       createdAt: user.createdAt.toISOString(),
     };
@@ -43,6 +44,7 @@ export class UsersService {
     if (dto.displayName !== undefined) updateData.displayName = dto.displayName;
     if (dto.bio !== undefined) updateData.bio = dto.bio;
     if (dto.locale !== undefined) updateData.locale = dto.locale;
+    if (dto.theme !== undefined) updateData.theme = dto.theme;
 
     const [updated] = await this.db
       .update(users)
@@ -57,6 +59,7 @@ export class UsersService {
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       locale: updated.locale,
+      theme: updated.theme,
       createdAt: updated.createdAt.toISOString(),
     };
   }
@@ -75,6 +78,7 @@ export class UsersService {
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
       locale: updated.locale,
+      theme: updated.theme,
       createdAt: updated.createdAt.toISOString(),
     };
   }

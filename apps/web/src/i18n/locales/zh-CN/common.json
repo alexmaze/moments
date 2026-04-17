@@ -5,6 +5,11 @@
     "profile": "我的",
     "logout": "退出"
   },
+  "theme": {
+    "system": "跟随系统",
+    "light": "浅色",
+    "dark": "深色"
+  },
   "notFound": {
     "title": "404",
     "message": "页面不存在",

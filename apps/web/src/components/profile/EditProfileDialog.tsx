@@ -6,6 +6,7 @@ import { User, Camera } from 'lucide-react';
 import { updateProfileApi } from '@/api/users.api';
 import { useAuthStore } from '@/store/auth.store';
 import { detectBrowserLocale } from '@/store/locale.store';
+import { useThemeStore } from '@/store/theme.store';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import i18n from '@/i18n';
 import {
@@ -14,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { UserDto, SupportedLocale } from '@/types/dto';
+import type { UserDto, SupportedLocale, SupportedTheme } from '@/types/dto';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -32,6 +33,9 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
   const [bio, setBio] = useState(profile.bio ?? '');
   // 'auto' in the select = null in DB (follow browser)
   const [localeValue, setLocaleValue] = useState<string>(profile.locale ?? 'auto');
+  // 'system' in the select = null in DB (follow system)
+  const [themeValue, setThemeValue] = useState<string>(profile.theme ?? 'system');
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   const avatarUpload = useAvatarUpload({ username: profile.username });
 
@@ -51,6 +55,9 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
       onClose();
     },
     onError: () => {
+      // Revert optimistic theme change
+      setTheme(profile.theme ?? null);
+      setThemeValue(profile.theme ?? 'system');
       toast.error(t('edit.saveError'));
     },
   });
@@ -61,6 +68,7 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
       displayName: displayName.trim(),
       bio: bio.trim() || undefined,
       locale: localeValue === 'auto' ? null : (localeValue as SupportedLocale),
+      theme: themeValue === 'system' ? null : (themeValue as SupportedTheme),
     });
   };
 
@@ -152,6 +160,27 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
               <option value="auto">{t('edit.languageAuto')}</option>
               <option value="en">English</option>
               <option value="zh-CN">中文（简体）</option>
+            </select>
+          </div>
+
+          {/* Theme */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              {t('edit.themeLabel')}
+            </label>
+            <select
+              value={themeValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                setThemeValue(v);
+                // Optimistic preview: apply immediately before saving
+                setTheme(v === 'system' ? null : (v as SupportedTheme));
+              }}
+              className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="system">{t('edit.themeSystem')}</option>
+              <option value="light">{t('edit.themeLight')}</option>
+              <option value="dark">{t('edit.themeDark')}</option>
             </select>
           </div>
 

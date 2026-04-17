@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Moments</title>
 
+    <!-- Theme FOUT prevention: apply .dark before CSS paints -->
+    <script>
+      (function () {
+        try {
+          var s = JSON.parse(localStorage.getItem('moments-theme') || '{}');
+          var pref = s.state && s.state.theme;
+          var dark = pref === 'dark'
+            ? true
+            : pref === 'light'
+            ? false
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Google Fonts: Inter (Latin) + Noto Sans SC (Chinese) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

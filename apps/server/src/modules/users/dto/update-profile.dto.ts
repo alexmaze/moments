@@ -16,4 +16,10 @@ export class UpdateProfileDto {
   @IsString()
   @IsIn(['en', 'zh-CN'])
   locale?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_obj, value) => value !== null)
+  @IsString()
+  @IsIn(['light', 'dark'])
+  theme?: string | null;
 }

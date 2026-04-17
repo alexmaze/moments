@@ -5,6 +5,11 @@
     "profile": "Profile",
     "logout": "Logout"
   },
+  "theme": {
+    "system": "Follow system",
+    "light": "Light",
+    "dark": "Dark"
+  },
   "notFound": {
     "title": "404",
     "message": "Page not found",

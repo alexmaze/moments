@@ -174,13 +174,15 @@ src/
 │   └── users.api.ts
 ├── store/
 │   ├── auth.store.ts # Zustand store (persisted to localStorage as "moments-auth")
-│   └── locale.store.ts # Locale preference store (persisted as "moments-locale")
+│   ├── locale.store.ts # Locale preference store (persisted as "moments-locale")
+│   └── theme.store.ts # Theme preference store (persisted as "moments-theme")
 ├── hooks/
 │   ├── useAuth.ts        # useLogin, useRegister, useLogout
 │   ├── usePosts.ts       # TanStack Query hooks for feed/post CRUD
 │   ├── useComments.ts    # TanStack Query hooks for comments
 │   └── useMediaUpload.ts # Parallel upload state machine with progress tracking
 │       useAvatarUpload.tsx # Avatar upload flow: file pick → crop → resize → upload
+│       useTheme.ts       # Dark mode: toggles .dark class on <html>, listens to prefers-color-scheme
 ├── components/
 │   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
@@ -198,6 +200,7 @@ src/
 - **Server state**: TanStack Query (staleTime 60s, no refetch-on-focus, retry 1).
 - **Auth state**: Zustand with `persist` middleware → `localStorage` key `moments-auth`.
 - **Locale state**: Zustand with `persist` middleware → `localStorage` key `moments-locale`. Separate from auth store so locale works before login.
+- **Theme state**: Zustand with `persist` middleware → `localStorage` key `moments-theme`. `null` = follow system. Synced from DB on login (same as locale).
 - **Media upload state**: local `useState` inside `useMediaUpload` hook.
 
 ### Routing structure
@@ -212,7 +215,7 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 
 | Table | Purpose |
 |---|---|
-| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, isActive |
+| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, isActive |
 | `media_assets` | Uploaded files: type (image/video), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
 | `posts` | Posts: authorId, content (nullable), likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
@@ -281,7 +284,11 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Fonts**: Inter (Latin) + Noto Sans SC (Chinese) via Google Fonts CDN (`font-display: swap`). Fallback chain: `system-ui → -apple-system → PingFang SC → Microsoft YaHei → sans-serif`. Loaded in `apps/web/index.html`.
 - **Border radius**: Base `--radius: 0.75rem` (12px). Cards use `rounded-xl` (16px), buttons/inputs use `rounded-lg` (12px), avatars use `rounded-full`.
 - **Shadows**: Warm-tinted shadows (hue 20° brown instead of cold black) via `--shadow-sm/md/lg` overrides in `@theme inline`.
-- **Dark mode**: CSS variables defined in `.dark` class with warm dark tones (not cold gray). No UI toggle yet (separate TODO).
+- **Dark mode**: Full dark mode support with three options: Light / Dark / Follow System (default). CSS variables defined in `.dark` class with warm dark tones (not cold gray). Theme preference stored in DB (`users.theme` column) + localStorage (`moments-theme`). FOUT prevention via synchronous inline script in `<head>` that reads localStorage before CSS paints.
+  - **Theme store**: `apps/web/src/store/theme.store.ts` — Zustand with `persist` middleware, mirrors locale store pattern. `null` = follow system, `'light'` / `'dark'` = explicit preference.
+  - **useTheme hook**: `apps/web/src/hooks/useTheme.ts` — mounted once in `App.tsx`, toggles `.dark` class on `<html>`, listens to `prefers-color-scheme` media query when in "Follow System" mode.
+  - **UI entry points**: (1) EditProfileDialog theme `<select>` with optimistic preview, (2) AppLayout header dropdown quick-toggle (cycles system → light → dark).
+  - **Auth sync**: On login, `syncThemeFromUser()` in `auth.store.ts` pushes DB preference to theme store (same pattern as locale sync).
 - **Hardcoded overlays**: `bg-black/*` on media thumbnails, avatar hover overlays, and dialog backdrops are intentionally kept — they must darken arbitrary user content.
 - **Guest page decoration**: Login/Register pages have a decorative amber radial gradient glow at the top (defined in `GuestLayout.tsx`).
 - **Mobile nav active state**: Current page's icon highlighted in amber via `useLocation()` comparison in `AppLayout.tsx`.

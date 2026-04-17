@@ -1,7 +1,8 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
-import { Home, Plus, User, LogOut } from 'lucide-react';
+import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
+import { Home, Plus, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -15,6 +16,27 @@ export default function AppLayout() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+
+  // Cycles: null (system) → 'light' → 'dark' → null
+  function cycleTheme() {
+    if (theme === null) return setTheme('light');
+    if (theme === 'light') return setTheme('dark');
+    return setTheme(null);
+  }
+
+  // Icon reflects current state: Monitor for system, Sun/Moon for explicit
+  const ThemeIcon = theme === null
+    ? Monitor
+    : getEffectiveTheme() === 'dark' ? Moon : Sun;
+
+  const themeLabel = theme === null
+    ? t('theme.system')
+    : theme === 'light'
+      ? t('theme.light')
+      : t('theme.dark');
 
   const isHome = location.pathname === '/';
   const isProfile = currentUser
@@ -56,6 +78,10 @@ export default function AppLayout() {
                 <DropdownMenuItem onSelect={() => navigate(`/users/${currentUser.username}`)}>
                   <User className="w-4 h-4" />
                   {t('nav.profile')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={cycleTheme}>
+                  <ThemeIcon className="w-4 h-4" />
+                  {themeLabel}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={handleLogout} destructive>

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import i18n from "@/i18n";
 import { useLocaleStore } from "./locale.store";
+import { useThemeStore } from "./theme.store";
 import type { UserDto } from "@/types/dto";
 
 interface AuthState {
@@ -22,6 +23,11 @@ function syncLocaleFromUser(user: UserDto) {
   }
 }
 
+function syncThemeFromUser(user: UserDto) {
+  // null = user hasn't set a preference, keep using system theme
+  useThemeStore.getState().setTheme(user.theme);
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -30,10 +36,12 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (token, user) => {
         set({ token, currentUser: user });
         syncLocaleFromUser(user);
+        syncThemeFromUser(user);
       },
       setCurrentUser: (user) => {
         set({ currentUser: user });
         syncLocaleFromUser(user);
+        syncThemeFromUser(user);
       },
       clearAuth: () => set({ token: null, currentUser: null }),
     }),
