@@ -14,7 +14,6 @@ import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets } from '@moments/db';
 import { STORAGE_PROVIDER } from './storage/storage.module';
 import { IStorageProvider } from './storage/storage.interface';
-import { LocalStorageProvider } from './storage/local.storage';
 
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
@@ -65,8 +64,9 @@ export class MediaService {
         durationSecs = result.durationSecs;
         coverPath = result.coverPath;
         coverUrl = result.coverUrl;
-      } catch {
-        // Non-critical: proceed without cover
+      } catch (error) {
+        // Non-critical: proceed without cover, but log for debugging
+        console.error('Failed to extract video metadata:', error);
       }
     }
 
@@ -162,8 +162,7 @@ export class MediaService {
 
       // Save cover to storage
       const coverBuffer = await fs.readFile(tmpCover);
-      const localProvider = this.storageProvider as LocalStorageProvider;
-      const savedCover = await localProvider.saveBuffer(coverBuffer, datePath, coverFilename);
+      const savedCover = await this.storageProvider.saveBuffer(coverBuffer, datePath, coverFilename);
 
       return {
         ...metadata,

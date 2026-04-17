@@ -35,21 +35,29 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
         <div className="grid grid-cols-3 gap-2">
           {items.map((item) => (
             <div key={item.localId} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-              {item.preview ? (
+              {item.type === 'video' ? (
                 <>
-                  <img
-                    src={item.preview}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                  {item.file.type.startsWith('video/') && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-                        <Play className="w-4 h-4 ml-0.5" fill="white" stroke="white" />
-                      </div>
-                    </div>
+                  {(item.coverUrl || item.preview) ? (
+                    <img
+                      src={item.coverUrl || item.preview}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted" />
                   )}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+                      <Play className="w-4 h-4 ml-0.5" fill="white" stroke="white" />
+                    </div>
+                  </div>
                 </>
+              ) : item.preview ? (
+                <img
+                  src={item.preview}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="w-6 h-6 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />

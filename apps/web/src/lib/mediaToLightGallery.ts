@@ -12,14 +12,17 @@ export function mediaToLightGallerySlides(
 ): GalleryItem[] {
   return items.map((item): GalleryItem => {
     if (item.type === 'video') {
+      // For HTML5 videos, `src` should NOT be the video URL (that's for YouTube/Vimeo).
+      // Set `src` to empty string so lgZoom doesn't try to treat it as an image.
+      // The actual video is provided via the `video` object.
       return {
-        src: item.publicUrl,
+        src: '',
         poster: item.coverUrl ?? undefined,
         thumb: item.coverUrl ?? undefined,
         video: {
           source: [{ src: item.publicUrl, type: item.mimeType }],
           attributes: {
-            preload: 'none',
+            preload: 'metadata',
             controls: true,
             playsinline: true,
           } as unknown as HTMLVideoElement,

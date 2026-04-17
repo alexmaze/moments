@@ -49,13 +49,25 @@ export default function MediaGrid({ items, onItemClick }: MediaGridProps) {
         >
           {item.type === 'video' ? (
             <>
-              <img
-                src={item.coverUrl || item.publicUrl}
-                alt=""
-                className={`w-full object-cover ${
-                  items.length === 1 ? 'max-h-96' : 'h-full'
-                }`}
-              />
+              {item.coverUrl ? (
+                <img
+                  src={item.coverUrl}
+                  alt=""
+                  className={`w-full object-cover ${
+                    items.length === 1 ? 'max-h-96' : 'h-full'
+                  }`}
+                />
+              ) : (
+                <video
+                  src={item.publicUrl}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className={`w-full object-cover ${
+                    items.length === 1 ? 'max-h-96' : 'h-full'
+                  }`}
+                />
+              )}
               {/* Play icon overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
