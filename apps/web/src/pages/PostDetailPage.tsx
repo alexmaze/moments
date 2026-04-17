@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
 import { usePost } from '@/hooks/usePosts';
 import PostDetail from '@/components/post/PostDetail';
 
@@ -51,10 +52,7 @@ export default function PostDetailPage() {
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
+        <ArrowLeft className="w-4 h-4" />
         {t('back')}
       </button>
 

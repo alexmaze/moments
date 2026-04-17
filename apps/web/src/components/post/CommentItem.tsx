@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { User, Trash2 } from 'lucide-react';
 import type { CommentDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
@@ -45,10 +46,7 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-muted-foreground">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+            <User className="w-4 h-4 text-muted-foreground" />
           </div>
         )}
       </Link>
@@ -71,10 +69,7 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
               className="ml-auto rounded p-1 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
               title={t('comments.deleteTitle')}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

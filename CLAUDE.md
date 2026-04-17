@@ -160,7 +160,7 @@ src/
 src/
 ├── main.tsx          # React root; wraps app in QueryClientProvider + BrowserRouter
 ├── App.tsx           # Route tree (react-router-dom v7)
-├── index.css         # Tailwind CSS v4 global styles
+├── index.css         # Tailwind CSS v4 global styles + design tokens + warm amber theme
 ├── i18n/
 │   ├── index.ts      # i18next initialization (static bundle, no lazy loading)
 │   ├── zod-error-map.ts # Custom Zod error map with i18n translations
@@ -273,10 +273,29 @@ This means orphaned uploads (status `pending`) can accumulate and need periodic 
 ### No test suite
 The `apps/server/test/` directory is empty. There are no automated tests. Rely on TypeScript type checking and manual testing.
 
+### Design System (Visual Theme)
+- **Theme**: Warm amber — warm milk-white background, pure white cards, amber/orange brand color (`--primary: 24 80% 50%`), warm gray tones throughout.
+- **Token system**: shadcn/ui-style HSL CSS variables in `apps/web/src/index.css` (`:root` for light, `.dark` for dark mode). All UI components consume tokens via Tailwind utility classes.
+- **Brand color (primary)**: Amber-orange `hsl(24, 80%, 50%)` — used for buttons, links, FAB, active nav states, focus rings.
+- **Like/heart color**: Separate `--like` token (`hsl(5, 85%, 57%)`) — warm red, not reusing `--destructive`. Utility class: `text-like`.
+- **Fonts**: Inter (Latin) + Noto Sans SC (Chinese) via Google Fonts CDN (`font-display: swap`). Fallback chain: `system-ui → -apple-system → PingFang SC → Microsoft YaHei → sans-serif`. Loaded in `apps/web/index.html`.
+- **Border radius**: Base `--radius: 0.75rem` (12px). Cards use `rounded-xl` (16px), buttons/inputs use `rounded-lg` (12px), avatars use `rounded-full`.
+- **Shadows**: Warm-tinted shadows (hue 20° brown instead of cold black) via `--shadow-sm/md/lg` overrides in `@theme inline`.
+- **Dark mode**: CSS variables defined in `.dark` class with warm dark tones (not cold gray). No UI toggle yet (separate TODO).
+- **Hardcoded overlays**: `bg-black/*` on media thumbnails, avatar hover overlays, and dialog backdrops are intentionally kept — they must darken arbitrary user content.
+- **Guest page decoration**: Login/Register pages have a decorative amber radial gradient glow at the top (defined in `GuestLayout.tsx`).
+- **Mobile nav active state**: Current page's icon highlighted in amber via `useLocation()` comparison in `AppLayout.tsx`.
+
+### Icons
+- **Library**: `lucide-react` — all图标统一使用 Lucide React 组件，禁止手写内嵌 `<svg>`。
+- **用法**: `import { Home, Plus, User } from 'lucide-react'`，通过 `className` 控制尺寸（如 `w-5 h-5`），通过 `strokeWidth` 控制线条粗细。
+- **特殊属性**: 需要填充的图标用 `fill` prop（如 `<Heart fill="currentColor" />`），媒体覆盖层上的白色图标用 `stroke="white"` 或 `fill="white"`。
+- **已使用图标**: `User`, `Plus`, `Play`, `X`, `Trash2`, `Camera`, `ArrowLeft`, `Heart`, `MessageSquare`, `Image`, `LogOut`, `Home`。
+
 ### Toast notifications
 - **Library**: `sonner` — lightweight toast library, module-level `toast()` function (no React context needed).
 - **Provider**: `<Toaster />` from `@/components/ui/sonner.tsx`, mounted in `App.tsx`.
-- **Theme**: Styled to match the project's HSL design tokens (bg-card, text-foreground, border-border).
+- **Theme**: Styled to match the warm amber design tokens (bg-card, text-foreground, border-border).
 - **Usage in hooks**: Import `{ toast } from 'sonner'` + `i18n from '@/i18n'`, call `toast.success(i18n.t('namespace:key'))` or `toast.error(...)` directly in mutation callbacks.
 - **Convention**: Success toasts for create/delete operations, error toasts for all failures, short-duration (2s) error toasts for high-frequency actions (e.g., like toggle).
 

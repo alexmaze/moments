@@ -3,53 +3,76 @@
 @import "lightgallery/css/lg-zoom.css";
 @import "lightgallery/css/lg-video.css";
 
+/* ─── Design tokens ─────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Surfaces */
+    --background: 30 20% 98%;
+    --foreground: 20 14% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 20 14% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 20 14% 10%;
+
+    /* Brand amber */
+    --primary: 24 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Subtle surfaces */
+    --secondary: 30 20% 94%;
+    --secondary-foreground: 20 14% 10%;
+    --muted: 30 15% 93%;
+    --muted-foreground: 25 10% 46%;
+    --accent: 30 20% 94%;
+    --accent-foreground: 20 14% 10%;
+
+    /* Semantic */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
+
+    /* Chrome */
+    --border: 30 18% 88%;
+    --input: 30 18% 88%;
+    --ring: 24 80% 50%;
+
+    /* Global radius base */
+    --radius: 0.75rem;
+
+    /* Like/heart action color */
+    --like: 5 85% 57%;
   }
 
+  /* ── Dark mode — warm dark tones ───────────────────────────── */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 20 10% 9%;
+    --foreground: 30 15% 92%;
+    --card: 20 8% 14%;
+    --card-foreground: 30 15% 92%;
+    --popover: 20 8% 14%;
+    --popover-foreground: 30 15% 92%;
+
+    --primary: 24 80% 62%;
+    --primary-foreground: 20 10% 9%;
+
+    --secondary: 20 8% 19%;
+    --secondary-foreground: 30 15% 92%;
+    --muted: 20 8% 19%;
+    --muted-foreground: 25 8% 58%;
+    --accent: 20 8% 23%;
+    --accent-foreground: 30 15% 92%;
+
+    --destructive: 0 62% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+
+    --border: 20 8% 22%;
+    --input: 20 8% 22%;
+    --ring: 24 80% 62%;
+
+    --like: 5 75% 63%;
   }
 }
 
+/* ─── Font + base reset ─────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
@@ -57,12 +80,20 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      'Inter',
+      'Noto Sans SC',
+      system-ui,
+      -apple-system,
+      'PingFang SC',
+      'Microsoft YaHei',
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* ─── Tailwind v4 token bridge ──────────────────────────────── */
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -83,13 +114,30 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+
+  /* Like/heart action token */
+  --color-like: hsl(var(--like));
+
+  /* Radius scale */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Warm-tinted shadows */
+  --shadow-sm:
+    0 1px 3px 0 hsl(20 30% 15% / 0.08),
+    0 1px 2px -1px hsl(20 30% 15% / 0.08);
+  --shadow-md:
+    0 4px 6px -1px hsl(20 30% 15% / 0.10),
+    0 2px 4px -2px hsl(20 30% 15% / 0.10);
+  --shadow-lg:
+    0 10px 15px -3px hsl(20 30% 15% / 0.10),
+    0 4px 6px -4px hsl(20 30% 15% / 0.10);
 }
 
-/* Dialog & Overlay animations */
+/* ─── Dialog & Overlay animations ───────────────────────────── */
 @keyframes overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }

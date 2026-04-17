@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { User, Camera } from 'lucide-react';
 import type { UserProfileDto } from '@/types/dto';
 import { formatDate } from '@/lib/utils';
 
@@ -25,10 +26,7 @@ export default function ProfileHeader({
     />
   ) : (
     <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-muted-foreground">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <User className="w-8 h-8 text-muted-foreground" />
     </div>
   );
 
@@ -50,10 +48,7 @@ export default function ProfileHeader({
               {isAvatarUploading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-6 h-6">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
+                <Camera className="w-6 h-6" stroke="white" />
               )}
             </div>
           </button>

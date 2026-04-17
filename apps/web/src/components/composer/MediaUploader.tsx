@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Plus, X, Play, Image } from 'lucide-react';
 import type { UploadItem } from '@/hooks/useMediaUpload';
 
 interface MediaUploaderProps {
@@ -44,9 +45,7 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
                   {item.file.type.startsWith('video/') && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4 ml-0.5">
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
+                        <Play className="w-4 h-4 ml-0.5" fill="white" stroke="white" />
                       </div>
                     </div>
                   )}
@@ -69,8 +68,8 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
 
               {/* Error indicator */}
               {item.status === 'error' && (
-                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                  <span className="text-xs text-white bg-red-500 px-2 py-0.5 rounded">
+                <div className="absolute inset-0 bg-destructive/20 flex items-center justify-center">
+                  <span className="text-xs text-destructive-foreground bg-destructive px-2 py-0.5 rounded">
                     {t('uploader.failed')}
                   </span>
                 </div>
@@ -81,20 +80,14 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
                 onClick={() => removeItem(item.localId)}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-3.5 h-3.5">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <X className="w-3.5 h-3.5" stroke="white" />
               </button>
             </div>
           ))}
 
           {/* Add more button */}
           <label className="aspect-square rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-accent transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6 text-muted-foreground">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Plus className="w-6 h-6 text-muted-foreground" />
             <input
               type="file"
               accept="image/*,video/*"
@@ -112,11 +105,7 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
           onDragOver={handleDragOver}
           className="block border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-accent transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 mx-auto text-muted-foreground">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
+          <Image className="w-8 h-8 mx-auto text-muted-foreground" />
           <p className="mt-2 text-sm text-muted-foreground">
             {t('uploader.dropzone')}
           </p>

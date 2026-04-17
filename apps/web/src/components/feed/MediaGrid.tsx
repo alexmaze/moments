@@ -1,4 +1,5 @@
 import type { PostMediaDto } from '@/types/dto';
+import { Play } from 'lucide-react';
 
 interface MediaGridProps {
   items: PostMediaDto[];
@@ -58,14 +59,7 @@ export default function MediaGrid({ items, onItemClick }: MediaGridProps) {
               {/* Play icon overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="white"
-                    className="w-5 h-5 ml-0.5"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
+                  <Play className="w-5 h-5 ml-0.5" fill="white" stroke="white" />
                 </div>
               </div>
             </>
