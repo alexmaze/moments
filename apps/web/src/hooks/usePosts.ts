@@ -1,0 +1,141 @@
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  getFeedApi,
+  getPostApi,
+  createPostApi,
+  deletePostApi,
+  toggleLikeApi,
+  getUserPostsApi,
+} from "@/api/posts.api";
+import type { PostDto, PaginatedResponse } from "@/types/dto";
+
+export const postKeys = {
+  all: ["posts"] as const,
+  feed: () => [...postKeys.all, "feed"] as const,
+  detail: (id: string) => [...postKeys.all, "detail", id] as const,
+  userPosts: (username: string) =>
+    [...postKeys.all, "user", username] as const,
+};
+
+export function useInfiniteFeed() {
+  return useInfiniteQuery({
+    queryKey: postKeys.feed(),
+    queryFn: ({ pageParam }) => getFeedApi(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor ?? undefined,
+  });
+}
+
+export function usePost(id: string) {
+  return useQuery({
+    queryKey: postKeys.detail(id),
+    queryFn: () => getPostApi(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreatePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createPostApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+    },
+  });
+}
+
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deletePostApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+    },
+  });
+}
+
+export function useToggleLike() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: toggleLikeApi,
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+
+      const previousFeed = queryClient.getQueryData<{
+        pages: PaginatedResponse<PostDto>[];
+      }>(postKeys.feed());
+
+      queryClient.setQueryData<{ pages: PaginatedResponse<PostDto>[] }>(
+        postKeys.feed(),
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((post) =>
+                post.id === postId
+                  ? {
+                      ...post,
+                      isLikedByMe: !post.isLikedByMe,
+                      likeCount: post.isLikedByMe
+                        ? post.likeCount - 1
+                        : post.likeCount + 1,
+                    }
+                  : post,
+              ),
+            })),
+          };
+        },
+      );
+
+      // Also optimistically update the detail cache if it exists
+      const previousDetail = queryClient.getQueryData<PostDto>(
+        postKeys.detail(postId),
+      );
+      if (previousDetail) {
+        queryClient.setQueryData<PostDto>(postKeys.detail(postId), {
+          ...previousDetail,
+          isLikedByMe: !previousDetail.isLikedByMe,
+          likeCount: previousDetail.isLikedByMe
+            ? previousDetail.likeCount - 1
+            : previousDetail.likeCount + 1,
+        });
+      }
+
+      return { previousFeed, previousDetail };
+    },
+    onError: (_err, postId, context) => {
+      if (context?.previousFeed) {
+        queryClient.setQueryData(postKeys.feed(), context.previousFeed);
+      }
+      if (context?.previousDetail) {
+        queryClient.setQueryData(
+          postKeys.detail(postId),
+          context.previousDetail,
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+    },
+  });
+}
+
+export function useUserPosts(username: string) {
+  return useInfiniteQuery({
+    queryKey: postKeys.userPosts(username),
+    queryFn: ({ pageParam }) => getUserPostsApi(username, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor ?? undefined,
+    enabled: !!username,
+  });
+}
