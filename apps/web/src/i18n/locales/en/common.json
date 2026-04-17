@@ -1,0 +1,20 @@
+{
+  "brand": "Moments",
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Page not found",
+    "goHome": "Go home"
+  },
+  "zod": {
+    "required": "This field is required",
+    "tooSmallString": "Must be at least {{minimum}} characters",
+    "tooBigString": "Must be at most {{maximum}} characters",
+    "invalidEmail": "Invalid email address",
+    "invalidUrl": "Invalid URL"
+  }
+}

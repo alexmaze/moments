@@ -1,7 +1,9 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function AppLayout() {
+  const { t } = useTranslation();
   const currentUser = useAuthStore((s) => s.currentUser);
   const navigate = useNavigate();
 
@@ -16,7 +18,7 @@ export default function AppLayout() {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">
           <Link to="/" className="text-xl font-bold tracking-tight text-foreground">
-            Moments
+            {t('brand')}
           </Link>
 
           <div className="flex items-center gap-3">
@@ -48,7 +50,7 @@ export default function AppLayout() {
             <button
               onClick={handleLogout}
               className="rounded-lg p-2 hover:bg-accent transition-colors text-muted-foreground"
-              title="Logout"
+              title={t('nav.logout')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -73,7 +75,7 @@ export default function AppLayout() {
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            <span className="text-[10px]">Home</span>
+            <span className="text-[10px]">{t('nav.home')}</span>
           </Link>
 
           <Link to="/?compose=1" className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors p-2">
@@ -94,7 +96,7 @@ export default function AppLayout() {
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="text-[10px]">Profile</span>
+              <span className="text-[10px]">{t('nav.profile')}</span>
             </Link>
           )}
         </div>

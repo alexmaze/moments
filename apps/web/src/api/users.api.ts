@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { UserDto, UserProfileDto } from "@/types/dto";
+import type { UserDto, UserProfileDto, SupportedLocale } from "@/types/dto";
 
 export function getUserProfileApi(username: string): Promise<UserProfileDto> {
   return apiClient.get(`/users/${username}`);
@@ -8,6 +8,7 @@ export function getUserProfileApi(username: string): Promise<UserProfileDto> {
 interface UpdateProfileRequest {
   displayName?: string;
   bio?: string;
+  locale?: SupportedLocale | null;
 }
 
 export function updateProfileApi(data: UpdateProfileRequest): Promise<UserDto> {

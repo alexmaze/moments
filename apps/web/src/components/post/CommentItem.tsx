@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { CommentDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
@@ -11,12 +12,13 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment, postId }: CommentItemProps) {
+  const { t } = useTranslation('post');
   const currentUser = useAuthStore((s) => s.currentUser);
   const deleteComment = useDeleteComment();
   const isOwner = currentUser?.id === comment.author.id;
 
   const handleDelete = () => {
-    if (confirm('Delete this comment?')) {
+    if (confirm(t('comments.deleteConfirm'))) {
       deleteComment.mutate({ commentId: comment.id, postId });
     }
   };
@@ -56,7 +58,7 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
             <button
               onClick={handleDelete}
               className="ml-auto rounded p-1 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
-              title="Delete comment"
+              title={t('comments.deleteTitle')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                 <polyline points="3 6 5 6 21 6" />

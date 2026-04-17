@@ -2,20 +2,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useRegister, useLogin } from '@/hooks/useAuth';
 
-const registerSchema = z.object({
-  username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores and hyphens'),
-  displayName: z.string().min(1).max(100),
-  password: z.string().min(6).max(128),
-});
-
-type RegisterInput = z.infer<typeof registerSchema>;
-
 export default function RegisterPage() {
+  const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const registerMutation = useRegister();
   const login = useLogin();
+
+  const registerSchema = z.object({
+    username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, t('validation.usernamePattern')),
+    displayName: z.string().min(1).max(100),
+    password: z.string().min(6).max(128),
+  });
+
+  type RegisterInput = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -28,7 +30,6 @@ export default function RegisterPage() {
   const onSubmit = (data: RegisterInput) => {
     registerMutation.mutate(data, {
       onSuccess: () => {
-        // Auto-login after successful registration
         login.mutate(
           { username: data.username, password: data.password },
           {
@@ -46,13 +47,13 @@ export default function RegisterPage() {
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border p-6">
       <h2 className="text-lg font-semibold text-foreground text-center mb-6">
-        Create your account
+        {t('register.title')}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1">
-            Username
+            {t('register.usernameLabel')}
           </label>
           <input
             id="username"
@@ -60,7 +61,7 @@ export default function RegisterPage() {
             autoComplete="username"
             {...register('username')}
             className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Choose a username"
+            placeholder={t('register.usernamePlaceholder')}
           />
           {errors.username && (
             <p className="mt-1 text-xs text-destructive">{errors.username.message}</p>
@@ -69,14 +70,14 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="displayName" className="block text-sm font-medium text-foreground mb-1">
-            Display Name
+            {t('register.displayNameLabel')}
           </label>
           <input
             id="displayName"
             type="text"
             {...register('displayName')}
             className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Your display name"
+            placeholder={t('register.displayNamePlaceholder')}
           />
           {errors.displayName && (
             <p className="mt-1 text-xs text-destructive">{errors.displayName.message}</p>
@@ -85,7 +86,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-            Password
+            {t('register.passwordLabel')}
           </label>
           <input
             id="password"
@@ -93,7 +94,7 @@ export default function RegisterPage() {
             autoComplete="new-password"
             {...register('password')}
             className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="At least 6 characters"
+            placeholder={t('register.passwordPlaceholder')}
           />
           {errors.password && (
             <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
@@ -102,7 +103,7 @@ export default function RegisterPage() {
 
         {registerMutation.isError && (
           <p className="text-sm text-destructive text-center">
-            {(registerMutation.error as Error)?.message || 'Registration failed. Please try again.'}
+            {(registerMutation.error as Error)?.message || t('register.error')}
           </p>
         )}
 
@@ -114,15 +115,15 @@ export default function RegisterPage() {
           {isPending ? (
             <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mx-auto" />
           ) : (
-            'Create Account'
+            t('register.submit')
           )}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
+        {t('register.hasAccount')}{' '}
         <Link to="/login" className="text-primary hover:underline font-medium">
-          Sign in
+          {t('register.signInLink')}
         </Link>
       </p>
     </div>

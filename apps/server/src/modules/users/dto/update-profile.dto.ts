@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsIn, ValidateIf } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -10,4 +10,10 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(300)
   bio?: string;
+
+  @IsOptional()
+  @ValidateIf((_obj, value) => value !== null)
+  @IsString()
+  @IsIn(['en', 'zh-CN'])
+  locale?: string | null;
 }

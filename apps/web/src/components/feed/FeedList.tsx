@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useInfiniteFeed } from '@/hooks/usePosts';
 import PostCard from './PostCard';
 
 export default function FeedList() {
+  const { t } = useTranslation('feed');
   const {
     data,
     fetchNextPage,
@@ -58,7 +60,7 @@ export default function FeedList() {
   if (isError) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Failed to load posts. Please try again later.
+        {t('error')}
       </div>
     );
   }
@@ -66,9 +68,9 @@ export default function FeedList() {
   if (posts.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground text-lg">No posts yet</p>
+        <p className="text-muted-foreground text-lg">{t('empty.title')}</p>
         <p className="text-muted-foreground text-sm mt-1">
-          Be the first to share a moment!
+          {t('empty.subtitle')}
         </p>
       </div>
     );

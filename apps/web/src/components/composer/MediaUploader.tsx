@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { UploadItem } from '@/hooks/useMediaUpload';
 
 interface MediaUploaderProps {
@@ -7,6 +8,8 @@ interface MediaUploaderProps {
 }
 
 export default function MediaUploader({ items, addFiles, removeItem }: MediaUploaderProps) {
+  const { t } = useTranslation('feed');
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       addFiles(Array.from(e.target.files));
@@ -68,7 +71,7 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
               {item.status === 'error' && (
                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
                   <span className="text-xs text-white bg-red-500 px-2 py-0.5 rounded">
-                    Failed
+                    {t('uploader.failed')}
                   </span>
                 </div>
               )}
@@ -115,7 +118,7 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
             <polyline points="21 15 16 10 5 21" />
           </svg>
           <p className="mt-2 text-sm text-muted-foreground">
-            Drop photos or videos here, or tap to browse
+            {t('uploader.dropzone')}
           </p>
           <input
             type="file"

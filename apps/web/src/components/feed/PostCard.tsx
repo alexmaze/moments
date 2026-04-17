@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { PostDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
@@ -11,6 +12,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
+  const { t } = useTranslation('feed');
   const currentUser = useAuthStore((s) => s.currentUser);
   const toggleLike = useToggleLike();
   const deletePost = useDeletePost();
@@ -26,7 +28,7 @@ export default function PostCard({ post }: PostCardProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Delete this post?')) {
+    if (confirm(t('postCard.deleteConfirm'))) {
       deletePost.mutate(post.id);
     }
   };
@@ -71,7 +73,7 @@ export default function PostCard({ post }: PostCardProps) {
           <button
             onClick={handleDelete}
             className="rounded-lg p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
-            title="Delete post"
+            title={t('postCard.deleteTitle')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
               <polyline points="3 6 5 6 21 6" />

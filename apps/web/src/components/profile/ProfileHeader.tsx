@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { UserProfileDto } from '@/types/dto';
 import { formatDate } from '@/lib/utils';
 
@@ -6,6 +7,8 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ profile }: ProfileHeaderProps) {
+  const { t } = useTranslation('profile');
+
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border p-6">
       <div className="flex items-start gap-4">
@@ -38,10 +41,10 @@ export default function ProfileHeader({ profile }: ProfileHeaderProps) {
 
           <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
             <span>
-              <strong className="text-foreground">{profile.postCount}</strong> posts
+              {t('stats.posts', { count: profile.postCount })}
             </span>
             <span>
-              Joined {formatDate(profile.createdAt)}
+              {t('stats.joined', { date: formatDate(profile.createdAt) })}
             </span>
           </div>
         </div>

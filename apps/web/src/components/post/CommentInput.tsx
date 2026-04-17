@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCreateComment } from '@/hooks/useComments';
 
 interface CommentInputProps {
@@ -6,6 +7,7 @@ interface CommentInputProps {
 }
 
 export default function CommentInput({ postId }: CommentInputProps) {
+  const { t } = useTranslation('post');
   const [content, setContent] = useState('');
   const createComment = useCreateComment();
 
@@ -30,7 +32,7 @@ export default function CommentInput({ postId }: CommentInputProps) {
         type="text"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Write a comment..."
+        placeholder={t('comments.inputPlaceholder')}
         className="flex-1 border border-input rounded-lg px-3 py-2 bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <button
@@ -41,7 +43,7 @@ export default function CommentInput({ postId }: CommentInputProps) {
         {createComment.isPending ? (
           <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
         ) : (
-          'Post'
+          t('comments.submit')
         )}
       </button>
     </form>

@@ -1,0 +1,22 @@
+{
+  "newPost": "发布动态",
+  "empty": {
+    "title": "还没有动态",
+    "subtitle": "来分享你的第一条动态吧！"
+  },
+  "error": "加载失败，请稍后重试。",
+  "composer": {
+    "cancel": "取消",
+    "title": "发布动态",
+    "submit": "发布",
+    "placeholder": "分享你的想法..."
+  },
+  "uploader": {
+    "dropzone": "拖拽图片或视频到此处，或点击选择",
+    "failed": "失败"
+  },
+  "postCard": {
+    "deleteConfirm": "确定要删除这条动态吗？",
+    "deleteTitle": "删除动态"
+  }
+}

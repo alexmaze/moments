@@ -15,9 +15,11 @@
     "@tanstack/react-query": "^5.65.0",
     "axios": "^1.7.0",
     "clsx": "^2.1.1",
+    "i18next": "^26.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.54.0",
+    "react-i18next": "^17.0.4",
     "react-router-dom": "^7.5.0",
     "zod": "^3.25.76",
     "zustand": "^5.0.0"

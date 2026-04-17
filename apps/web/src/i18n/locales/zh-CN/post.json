@@ -1,0 +1,14 @@
+{
+  "notFound": "动态不存在。",
+  "back": "返回",
+  "comments": {
+    "title": "评论",
+    "empty": "还没有评论，快来抢沙发！",
+    "inputPlaceholder": "写下你的评论...",
+    "submit": "发布",
+    "loading": "加载中...",
+    "loadMore": "加载更多评论",
+    "deleteConfirm": "确定要删除这条评论吗？",
+    "deleteTitle": "删除评论"
+  }
+}

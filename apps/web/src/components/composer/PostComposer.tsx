@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import MediaUploader from './MediaUploader';
@@ -8,6 +9,7 @@ interface PostComposerProps {
 }
 
 export default function PostComposer({ onClose }: PostComposerProps) {
+  const { t } = useTranslation('feed');
   const [content, setContent] = useState('');
   const createPost = useCreatePost();
   const { items, addFiles, removeItem, readyIds, allUploaded } = useMediaUpload();
@@ -40,9 +42,9 @@ export default function PostComposer({ onClose }: PostComposerProps) {
           onClick={onClose}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Cancel
+          {t('composer.cancel')}
         </button>
-        <h2 className="text-sm font-medium text-foreground">New Post</h2>
+        <h2 className="text-sm font-medium text-foreground">{t('composer.title')}</h2>
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
@@ -51,7 +53,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
           {createPost.isPending ? (
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
-            'Post'
+            t('composer.submit')
           )}
         </button>
       </div>
@@ -61,7 +63,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="What's on your mind?"
+          placeholder={t('composer.placeholder')}
           rows={4}
           className="w-full bg-transparent text-foreground placeholder:text-muted-foreground resize-none focus:outline-none text-sm"
           autoFocus

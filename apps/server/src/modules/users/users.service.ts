@@ -32,6 +32,7 @@ export class UsersService {
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
+      locale: user.locale,
       postCount: postCountResult.count,
       createdAt: user.createdAt.toISOString(),
     };
@@ -41,6 +42,7 @@ export class UsersService {
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (dto.displayName !== undefined) updateData.displayName = dto.displayName;
     if (dto.bio !== undefined) updateData.bio = dto.bio;
+    if (dto.locale !== undefined) updateData.locale = dto.locale;
 
     const [updated] = await this.db
       .update(users)
@@ -54,6 +56,7 @@ export class UsersService {
       displayName: updated.displayName,
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
+      locale: updated.locale,
       createdAt: updated.createdAt.toISOString(),
     };
   }
@@ -71,6 +74,7 @@ export class UsersService {
       displayName: updated.displayName,
       avatarUrl: updated.avatarUrl,
       bio: updated.bio,
+      locale: updated.locale,
       createdAt: updated.createdAt.toISOString(),
     };
   }

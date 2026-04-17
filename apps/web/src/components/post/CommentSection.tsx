@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { CommentDto } from '@/types/dto';
 import { usePostComments } from '@/hooks/useComments';
 import CommentItem from './CommentItem';
@@ -5,11 +6,8 @@ import CommentInput from './CommentInput';
 
 interface CommentSectionProps {
   postId: string;
-  /** Pass when rendering inside PostCard (from PostDto.comments). */
   initialComments?: CommentDto[];
-  /** Pass when rendering inside PostCard (from PostDto.hasMoreComments). */
   initialHasMore?: boolean;
-  /** 'card' = standalone card with border (detail page), 'inline' = no outer card (feed inline) */
   variant?: 'card' | 'inline';
 }
 
@@ -19,18 +17,18 @@ export default function CommentSection({
   initialHasMore,
   variant = 'card',
 }: CommentSectionProps) {
+  const { t } = useTranslation('post');
   const { comments, hasMore, loadMore, isLoadingMore, isInitialLoad } =
     usePostComments(postId, { initialComments, initialHasMore });
 
   const isCard = variant === 'card';
 
-  // Only show loading skeleton on detail page with empty cache
   if (isInitialLoad) {
     return (
       <div className={isCard ? 'bg-card rounded-xl shadow-sm border border-border' : ''}>
         {isCard && (
           <div className="p-4 border-b border-border">
-            <h3 className="font-medium text-foreground text-sm">Comments</h3>
+            <h3 className="font-medium text-foreground text-sm">{t('comments.title')}</h3>
           </div>
         )}
         <div className="p-4 space-y-4">
@@ -52,11 +50,10 @@ export default function CommentSection({
     <div className={isCard ? 'bg-card rounded-xl shadow-sm border border-border' : ''}>
       {isCard && (
         <div className="p-4 border-b border-border">
-          <h3 className="font-medium text-foreground text-sm">Comments</h3>
+          <h3 className="font-medium text-foreground text-sm">{t('comments.title')}</h3>
         </div>
       )}
 
-      {/* Comment list */}
       <div className={isCard ? 'divide-y divide-border' : 'divide-y divide-border/50'}>
         {comments.length > 0 ? (
           comments.map((comment) => (
@@ -64,12 +61,11 @@ export default function CommentSection({
           ))
         ) : isCard ? (
           <div className="p-4 text-sm text-muted-foreground text-center">
-            No comments yet. Be the first to comment!
+            {t('comments.empty')}
           </div>
         ) : null}
       </div>
 
-      {/* Load more button */}
       {hasMore && (
         <div className="px-4 pb-2">
           <button
@@ -80,16 +76,15 @@ export default function CommentSection({
             {isLoadingMore ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                Loading...
+                {t('comments.loading')}
               </>
             ) : (
-              'Load more comments'
+              t('comments.loadMore')
             )}
           </button>
         </div>
       )}
 
-      {/* Comment input */}
       <div className={isCard ? 'border-t border-border' : 'border-t border-border/50'}>
         <CommentInput postId={postId} />
       </div>

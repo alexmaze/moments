@@ -1,0 +1,22 @@
+{
+  "newPost": "New Post",
+  "empty": {
+    "title": "No posts yet",
+    "subtitle": "Be the first to share a moment!"
+  },
+  "error": "Failed to load posts. Please try again later.",
+  "composer": {
+    "cancel": "Cancel",
+    "title": "New Post",
+    "submit": "Post",
+    "placeholder": "What's on your mind?"
+  },
+  "uploader": {
+    "dropzone": "Drop photos or videos here, or tap to browse",
+    "failed": "Failed"
+  },
+  "postCard": {
+    "deleteConfirm": "Delete this post?",
+    "deleteTitle": "Delete post"
+  }
+}

@@ -1,13 +1,22 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getUserProfileApi } from '@/api/users.api';
 import { useUserPosts } from '@/hooks/usePosts';
+import { useAuthStore } from '@/store/auth.store';
 import ProfileHeader from '@/components/profile/ProfileHeader';
+import EditProfileDialog from '@/components/profile/EditProfileDialog';
 import PostCard from '@/components/feed/PostCard';
 
 export default function ProfilePage() {
+  const { t } = useTranslation('profile');
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const isOwnProfile = currentUser?.username === username;
 
   const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ['userProfile', username],
@@ -38,12 +47,12 @@ export default function ProfilePage() {
   if (profileError || !profile) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">User not found.</p>
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <button
           onClick={() => navigate(-1)}
           className="mt-4 text-sm text-primary hover:underline"
         >
-          Go back
+          {t('goBack')}
         </button>
       </div>
     );
@@ -60,13 +69,23 @@ export default function ProfilePage() {
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
-        Back
+        {t('back')}
       </button>
 
       <ProfileHeader profile={profile} />
 
+      {/* Edit profile button */}
+      {isOwnProfile && currentUser && (
+        <button
+          onClick={() => setEditOpen(true)}
+          className="w-full rounded-lg px-4 py-2 border border-border text-sm font-medium text-foreground hover:bg-accent transition-colors"
+        >
+          {t('edit.button')}
+        </button>
+      )}
+
       <div className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground px-1">Posts</h2>
+        <h2 className="text-sm font-medium text-muted-foreground px-1">{t('postsSection')}</h2>
 
         {postsLoading ? (
           <div className="space-y-4">
@@ -90,10 +109,19 @@ export default function ProfilePage() {
           posts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
           <div className="text-center py-8 text-sm text-muted-foreground">
-            No posts yet.
+            {t('noPosts')}
           </div>
         )}
       </div>
+
+      {/* Edit profile dialog */}
+      {isOwnProfile && currentUser && (
+        <EditProfileDialog
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          profile={currentUser}
+        />
+      )}
     </div>
   );
 }

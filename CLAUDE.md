@@ -160,6 +160,11 @@ src/
 ├── main.tsx          # React root; wraps app in QueryClientProvider + BrowserRouter
 ├── App.tsx           # Route tree (react-router-dom v7)
 ├── index.css         # Tailwind CSS v4 global styles
+├── i18n/
+│   ├── index.ts      # i18next initialization (static bundle, no lazy loading)
+│   ├── zod-error-map.ts # Custom Zod error map with i18n translations
+│   ├── i18next.d.ts  # TypeScript type augmentation for translation keys
+│   └── locales/      # {en,zh-CN}/{common,auth,feed,post,profile}.json
 ├── api/
 │   ├── client.ts     # Axios instance; auto-injects Bearer token; handles 401 → clearAuth
 │   ├── auth.api.ts
@@ -167,7 +172,8 @@ src/
 │   ├── media.api.ts
 │   └── users.api.ts
 ├── store/
-│   └── auth.store.ts # Zustand store (persisted to localStorage as "moments-auth")
+│   ├── auth.store.ts # Zustand store (persisted to localStorage as "moments-auth")
+│   └── locale.store.ts # Locale preference store (persisted as "moments-locale")
 ├── hooks/
 │   ├── useAuth.ts        # useLogin, useRegister, useLogout
 │   ├── usePosts.ts       # TanStack Query hooks for feed/post CRUD
@@ -178,7 +184,7 @@ src/
 │   ├── feed/         # FeedList, PostCard, MediaGrid
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # PostComposer, MediaUploader
-│   └── profile/      # ProfileHeader
+│   └── profile/      # ProfileHeader, EditProfileDialog, EditProfileDialog
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
 │   └── dto.ts        # Frontend TS interfaces mirroring API response shapes
@@ -188,6 +194,7 @@ src/
 ### State management
 - **Server state**: TanStack Query (staleTime 60s, no refetch-on-focus, retry 1).
 - **Auth state**: Zustand with `persist` middleware → `localStorage` key `moments-auth`.
+- **Locale state**: Zustand with `persist` middleware → `localStorage` key `moments-locale`. Separate from auth store so locale works before login.
 - **Media upload state**: local `useState` inside `useMediaUpload` hook.
 
 ### Routing structure
@@ -202,7 +209,7 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 
 | Table | Purpose |
 |---|---|
-| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, isActive |
+| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, isActive |
 | `media_assets` | Uploaded files: type (image/video), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
 | `posts` | Posts: authorId, content (nullable), likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
@@ -256,6 +263,18 @@ This means orphaned uploads (status `pending`) can accumulate and need periodic 
 
 ### No test suite
 The `apps/server/test/` directory is empty. There are no automated tests. Rely on TypeScript type checking and manual testing.
+
+### Internationalization (i18n)
+- **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`
+- **Supported locales**: `en` (English), `zh-CN` (Simplified Chinese)
+- **Translation files**: `apps/web/src/i18n/locales/{en,zh-CN}/*.json`
+- **Namespaces**: `common`, `auth`, `feed`, `post`, `profile` — each page uses its own namespace
+- **Language detection priority**: `localStorage` (key `moments-locale`) → `navigator.language`
+- **User preference sync**: On login, DB `users.locale` overrides localStorage. Changes via Edit Profile dialog are saved to both DB and localStorage.
+- **Date/time formatting**: Uses `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` for locale-aware output.
+- **Zod validation**: Custom `ZodErrorMap` in `apps/web/src/i18n/zod-error-map.ts` maps error codes to translated strings. Re-installed on language change.
+- **Adding a new language**: (1) Create `apps/web/src/i18n/locales/{code}/*.json` files, (2) Add imports to `apps/web/src/i18n/index.ts`, (3) Add to `SUPPORTED_LOCALES` in `packages/shared/src/types/user.types.ts`, (4) Add to `@IsIn()` in `apps/server/src/modules/users/dto/update-profile.dto.ts`.
+- **TypeScript key autocomplete**: `apps/web/src/i18n/i18next.d.ts` declares `CustomTypeOptions.resources` from English JSON files.
 
 ### 文档维护要求
 任何代码变更（新增功能、修改接口、调整架构、变更配置等）完成后，必须同步更新相关文档，包括但不限于：

@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePost } from '@/hooks/usePosts';
 import PostDetail from '@/components/post/PostDetail';
 
 export default function PostDetailPage() {
+  const { t } = useTranslation('post');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: post, isLoading, isError } = usePost(id!);
@@ -31,12 +33,12 @@ export default function PostDetailPage() {
   if (isError || !post) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Post not found.</p>
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <button
           onClick={() => navigate(-1)}
           className="mt-4 text-sm text-primary hover:underline"
         >
-          Go back
+          {t('back')}
         </button>
       </div>
     );
@@ -53,7 +55,7 @@ export default function PostDetailPage() {
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>
-        Back
+        {t('back')}
       </button>
 
       <PostDetail post={post} />

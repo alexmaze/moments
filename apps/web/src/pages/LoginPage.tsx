@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useLogin } from '@/hooks/useAuth';
 
 const loginSchema = z.object({
@@ -12,6 +13,7 @@ const loginSchema = z.object({
 type LoginInput = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const login = useLogin();
 
@@ -34,13 +36,13 @@ export default function LoginPage() {
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border p-6">
       <h2 className="text-lg font-semibold text-foreground text-center mb-6">
-        Sign in to Moments
+        {t('login.title')}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1">
-            Username
+            {t('login.usernameLabel')}
           </label>
           <input
             id="username"
@@ -48,7 +50,7 @@ export default function LoginPage() {
             autoComplete="username"
             {...register('username')}
             className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter your username"
+            placeholder={t('login.usernamePlaceholder')}
           />
           {errors.username && (
             <p className="mt-1 text-xs text-destructive">{errors.username.message}</p>
@@ -57,7 +59,7 @@ export default function LoginPage() {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-            Password
+            {t('login.passwordLabel')}
           </label>
           <input
             id="password"
@@ -65,7 +67,7 @@ export default function LoginPage() {
             autoComplete="current-password"
             {...register('password')}
             className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Enter your password"
+            placeholder={t('login.passwordPlaceholder')}
           />
           {errors.password && (
             <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
@@ -74,7 +76,7 @@ export default function LoginPage() {
 
         {login.isError && (
           <p className="text-sm text-destructive text-center">
-            {(login.error as Error)?.message || 'Login failed. Please try again.'}
+            {(login.error as Error)?.message || t('login.error')}
           </p>
         )}
 
@@ -86,15 +88,15 @@ export default function LoginPage() {
           {login.isPending ? (
             <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mx-auto" />
           ) : (
-            'Sign In'
+            t('login.submit')
           )}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
+        {t('login.noAccount')}{' '}
         <Link to="/register" className="text-primary hover:underline font-medium">
-          Sign up
+          {t('login.signUpLink')}
         </Link>
       </p>
     </div>

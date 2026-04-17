@@ -1,0 +1,24 @@
+{
+  "notFound": "User not found.",
+  "goBack": "Go back",
+  "back": "Back",
+  "postsSection": "Posts",
+  "noPosts": "No posts yet.",
+  "stats": {
+    "posts_one": "{{count}} post",
+    "posts_other": "{{count}} posts",
+    "joined": "Joined {{date}}"
+  },
+  "edit": {
+    "button": "Edit Profile",
+    "title": "Edit Profile",
+    "displayNameLabel": "Display Name",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Tell us about yourself...",
+    "languageLabel": "Language",
+    "languageAuto": "Follow browser",
+    "languageAuto": "Follow browser",
+    "save": "Save",
+    "saving": "Saving..."
+  }
+}

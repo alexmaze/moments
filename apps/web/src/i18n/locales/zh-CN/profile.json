@@ -1,0 +1,23 @@
+{
+  "notFound": "用户不存在。",
+  "goBack": "返回",
+  "back": "返回",
+  "postsSection": "动态",
+  "noPosts": "还没有动态。",
+  "stats": {
+    "posts_one": "{{count}} 条动态",
+    "posts_other": "{{count}} 条动态",
+    "joined": "加入于 {{date}}"
+  },
+  "edit": {
+    "button": "编辑资料",
+    "title": "编辑资料",
+    "displayNameLabel": "昵称",
+    "bioLabel": "简介",
+    "bioPlaceholder": "介绍一下自己...",
+    "languageLabel": "语言",
+    "languageAuto": "跟随浏览器",
+    "save": "保存",
+    "saving": "保存中..."
+  }
+}
