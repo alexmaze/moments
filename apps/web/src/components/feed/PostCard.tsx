@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { PostDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
@@ -24,9 +24,10 @@ import {
 
 interface PostCardProps {
   post: PostDto;
+  variant?: 'feed' | 'detail';
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
   const { t } = useTranslation('feed');
   const currentUser = useAuthStore((s) => s.currentUser);
   const toggleLike = useToggleLike();
@@ -34,6 +35,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isOwner = currentUser?.id === post.author.id;
+  const navigate = useNavigate();
 
   // Lightbox
   const lightboxRef = useRef<MediaLightboxHandle>(null);
@@ -61,7 +63,10 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-4">
+    <div
+      className="bg-card rounded-xl shadow-sm border border-border p-4 cursor-pointer"
+      onClick={() => navigate(`/posts/${post.id}`)}
+    >
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link to={`/users/${post.author.username}`} onClick={(e) => e.stopPropagation()}>
@@ -105,7 +110,7 @@ export default function PostCard({ post }: PostCardProps) {
       </div>
 
       {/* Content */}
-      <Link to={`/posts/${post.id}`} className="block">
+      <div>
         {post.content && (
           <p className="mt-3 text-foreground text-sm whitespace-pre-wrap break-words">
             {post.content}
@@ -113,8 +118,8 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Media */}
-        <MediaGrid items={post.media} onItemClick={handleMediaClick} />
-      </Link>
+        <MediaGrid items={post.media} variant={variant} onItemClick={handleMediaClick} />
+      </div>
 
       {/* Footer */}
       <div className="mt-3 flex items-center gap-4">

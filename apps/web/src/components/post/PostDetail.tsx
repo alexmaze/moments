@@ -8,7 +8,7 @@ interface PostDetailProps {
 export default function PostDetail({ post }: PostDetailProps) {
   return (
     <div>
-      <PostCard post={post} />
+      <PostCard post={post} variant="detail" />
     </div>
   );
 }

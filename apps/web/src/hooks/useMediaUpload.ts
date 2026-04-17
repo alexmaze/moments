@@ -87,15 +87,12 @@ function generateVideoThumbnail(file: File): Promise<string> {
   });
 }
 
-export function useMediaUpload(maxFiles = 9) {
+export function useMediaUpload() {
   const [items, setItems] = useState<UploadItem[]>([]);
 
   const addFiles = useCallback(
     (files: File[]) => {
-      const remaining = maxFiles - items.length;
-      const toAdd = files.slice(0, remaining);
-
-      const newItems: UploadItem[] = toAdd.map((file) => ({
+      const newItems: UploadItem[] = files.map((file) => ({
         localId: nextLocalId(),
         file,
         preview: file.type.startsWith("video/") ? "" : URL.createObjectURL(file),
@@ -161,7 +158,7 @@ export function useMediaUpload(maxFiles = 9) {
           });
       }
     },
-    [items.length, maxFiles],
+    [items.length],
   );
 
   const removeItem = useCallback((localId: string) => {

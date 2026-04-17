@@ -313,6 +313,21 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **AlertDialog**: For destructive confirmations (delete post, delete comment). Uses `AlertDialogAction` (destructive style) + `AlertDialogCancel` pattern. Prevents closing on overlay click — requires explicit user action.
 - **Convention**: Never use `window.confirm()` or `window.alert()`. Always use `AlertDialog` for confirmations and `toast` for notifications.
 
+### Media Grid (媒体网格布局)
+- **Component**: `@/components/feed/MediaGrid.tsx` — renders media thumbnails in a responsive grid layout.
+- **`variant` prop**: `'feed'` (default) or `'detail'` — controls overflow behavior.
+- **Layout rules by item count** (applies to both variants):
+  - **1**: Single image/video, width 100%, aspect ratio from original dimensions clamped to 1:2 (portrait) ~ 2:1 (landscape), max-h 400px, `object-cover` center crop. Falls back to 4:3 when dimensions unknown.
+  - **2**: `grid-cols-2`, aspect-square, center crop.
+  - **3**: `grid-cols-3`, one row, aspect-square.
+  - **4**: `grid-cols-2`, 2×2 grid, aspect-square.
+  - **5–6**: `grid-cols-3`, two rows, aspect-square.
+  - **7–9**: `grid-cols-3`, nine-grid, aspect-square.
+  - **>9 (feed)**: Only first 9 shown; last cell overlaid with `+N` semi-transparent badge. Clicking still opens lightbox with all media.
+  - **>9 (detail)**: All items shown in `grid-cols-3`, no truncation.
+- **`PostCard` variant prop**: `PostCard` accepts `variant?: 'feed' | 'detail'` and passes it through to `MediaGrid`. `PostDetail` passes `variant="detail"`.
+- **Lightbox integration**: `onItemClick(index)` callback triggers lightbox; slides are always built from the **full** `post.media` array regardless of display truncation.
+
 ### Media Lightbox (图片/视频查看器)
 - **Library**: `lightgallery` (v2.9) — image/video lightbox with zoom, pan, and keyboard navigation.
 - **Plugins used**: `lgZoom` (scroll-wheel/pinch zoom, drag pan) + `lgVideo` (HTML5 `<video>` playback).
