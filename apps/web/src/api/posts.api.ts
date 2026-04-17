@@ -41,9 +41,10 @@ export function toggleLikeApi(
 export function getCommentsApi(
   postId: string,
   page?: number,
+  limit?: number,
 ): Promise<PagePaginatedResponse<CommentDto>> {
   return apiClient.get(`/posts/${postId}/comments`, {
-    params: { page },
+    params: { page, limit },
   });
 }
 

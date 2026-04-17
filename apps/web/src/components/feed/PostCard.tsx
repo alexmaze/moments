@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import MediaGrid from './MediaGrid';
+import CommentSection from '@/components/post/CommentSection';
 
 interface PostCardProps {
   post: PostDto;
@@ -115,15 +116,25 @@ export default function PostCard({ post }: PostCardProps) {
           {post.likeCount > 0 && <span>{post.likeCount}</span>}
         </button>
 
-        <Link
-          to={`/posts/${post.id}`}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           {post.commentCount > 0 && <span>{post.commentCount}</span>}
-        </Link>
+        </span>
+      </div>
+
+      {/* Inline comment section — always visible */}
+      <div
+        className="mt-3 pt-3 border-t border-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CommentSection
+          postId={post.id}
+          initialComments={post.comments}
+          initialHasMore={post.hasMoreComments}
+          variant="inline"
+        />
       </div>
     </div>
   );

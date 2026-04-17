@@ -156,7 +156,22 @@ GET /api/posts
       ],
       "likeCount": 5,
       "commentCount": 3,
-      "isLikedByMe": false
+      "isLikedByMe": false,
+      "comments": [
+        {
+          "id": "uuid",
+          "content": "好看！",
+          "createdAt": "2025-01-01T12:30:00.000Z",
+          "isDeleted": false,
+          "author": {
+            "id": "uuid",
+            "username": "bob",
+            "displayName": "Bob",
+            "avatarUrl": null
+          }
+        }
+      ],
+      "hasMoreComments": false
     }
   ],
   "meta": {
@@ -165,6 +180,8 @@ GET /api/posts
   }
 }
 ```
+
+> **内嵌评论预览**: 每条帖子内嵌前 10 条评论（按时间正序），`hasMoreComments` 为 `true` 时表示还有更多评论可通过 `GET /api/posts/:postId/comments?page=2&limit=10` 加载。
 
 ---
 

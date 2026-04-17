@@ -10,11 +10,13 @@ export interface PostDto {
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;
+  /** First ≤10 non-deleted comments, oldest-first. Always present ([] when none). */
+  comments: CommentDto[];
+  /** true when commentCount > preview comments length, i.e., there are more to load. */
+  hasMoreComments: boolean;
 }
 
-export interface PostDetailDto extends PostDto {
-  comments: CommentDto[];
-}
+export interface PostDetailDto extends PostDto {}
 
 // Comment types
 export interface CommentDto {

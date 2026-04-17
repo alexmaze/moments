@@ -133,7 +133,7 @@ src/
 
 ### Database access pattern
 - Drizzle client injected via `@Inject(DRIZZLE)` using the `DRIZZLE` Symbol token.
-- **No Drizzle relations API used for queries** — services do explicit batch loading and assembly (see `PostsService.enrichPosts()`). Relations in schema are defined for documentation/type purposes.
+- **No Drizzle relations API used for queries** — services do explicit batch loading and assembly (see `PostsService.enrichPosts()` which batch-loads authors, media, likes, and comment previews in parallel). Relations in schema are defined for documentation/type purposes.
 - Soft deletes on posts and comments (`isDeleted` flag + `deletedAt`).
 - Like/comment counts are denormalized columns on the `posts` table, updated in-place.
 
@@ -240,6 +240,13 @@ pnpm db:migrate    # applies it to the database
 ### Feed pagination
 - Posts feed uses **cursor-based pagination** (ISO timestamp cursor from `createdAt`).
 - Comments use **page-based pagination** (`page` + `pageSize`).
+- Feed API embeds the first 10 comments per post (`comments` array + `hasMoreComments` flag) to enable inline display without extra requests.
+
+### Inline comments in feed
+- PostCard includes a toggle button to expand/collapse an inline comment section.
+- Comments are seeded from the embedded preview data (no initial fetch), with "Load more" button to paginate.
+- `usePostComments` hook (based on `useInfiniteQuery`) handles both feed-inline and detail-page contexts.
+- Comment create/delete use optimistic updates to avoid resetting the infinite feed scroll.
 
 ### Media upload (two-phase)
 1. Upload file → get `mediaId` (status: `pending`)

@@ -37,6 +37,10 @@ export interface PostDto {
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;
+  /** First ≤10 non-deleted comments, oldest-first. */
+  comments: CommentDto[];
+  /** true when there are more comments beyond the preview. */
+  hasMoreComments: boolean;
 }
 
 export interface CommentDto {

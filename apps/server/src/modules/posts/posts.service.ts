@@ -5,13 +5,14 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { eq, and, desc, lt, inArray } from 'drizzle-orm';
+import { eq, and, desc, lt, asc, inArray } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import {
   type DrizzleClient,
   posts,
   postMediaRelations,
   postLikes,
+  postComments,
   mediaAssets,
   users,
 } from '@moments/db';
@@ -19,6 +20,8 @@ import { CreatePostDto } from './dto';
 
 @Injectable()
 export class PostsService {
+  private readonly COMMENT_PREVIEW_LIMIT = 10;
+
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
   ) {}
@@ -245,10 +248,14 @@ export class PostsService {
       likedPostIds = new Set(likeRows.map((l) => l.postId));
     }
 
+    // Batch load comment previews (first N comments per post)
+    const commentPreviewMap = await this.batchFetchCommentPreviews(postIds);
+
     // Assemble
     return postRows.map((post) => {
       const author = authorMap.get(post.authorId)!;
       const mediaRels = mediaByPost.get(post.id) || [];
+      const previewComments = commentPreviewMap.get(post.id) || [];
 
       return {
         id: post.id,
@@ -274,7 +281,73 @@ export class PostsService {
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         isLikedByMe: likedPostIds.has(post.id),
+        comments: previewComments,
+        hasMoreComments: post.commentCount > previewComments.length,
       };
     });
+  }
+
+  /**
+   * Batch-load the first COMMENT_PREVIEW_LIMIT comments for each post.
+   * Fetches all non-deleted comments for the given postIds in one query,
+   * then groups and truncates in JS (avoids ROW_NUMBER which Drizzle ORM
+   * doesn't natively support).
+   */
+  private async batchFetchCommentPreviews(postIds: string[]) {
+    const result = new Map<string, Array<{
+      id: string;
+      content: string;
+      createdAt: string;
+      isDeleted: boolean;
+      author: { id: string; username: string; displayName: string; avatarUrl: string | null };
+    }>>();
+
+    if (postIds.length === 0) return result;
+
+    // Initialize empty arrays for all postIds
+    for (const id of postIds) {
+      result.set(id, []);
+    }
+
+    // Fetch all non-deleted comments for these posts, ordered oldest-first
+    const rows = await this.db
+      .select({
+        id: postComments.id,
+        postId: postComments.postId,
+        content: postComments.content,
+        createdAt: postComments.createdAt,
+        isDeleted: postComments.isDeleted,
+        author: {
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+        },
+      })
+      .from(postComments)
+      .innerJoin(users, eq(postComments.authorId, users.id))
+      .where(
+        and(
+          inArray(postComments.postId, postIds),
+          eq(postComments.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(postComments.createdAt));
+
+    // Group by postId and take first COMMENT_PREVIEW_LIMIT per post
+    for (const row of rows) {
+      const list = result.get(row.postId)!;
+      if (list.length < this.COMMENT_PREVIEW_LIMIT) {
+        list.push({
+          id: row.id,
+          content: row.content,
+          createdAt: row.createdAt.toISOString(),
+          isDeleted: row.isDeleted,
+          author: row.author,
+        });
+      }
+    }
+
+    return result;
   }
 }
