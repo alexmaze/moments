@@ -3,14 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import MediaUploader from './MediaUploader';
+import { SpaceSelector } from '@/components/spaces/SpaceSelector';
 
 interface PostComposerProps {
   onClose: () => void;
+  spaceId?: string;
 }
 
-export default function PostComposer({ onClose }: PostComposerProps) {
+export default function PostComposer({ onClose, spaceId: initialSpaceId }: PostComposerProps) {
   const { t } = useTranslation('feed');
   const [content, setContent] = useState('');
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | undefined>(initialSpaceId);
   const createPost = useCreatePost();
   const { items, addFiles, removeItem, readyIds, allUploaded } = useMediaUpload();
 
@@ -25,6 +28,7 @@ export default function PostComposer({ onClose }: PostComposerProps) {
       {
         content: content.trim() || undefined,
         mediaIds: readyIds,
+        spaceId: selectedSpaceId,
       },
       {
         onSuccess: () => {
@@ -60,6 +64,16 @@ export default function PostComposer({ onClose }: PostComposerProps) {
 
       {/* Content */}
       <div className="p-4">
+        {/* Space selector — only show if no fixed spaceId prop */}
+        {!initialSpaceId && (
+          <div className="mb-3">
+            <SpaceSelector
+              selectedSpaceId={selectedSpaceId}
+              onChange={setSelectedSpaceId}
+            />
+          </div>
+        )}
+
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}

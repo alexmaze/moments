@@ -22,6 +22,7 @@ export function getPostApi(id: string): Promise<PostDto> {
 interface CreatePostRequest {
   content?: string;
   mediaIds?: string[];
+  spaceId?: string;
 }
 
 export function createPostApi(data: CreatePostRequest): Promise<PostDto> {

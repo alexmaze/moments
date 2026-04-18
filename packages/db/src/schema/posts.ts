@@ -1,11 +1,13 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, smallint, unique, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { mediaAssets } from './media';
+import { spaces } from './spaces';
 
 export const posts = pgTable('posts', {
   id: uuid('id').primaryKey().defaultRandom(),
   authorId: uuid('author_id').notNull().references(() => users.id),
   content: text('content'),
+  spaceId: uuid('space_id').references(() => spaces.id),
   likeCount: integer('like_count').notNull().default(0),
   commentCount: integer('comment_count').notNull().default(0),
   isDeleted: boolean('is_deleted').notNull().default(false),
@@ -15,6 +17,7 @@ export const posts = pgTable('posts', {
 }, (table) => [
   index('idx_posts_feed').on(table.createdAt),
   index('idx_posts_author').on(table.authorId, table.createdAt),
+  index('idx_posts_space').on(table.spaceId, table.createdAt),
 ]);
 
 export const postMediaRelations = pgTable('post_media_relations', {

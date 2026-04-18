@@ -10,4 +10,8 @@ export class CreatePostDto {
   @IsArray()
   @IsUUID('4', { each: true })
   mediaIds?: string[];
+
+  @IsOptional()
+  @IsUUID('4')
+  spaceId?: string;
 }

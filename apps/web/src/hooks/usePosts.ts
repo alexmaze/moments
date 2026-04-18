@@ -48,6 +48,8 @@ export function useCreatePost() {
     mutationFn: createPostApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      // Also invalidate spaces data in case the post was to a space
+      queryClient.invalidateQueries({ queryKey: ["spaces"] });
       toast.success(i18n.t("feed:composer.postSuccess"));
     },
     onError: () => {
@@ -78,34 +80,54 @@ export function useToggleLike() {
     mutationFn: toggleLikeApi,
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+      // Also cancel any space post queries
+      await queryClient.cancelQueries({ queryKey: ["spaces"] });
 
+      // Helper to toggle like in a paginated cache
+      const toggleInPages = (
+        old: { pages: PaginatedResponse<PostDto>[] } | undefined,
+      ) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((post) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    isLikedByMe: !post.isLikedByMe,
+                    likeCount: post.isLikedByMe
+                      ? post.likeCount - 1
+                      : post.likeCount + 1,
+                  }
+                : post,
+            ),
+          })),
+        };
+      };
+
+      // Optimistically update main feed
       const previousFeed = queryClient.getQueryData<{
         pages: PaginatedResponse<PostDto>[];
       }>(postKeys.feed());
+      queryClient.setQueryData(postKeys.feed(), toggleInPages);
 
-      queryClient.setQueryData<{ pages: PaginatedResponse<PostDto>[] }>(
-        postKeys.feed(),
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: page.data.map((post) =>
-                post.id === postId
-                  ? {
-                      ...post,
-                      isLikedByMe: !post.isLikedByMe,
-                      likeCount: post.isLikedByMe
-                        ? post.likeCount - 1
-                        : post.likeCount + 1,
-                    }
-                  : post,
-              ),
-            })),
-          };
-        },
-      );
+      // Optimistically update all space post caches
+      const spacePostQueries = queryClient.getQueriesData<{
+        pages: PaginatedResponse<PostDto>[];
+      }>({ queryKey: ["spaces"] });
+      const previousSpacePosts = new Map<
+        readonly unknown[],
+        { pages: PaginatedResponse<PostDto>[] } | undefined
+      >();
+      for (const [key, data] of spacePostQueries) {
+        // Only target space post queries (["spaces", "posts", slug])
+        if (key[1] === "posts" && data) {
+          previousSpacePosts.set(key, data);
+          queryClient.setQueryData(key, toggleInPages);
+        }
+      }
 
       // Also optimistically update the detail cache if it exists
       const previousDetail = queryClient.getQueryData<PostDto>(
@@ -121,7 +143,7 @@ export function useToggleLike() {
         });
       }
 
-      return { previousFeed, previousDetail };
+      return { previousFeed, previousDetail, previousSpacePosts };
     },
     onError: (_err, postId, context) => {
       if (context?.previousFeed) {
@@ -133,10 +155,20 @@ export function useToggleLike() {
           context.previousDetail,
         );
       }
+      if (context?.previousSpacePosts) {
+        for (const [key, data] of context.previousSpacePosts) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       toast.error(i18n.t("feed:postCard.likeError"), { duration: 2000 });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      // Also invalidate space post queries so they refetch
+      queryClient.invalidateQueries({
+        queryKey: ["spaces"],
+        predicate: (query) => query.queryKey[1] === "posts",
+      });
     },
   });
 }

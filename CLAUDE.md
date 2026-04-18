@@ -124,7 +124,8 @@ src/
     ├── likes/                 # Toggle like on a post
     ├── comments/              # Comments on posts; page-based pagination
     ├── media/                 # File upload (images + videos); storage abstraction
-    └── users/                 # User profile, update profile, user posts
+    ├── users/                 # User profile, update profile, user posts
+    └── spaces/                # Public spaces: CRUD, membership, growth records (baby spaces)
 ```
 
 ### Auth pattern
@@ -165,13 +166,14 @@ src/
 │   ├── index.ts      # i18next initialization (static bundle, no lazy loading)
 │   ├── zod-error-map.ts # Custom Zod error map with i18n translations
 │   ├── i18next.d.ts  # TypeScript type augmentation for translation keys
-│   └── locales/      # {en,zh-CN}/{common,auth,feed,post,profile}.json
+│   └── locales/      # {en,zh-CN}/{common,auth,feed,post,profile,spaces}.json
 ├── api/
 │   ├── client.ts     # Axios instance; auto-injects Bearer token; handles 401 → clearAuth
 │   ├── auth.api.ts
 │   ├── posts.api.ts
 │   ├── media.api.ts
-│   └── users.api.ts
+│   ├── users.api.ts
+│   └── spaces.api.ts
 ├── store/
 │   ├── auth.store.ts # Zustand store (persisted to localStorage as "moments-auth")
 │   ├── locale.store.ts # Locale preference store (persisted as "moments-locale")
@@ -180,6 +182,8 @@ src/
 │   ├── useAuth.ts        # useLogin, useRegister, useLogout
 │   ├── usePosts.ts       # TanStack Query hooks for feed/post CRUD
 │   ├── useComments.ts    # TanStack Query hooks for comments
+│   ├── useSpaces.ts      # TanStack Query hooks for spaces CRUD, membership
+│   ├── useGrowthRecords.ts # TanStack Query hooks for baby space growth records
 │   └── useMediaUpload.ts # Parallel upload state machine with progress tracking
 │       useAvatarUpload.tsx # Avatar upload flow: file pick → crop → resize → upload
 │       useTheme.ts       # Dark mode: toggles .dark class on <html>, listens to prefers-color-scheme
@@ -205,7 +209,7 @@ src/
 
 ### Routing structure
 - Guest routes (`/login`, `/register`) wrapped in `GuestLayout`.
-- Authenticated routes (`/`, `/posts/:id`, `/users/:username`) wrapped in `AuthGuard` → `AppLayout`.
+- Authenticated routes (`/`, `/posts/:id`, `/users/:username`, `/spaces`, `/spaces/:slug`) wrapped in `AuthGuard` → `AppLayout`.
 - Path alias `@/` maps to `src/` (configured in both Vite and tsconfig).
 
 ### Dev proxy
@@ -217,10 +221,13 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 |---|---|
 | `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, isActive |
 | `media_assets` | Uploaded files: type (image/video), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
-| `posts` | Posts: authorId, content (nullable), likeCount, commentCount, soft-delete flags |
+| `posts` | Posts: authorId, content (nullable), spaceId (nullable FK→spaces), likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
 | `post_likes` | Unique (postId, userId) pair |
 | `post_comments` | Comments with soft-delete |
+| `spaces` | Public spaces: name, slug (unique), description, coverUrl, type (general/baby), creatorId, memberCount, postCount, soft-delete |
+| `space_members` | Space membership: spaceId + userId (unique pair), role (owner/admin/member), joinedAt |
+| `growth_records` | Baby space growth data: spaceId, recordedBy, date, heightCm, weightKg, headCircumferenceCm |
 | `event_log` | Audit log: eventType, entityType, entityId, payload, ipAddress, userAgent |
 
 Migrations live in `packages/db/src/migrations/`. Schema source of truth is `packages/db/src/schema/`.
@@ -346,11 +353,27 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Trigger**: Both Feed page and Detail page support lightbox (via PostCard). Click media → lightbox; click text → navigate to detail page.
 - **Keyboard**: ← → arrows switch slides, ESC closes. Scroll-wheel zooms when viewing images.
 
+### Public Spaces (公共主题空间)
+- **Backend module**: `apps/server/src/modules/spaces/` — SpacesService, GrowthRecordsService, SpacesController
+- **Database tables**: `spaces` (name, slug, type, creatorId, memberCount, postCount), `space_members` (role-based membership), `growth_records` (baby space growth data). Posts table has nullable `spaceId` FK.
+- **Space types**: `general` (default), `baby` (adds growth records feature with height/weight/head circumference tracking + recharts line chart)
+- **Permission model**: Fully public browsing. Only joined members can post/comment/like. Owner cannot leave (must transfer/delete).
+- **Feed integration**: Space posts appear in main feed with space badge (name + link). PostCard shows `post.space` info. `enrichPosts()` batch-loads space info + membership status.
+- **Membership guard**: LikesService and CommentsService check `post.spaceId` → verify membership before allowing interaction.
+- **API routes**: All under `/api/spaces` prefix. `GET /spaces/my` defined before `:slug` to avoid collision.
+- **Frontend**:
+  - Pages: `SpacesPage` (list with infinite scroll), `SpaceDetailPage` (header + tabs: Posts/Members/Growth)
+  - Components: `SpaceCard`, `CreateSpaceDialog`, `SpaceHeader`, `SpacePostsTab`, `SpaceMembersTab`, `GrowthTab`, `GrowthChart` (recharts), `GrowthRecordForm`, `GrowthRecordsList`, `SpaceSelector`
+  - Hooks: `useSpaces.ts` (spaceKeys factory, CRUD/membership hooks), `useGrowthRecords.ts`
+  - i18n namespace: `spaces` (in `locales/{en,zh-CN}/spaces.json`)
+- **Navigation**: Bottom nav has 4 items: Home / Spaces / Profile. `AppLayout` uses `isSpaces = location.pathname.startsWith('/spaces')`.
+- **PostComposer**: Accepts optional `spaceId` prop. When no fixed space, shows `SpaceSelector` dropdown using `useMySpaces()`.
+
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`
 - **Supported locales**: `en` (English), `zh-CN` (Simplified Chinese)
 - **Translation files**: `apps/web/src/i18n/locales/{en,zh-CN}/*.json`
-- **Namespaces**: `common`, `auth`, `feed`, `post`, `profile` — each page uses its own namespace
+- **Namespaces**: `common`, `auth`, `feed`, `post`, `profile`, `spaces` — each page/feature uses its own namespace
 - **Language detection priority**: `localStorage` (key `moments-locale`) → `navigator.language`
 - **User preference sync**: On login, DB `users.locale` overrides localStorage. Changes via Edit Profile dialog are saved to both DB and localStorage.
 - **Date/time formatting**: Uses `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` for locale-aware output.

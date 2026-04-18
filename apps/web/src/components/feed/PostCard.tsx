@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import { mediaToLightGallerySlides } from '@/lib/mediaToLightGallery';
-import { User, Trash2, Heart, MessageSquare } from 'lucide-react';
+import { User, Trash2, Heart, MessageSquare, Users } from 'lucide-react';
 import MediaGrid from './MediaGrid';
 import MediaLightbox from './MediaLightbox';
 import type { MediaLightboxHandle } from './MediaLightbox';
@@ -96,6 +96,16 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
             <span>&middot;</span>
             <span>{formatRelativeTime(post.createdAt)}</span>
           </div>
+          {post.space && (
+            <Link
+              to={`/spaces/${post.space.slug}`}
+              className="inline-flex items-center gap-1 text-xs text-primary/80 hover:text-primary mt-0.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Users className="w-3 h-3" />
+              <span>{post.space.name}</span>
+            </Link>
+          )}
         </div>
 
         {isOwner && (

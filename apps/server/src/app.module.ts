@@ -8,6 +8,7 @@ import { PostsModule } from './modules/posts/posts.module';
 import { LikesModule } from './modules/likes/likes.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { UsersModule } from './modules/users/users.module';
+import { SpacesModule } from './modules/spaces/spaces.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -23,6 +24,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     LikesModule,
     CommentsModule,
     UsersModule,
+    SpacesModule,
   ],
   providers: [
     {

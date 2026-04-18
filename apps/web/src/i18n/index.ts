@@ -7,6 +7,7 @@ import enAuth from './locales/en/auth.json';
 import enFeed from './locales/en/feed.json';
 import enPost from './locales/en/post.json';
 import enProfile from './locales/en/profile.json';
+import enSpaces from './locales/en/spaces.json';
 
 // Chinese
 import zhCommon from './locales/zh-CN/common.json';
@@ -14,6 +15,7 @@ import zhAuth from './locales/zh-CN/auth.json';
 import zhFeed from './locales/zh-CN/feed.json';
 import zhPost from './locales/zh-CN/post.json';
 import zhProfile from './locales/zh-CN/profile.json';
+import zhSpaces from './locales/zh-CN/spaces.json';
 
 export const SUPPORTED_LOCALES = ['en', 'zh-CN'] as const;
 
@@ -49,6 +51,7 @@ i18n
         feed: enFeed,
         post: enPost,
         profile: enProfile,
+        spaces: enSpaces,
       },
       'zh-CN': {
         common: zhCommon,
@@ -56,6 +59,7 @@ i18n
         feed: zhFeed,
         post: zhPost,
         profile: zhProfile,
+        spaces: zhSpaces,
       },
     },
 
@@ -63,7 +67,7 @@ i18n
     fallbackLng: 'en',
     supportedLngs: ['en', 'zh-CN'],
     defaultNS: 'common',
-    ns: ['common', 'auth', 'feed', 'post', 'profile'],
+    ns: ['common', 'auth', 'feed', 'post', 'profile', 'spaces'],
 
     interpolation: {
       escapeValue: false,

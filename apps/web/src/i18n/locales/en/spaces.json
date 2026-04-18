@@ -1,0 +1,69 @@
+{
+  "title": "Spaces",
+  "create": {
+    "title": "Create Space",
+    "name": "Space Name",
+    "namePlaceholder": "e.g. Baby Alex's Journey",
+    "slug": "URL Slug",
+    "slugPlaceholder": "e.g. baby-alex",
+    "slugHelp": "Lowercase letters, numbers, and hyphens only",
+    "description": "Description",
+    "descriptionPlaceholder": "What is this space about?",
+    "type": "Space Type",
+    "typeGeneral": "General",
+    "typeBaby": "Baby Growth",
+    "submit": "Create",
+    "success": "Space created!",
+    "error": "Failed to create space."
+  },
+  "detail": {
+    "members": "{{count}} members",
+    "posts": "{{count}} posts",
+    "join": "Join",
+    "leave": "Leave",
+    "joined": "Joined",
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member",
+    "postsTab": "Posts",
+    "membersTab": "Members",
+    "growthTab": "Growth",
+    "noPosts": "No posts in this space yet.",
+    "noPostsJoined": "Be the first to share something!",
+    "noMembers": "No members yet."
+  },
+  "join": { "success": "You joined the space!" },
+  "leave": {
+    "success": "You left the space.",
+    "confirm": "Leave space?",
+    "confirmDesc": "You will no longer be able to post or interact in this space.",
+    "confirmAction": "Leave",
+    "confirmCancel": "Cancel"
+  },
+  "badge": "in {{spaceName}}",
+  "list": {
+    "empty": "No spaces yet",
+    "emptySubtitle": "Create the first space!",
+    "error": "Failed to load spaces."
+  },
+  "growth": {
+    "title": "Growth Records",
+    "addRecord": "Add Record",
+    "date": "Date",
+    "height": "Height (cm)",
+    "weight": "Weight (kg)",
+    "headCircumference": "Head Circ. (cm)",
+    "addSuccess": "Growth record added!",
+    "addError": "Failed to add record.",
+    "deleteSuccess": "Record deleted.",
+    "noRecords": "No growth records yet.",
+    "atLeastOne": "At least one measurement is required",
+    "submit": "Save",
+    "cancel": "Cancel"
+  },
+  "composer": {
+    "selectSpace": "Post to...",
+    "mainFeed": "Main Feed",
+    "inSpace": "in {{spaceName}}"
+  }
+}

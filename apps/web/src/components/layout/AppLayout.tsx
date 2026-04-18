@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
-import { Home, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { Home, User, LogOut, Sun, Moon, Monitor, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -39,6 +39,7 @@ export default function AppLayout() {
       : t('theme.dark');
 
   const isHome = location.pathname === '/';
+  const isSpaces = location.pathname.startsWith('/spaces');
   const isProfile = currentUser
     ? location.pathname === `/users/${currentUser.username}`
     : false;
@@ -53,9 +54,27 @@ export default function AppLayout() {
       {/* Top nav */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">
-          <Link to="/" className="text-xl font-bold tracking-tight text-primary">
-            {t('brand')}
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-xl font-bold tracking-tight text-primary">
+              {t('brand')}
+            </Link>
+
+            {/* Desktop nav tabs */}
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
+                to="/"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isHome ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+              >
+                {t('nav.home')}
+              </Link>
+              <Link
+                to="/spaces"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isSpaces ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+              >
+                {t('nav.spaces')}
+              </Link>
+            </nav>
+          </div>
 
           {currentUser && (
             <DropdownMenu>
@@ -105,6 +124,11 @@ export default function AppLayout() {
           <Link to="/" className={`flex flex-col items-center gap-0.5 transition-colors p-2 ${isHome ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             <Home className="w-5 h-5" />
             <span className="text-[10px]">{t('nav.home')}</span>
+          </Link>
+
+          <Link to="/spaces" className={`flex flex-col items-center gap-0.5 transition-colors p-2 ${isSpaces ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+            <Users className="w-5 h-5" />
+            <span className="text-[10px]">{t('nav.spaces')}</span>
           </Link>
 
           {currentUser && (

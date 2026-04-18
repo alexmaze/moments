@@ -1,7 +1,7 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { eq, and, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, posts, postLikes } from '@moments/db';
+import { type DrizzleClient, posts, postLikes, spaceMembers } from '@moments/db';
 
 @Injectable()
 export class LikesService {
@@ -13,13 +13,29 @@ export class LikesService {
     return this.db.transaction(async (tx) => {
       // Check post exists
       const [post] = await tx
-        .select({ id: posts.id })
+        .select({ id: posts.id, spaceId: posts.spaceId })
         .from(posts)
         .where(and(eq(posts.id, postId), eq(posts.isDeleted, false)))
         .limit(1);
 
       if (!post) {
         throw new NotFoundException('Post not found');
+      }
+
+      // If post belongs to a space, verify user is a member
+      if (post.spaceId) {
+        const [membership] = await tx
+          .select({ id: spaceMembers.id })
+          .from(spaceMembers)
+          .where(and(
+            eq(spaceMembers.spaceId, post.spaceId),
+            eq(spaceMembers.userId, userId),
+          ))
+          .limit(1);
+
+        if (!membership) {
+          throw new ForbiddenException('Join this space to interact with its posts');
+        }
       }
 
       // Check if like already exists

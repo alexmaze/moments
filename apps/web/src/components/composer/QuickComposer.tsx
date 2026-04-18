@@ -5,12 +5,19 @@ import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import MediaUploader from './MediaUploader';
+import { SpaceSelector } from '@/components/spaces/SpaceSelector';
 
-export default function QuickComposer() {
+interface QuickComposerProps {
+  /** When set, locks the composer to this space (hides SpaceSelector) */
+  fixedSpaceId?: string;
+}
+
+export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const { t } = useTranslation('feed');
   const currentUser = useAuthStore((s) => s.currentUser);
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState('');
+  const [spaceId, setSpaceId] = useState<string | undefined>(fixedSpaceId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +29,7 @@ export default function QuickComposer() {
   const hasMedia = items.length > 0;
   const hasMediaReady = hasMedia && allUploaded;
   const canSubmit = (hasContent || hasMediaReady) && !createPost.isPending;
-  const isDirty = hasContent || hasMedia;
+  const isDirty = hasContent || hasMedia || !!spaceId;
 
   // Auto-focus textarea when expanded
   useEffect(() => {
@@ -66,10 +73,12 @@ export default function QuickComposer() {
       {
         content: content.trim() || undefined,
         mediaIds: readyIds,
+        spaceId,
       },
       {
         onSuccess: () => {
           setContent('');
+          setSpaceId(fixedSpaceId);
           reset();
           setExpanded(false);
         },
@@ -159,7 +168,7 @@ export default function QuickComposer() {
           </div>
 
           {/* Bottom toolbar */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
             <button
               onClick={handleFileSelect}
               type="button"
@@ -167,6 +176,12 @@ export default function QuickComposer() {
             >
               <Image className="w-5 h-5" />
             </button>
+
+            {!fixedSpaceId && (
+              <SpaceSelector selectedSpaceId={spaceId} onChange={setSpaceId} />
+            )}
+
+            <div className="flex-1" />
 
             <button
               onClick={handleSubmit}

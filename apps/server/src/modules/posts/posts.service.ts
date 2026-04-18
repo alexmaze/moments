@@ -5,7 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { eq, and, desc, lt, asc, inArray } from 'drizzle-orm';
+import { eq, and, desc, lt, asc, inArray, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import {
   type DrizzleClient,
@@ -15,6 +15,8 @@ import {
   postComments,
   mediaAssets,
   users,
+  spaces,
+  spaceMembers,
 } from '@moments/db';
 import { CreatePostDto } from './dto';
 
@@ -34,11 +36,38 @@ export class PostsService {
       throw new BadRequestException('Post must have either text content or at least one media attachment');
     }
 
+    // If posting to a space, verify membership
+    if (dto.spaceId) {
+      const [space] = await this.db
+        .select({ id: spaces.id, isDeleted: spaces.isDeleted })
+        .from(spaces)
+        .where(eq(spaces.id, dto.spaceId))
+        .limit(1);
+
+      if (!space || space.isDeleted) {
+        throw new NotFoundException('Space not found');
+      }
+
+      const [membership] = await this.db
+        .select({ id: spaceMembers.id })
+        .from(spaceMembers)
+        .where(and(
+          eq(spaceMembers.spaceId, dto.spaceId),
+          eq(spaceMembers.userId, authorId),
+        ))
+        .limit(1);
+
+      if (!membership) {
+        throw new ForbiddenException('You must join this space to post');
+      }
+    }
+
     const post = await this.db.transaction(async (tx) => {
       // Insert post
       const [newPost] = await tx.insert(posts).values({
         authorId,
         content: hasContent ? dto.content!.trim() : null,
+        spaceId: dto.spaceId ?? null,
       }).returning();
 
       // Handle media attachments
@@ -72,6 +101,14 @@ export class PostsService {
           .update(mediaAssets)
           .set({ status: 'attached' })
           .where(inArray(mediaAssets.id, dto.mediaIds!));
+      }
+
+      // Increment space post count
+      if (dto.spaceId) {
+        await tx
+          .update(spaces)
+          .set({ postCount: sql`${spaces.postCount} + 1` })
+          .where(eq(spaces.id, dto.spaceId));
       }
 
       return newPost;
@@ -196,12 +233,57 @@ export class PostsService {
       throw new ForbiddenException('You can only delete your own posts');
     }
 
-    await this.db
-      .update(posts)
-      .set({ isDeleted: true, deletedAt: new Date() })
-      .where(eq(posts.id, id));
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({ isDeleted: true, deletedAt: new Date() })
+        .where(eq(posts.id, id));
+
+      // Decrement space post count if applicable
+      if (post.spaceId) {
+        await tx
+          .update(spaces)
+          .set({ postCount: sql`${spaces.postCount} - 1` })
+          .where(eq(spaces.id, post.spaceId));
+      }
+    });
 
     return { success: true };
+  }
+
+  async getSpacePosts(spaceId: string, cursor?: string, limit = 20, currentUserId?: string) {
+    const safeLimit = Math.min(limit, 50);
+
+    const conditions = [eq(posts.isDeleted, false), eq(posts.spaceId, spaceId)];
+    if (cursor) {
+      conditions.push(lt(posts.createdAt, new Date(cursor)));
+    }
+
+    const postRows = await this.db
+      .select()
+      .from(posts)
+      .where(and(...conditions))
+      .orderBy(desc(posts.createdAt))
+      .limit(safeLimit + 1);
+
+    const hasMore = postRows.length > safeLimit;
+    const resultPosts = hasMore ? postRows.slice(0, safeLimit) : postRows;
+
+    if (resultPosts.length === 0) {
+      return { data: [], meta: { hasMore: false, nextCursor: null } };
+    }
+
+    const postIds = resultPosts.map((p) => p.id);
+    const data = await this.enrichPosts(resultPosts, postIds, currentUserId);
+
+    const lastPost = resultPosts[resultPosts.length - 1];
+    return {
+      data,
+      meta: {
+        hasMore,
+        nextCursor: hasMore ? lastPost.createdAt.toISOString() : null,
+      },
+    };
   }
 
   // Batch-load related data for a list of posts
@@ -251,11 +333,48 @@ export class PostsService {
     // Batch load comment previews (first N comments per post)
     const commentPreviewMap = await this.batchFetchCommentPreviews(postIds);
 
+    // Batch load space info for posts that belong to a space
+    const spaceIds = [...new Set(postRows.map((p) => p.spaceId).filter(Boolean))] as string[];
+    let spaceMap = new Map<string, { id: string; name: string; slug: string; type: string }>();
+    let memberSpaceIds = new Set<string>();
+
+    if (spaceIds.length > 0) {
+      const spaceRows = await this.db
+        .select({
+          id: spaces.id,
+          name: spaces.name,
+          slug: spaces.slug,
+          type: spaces.type,
+          isDeleted: spaces.isDeleted,
+        })
+        .from(spaces)
+        .where(inArray(spaces.id, spaceIds));
+
+      spaceMap = new Map(
+        spaceRows
+          .filter((s) => !s.isDeleted)
+          .map((s) => [s.id, { id: s.id, name: s.name, slug: s.slug, type: s.type }]),
+      );
+
+      // Check current user's membership for these spaces
+      if (currentUserId) {
+        const membershipRows = await this.db
+          .select({ spaceId: spaceMembers.spaceId })
+          .from(spaceMembers)
+          .where(and(
+            inArray(spaceMembers.spaceId, spaceIds),
+            eq(spaceMembers.userId, currentUserId),
+          ));
+        memberSpaceIds = new Set(membershipRows.map((r) => r.spaceId));
+      }
+    }
+
     // Assemble
     return postRows.map((post) => {
       const author = authorMap.get(post.authorId)!;
       const mediaRels = mediaByPost.get(post.id) || [];
       const previewComments = commentPreviewMap.get(post.id) || [];
+      const spaceInfo = post.spaceId ? spaceMap.get(post.spaceId) ?? null : null;
 
       return {
         id: post.id,
@@ -281,6 +400,10 @@ export class PostsService {
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         isLikedByMe: likedPostIds.has(post.id),
+        space: spaceInfo ? {
+          ...spaceInfo,
+          isMember: memberSpaceIds.has(spaceInfo.id),
+        } : null,
         comments: previewComments,
         hasMoreComments: post.commentCount > previewComments.length,
       };

@@ -7,6 +7,8 @@ import RegisterPage from '@/pages/RegisterPage';
 import FeedPage from '@/pages/FeedPage';
 import PostDetailPage from '@/pages/PostDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
+import SpacesPage from '@/pages/SpacesPage';
+import SpaceDetailPage from '@/pages/SpaceDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Toaster } from '@/components/ui/sonner';
 import { useTheme } from '@/hooks/useTheme';
@@ -27,6 +29,8 @@ function App() {
           <Route index element={<FeedPage />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
           <Route path="/users/:username" element={<ProfilePage />} />
+          <Route path="/spaces" element={<SpacesPage />} />
+          <Route path="/spaces/:slug" element={<SpaceDetailPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />

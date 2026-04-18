@@ -1,0 +1,69 @@
+{
+  "title": "主题空间",
+  "create": {
+    "title": "创建空间",
+    "name": "空间名称",
+    "namePlaceholder": "例如：宝宝小明的成长记录",
+    "slug": "链接标识",
+    "slugPlaceholder": "例如：baby-xiaoming",
+    "slugHelp": "只能包含小写字母、数字和短横线",
+    "description": "描述",
+    "descriptionPlaceholder": "这个空间是关于什么的？",
+    "type": "空间类型",
+    "typeGeneral": "通用",
+    "typeBaby": "宝宝成长",
+    "submit": "创建",
+    "success": "空间创建成功！",
+    "error": "创建失败，请重试。"
+  },
+  "detail": {
+    "members": "{{count}} 成员",
+    "posts": "{{count}} 条动态",
+    "join": "加入",
+    "leave": "退出",
+    "joined": "已加入",
+    "owner": "创建者",
+    "admin": "管理员",
+    "member": "成员",
+    "postsTab": "动态",
+    "membersTab": "成员",
+    "growthTab": "成长曲线",
+    "noPosts": "这个空间还没有动态。",
+    "noPostsJoined": "来分享第一条动态吧！",
+    "noMembers": "还没有成员。"
+  },
+  "join": { "success": "已加入空间！" },
+  "leave": {
+    "success": "已退出空间。",
+    "confirm": "退出空间？",
+    "confirmDesc": "退出后你将无法在此空间发帖和互动。",
+    "confirmAction": "退出",
+    "confirmCancel": "取消"
+  },
+  "badge": "发布在 {{spaceName}}",
+  "list": {
+    "empty": "还没有空间",
+    "emptySubtitle": "创建第一个空间吧！",
+    "error": "加载失败，请稍后重试。"
+  },
+  "growth": {
+    "title": "成长记录",
+    "addRecord": "添加记录",
+    "date": "日期",
+    "height": "身高 (cm)",
+    "weight": "体重 (kg)",
+    "headCircumference": "头围 (cm)",
+    "addSuccess": "成长记录已添加！",
+    "addError": "添加失败，请重试。",
+    "deleteSuccess": "记录已删除。",
+    "noRecords": "还没有成长记录。",
+    "atLeastOne": "至少需要填写一项指标",
+    "submit": "保存",
+    "cancel": "取消"
+  },
+  "composer": {
+    "selectSpace": "发布到...",
+    "mainFeed": "主信息流",
+    "inSpace": "在 {{spaceName}}"
+  }
+}
