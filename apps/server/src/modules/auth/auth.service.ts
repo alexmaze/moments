@@ -91,6 +91,7 @@ export class AuthService {
       bio: user.bio,
       locale: user.locale,
       theme: user.theme,
+      background: user.background,
       createdAt: user.createdAt.toISOString(),
     };
   }

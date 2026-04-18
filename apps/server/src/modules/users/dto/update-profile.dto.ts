@@ -22,4 +22,10 @@ export class UpdateProfileDto {
   @IsString()
   @IsIn(['light', 'dark'])
   theme?: string | null;
+
+  @IsOptional()
+  @ValidateIf((_obj, value) => value !== null)
+  @IsString()
+  @MaxLength(512)
+  background?: string | null;
 }

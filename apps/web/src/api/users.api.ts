@@ -10,6 +10,7 @@ interface UpdateProfileRequest {
   bio?: string;
   locale?: SupportedLocale | null;
   theme?: SupportedTheme | null;
+  background?: string | null;
 }
 
 export function updateProfileApi(data: UpdateProfileRequest): Promise<UserDto> {

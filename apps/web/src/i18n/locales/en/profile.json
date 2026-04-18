@@ -32,6 +32,12 @@
     "avatarUploading": "Uploading...",
     "avatarZoom": "Zoom",
     "avatarSuccess": "Avatar updated!",
-    "avatarError": "Failed to update avatar."
+    "avatarError": "Failed to update avatar.",
+    "backgroundLabel": "Background",
+    "backgroundDefault": "Default",
+    "backgroundUpload": "Upload custom",
+    "backgroundRemove": "Remove",
+    "backgroundUploadSuccess": "Background updated!",
+    "backgroundUploadError": "Failed to upload background."
   }
 }

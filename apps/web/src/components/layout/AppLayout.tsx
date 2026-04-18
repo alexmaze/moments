@@ -2,6 +2,9 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
+import { useBackground } from '@/hooks/useBackground';
+import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
+import { cn } from '@/lib/utils';
 import { Home, User, LogOut, Sun, Moon, Monitor, Users } from 'lucide-react';
 import {
   DropdownMenu,
@@ -19,6 +22,10 @@ export default function AppLayout() {
 
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
+
+  const { backgroundStyle, hasCustomBackground } = useBackground();
+
+  useBodyScrollbar();
 
   // Cycles: null (system) → 'light' → 'dark' → null
   function cycleTheme() {
@@ -50,7 +57,21 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div
+      className={cn(
+        'min-h-screen flex flex-col',
+        !hasCustomBackground && 'bg-background',
+      )}
+      style={hasCustomBackground ? backgroundStyle : undefined}
+    >
+      {/* Dark-mode overlay: dims custom background in dark mode for readability */}
+      {hasCustomBackground && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none bg-black/0 dark:bg-black/55 transition-colors duration-300"
+        />
+      )}
+
       {/* Top nav */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">

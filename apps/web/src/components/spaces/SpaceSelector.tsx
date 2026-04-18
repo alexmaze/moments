@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, X, Globe, Baby } from 'lucide-react';
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { useMySpaces } from '@/hooks/useSpaces';
 
 interface SpaceSelectorProps {
@@ -80,7 +81,18 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
           )}
 
           {!isLoading && spaces && spaces.length > 0 && (
-            <div className="max-h-60 overflow-y-auto py-1">
+            <OverlayScrollbarsComponent
+              element="div"
+              className="max-h-60 py-1"
+              options={{
+                scrollbars: {
+                  theme: 'os-theme-moments',
+                  autoHide: 'scroll',
+                  autoHideDelay: 800,
+                },
+              }}
+              defer
+            >
               {/* Main feed option */}
               <button
                 type="button"
@@ -125,7 +137,7 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
                   <span className="truncate font-medium">{space.name}</span>
                 </button>
               ))}
-            </div>
+            </OverlayScrollbarsComponent>
           )}
         </div>
       )}

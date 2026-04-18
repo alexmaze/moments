@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import i18n from "@/i18n";
 import { useLocaleStore } from "./locale.store";
 import { useThemeStore } from "./theme.store";
+import { useBackgroundStore } from "./background.store";
 import type { UserDto } from "@/types/dto";
 
 interface AuthState {
@@ -28,6 +29,13 @@ function syncThemeFromUser(user: UserDto) {
   useThemeStore.getState().setTheme(user.theme);
 }
 
+function syncBackgroundFromUser(user: UserDto) {
+  // null = user hasn't set a preference, use default theme background
+  if (user.background !== undefined) {
+    useBackgroundStore.getState().setBackground(user.background ?? null);
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -37,11 +45,13 @@ export const useAuthStore = create<AuthState>()(
         set({ token, currentUser: user });
         syncLocaleFromUser(user);
         syncThemeFromUser(user);
+        syncBackgroundFromUser(user);
       },
       setCurrentUser: (user) => {
         set({ currentUser: user });
         syncLocaleFromUser(user);
         syncThemeFromUser(user);
+        syncBackgroundFromUser(user);
       },
       clearAuth: () => set({ token: null, currentUser: null }),
     }),

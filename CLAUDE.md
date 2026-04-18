@@ -173,11 +173,13 @@ src/
 │   ├── posts.api.ts
 │   ├── media.api.ts
 │   ├── users.api.ts
-│   └── spaces.api.ts
+│   ├── spaces.api.ts
+│   └── background.api.ts
 ├── store/
 │   ├── auth.store.ts # Zustand store (persisted to localStorage as "moments-auth")
 │   ├── locale.store.ts # Locale preference store (persisted as "moments-locale")
-│   └── theme.store.ts # Theme preference store (persisted as "moments-theme")
+│   ├── theme.store.ts # Theme preference store (persisted as "moments-theme")
+│   └── background.store.ts # Background preference store (persisted as "moments-background")
 ├── hooks/
 │   ├── useAuth.ts        # useLogin, useRegister, useLogout
 │   ├── usePosts.ts       # TanStack Query hooks for feed/post CRUD
@@ -187,13 +189,15 @@ src/
 │   └── useMediaUpload.ts # Parallel upload state machine with progress tracking
 │       useAvatarUpload.tsx # Avatar upload flow: file pick → crop → resize → upload
 │       useTheme.ts       # Dark mode: toggles .dark class on <html>, listens to prefers-color-scheme
+│       useBackground.ts  # Custom background: reads store, resolves preset/URL → CSSProperties
+│       useBackgroundUpload.ts # Background image upload flow
 ├── components/
 │   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # PostComposer, QuickComposer, MediaUploader
-│   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog
+│   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog, BackgroundPicker
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
 │   └── dto.ts        # Frontend TS interfaces mirroring API response shapes
@@ -205,6 +209,7 @@ src/
 - **Auth state**: Zustand with `persist` middleware → `localStorage` key `moments-auth`.
 - **Locale state**: Zustand with `persist` middleware → `localStorage` key `moments-locale`. Separate from auth store so locale works before login.
 - **Theme state**: Zustand with `persist` middleware → `localStorage` key `moments-theme`. `null` = follow system. Synced from DB on login (same as locale).
+- **Background state**: Zustand with `persist` middleware → `localStorage` key `moments-background`. Stores preset ID (e.g. `'gradient-sunset'`), image URL, or `null` (default). Synced from DB on login (same as theme/locale).
 - **Media upload state**: local `useState` inside `useMediaUpload` hook.
 
 ### Routing structure
@@ -219,7 +224,7 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 
 | Table | Purpose |
 |---|---|
-| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, isActive |
+| `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, background (preset ID or image URL), isActive |
 | `media_assets` | Uploaded files: type (image/video), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
 | `posts` | Posts: authorId, content (nullable), spaceId (nullable FK→spaces), likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
@@ -307,6 +312,13 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Hardcoded overlays**: `bg-black/*` on media thumbnails, avatar hover overlays, and dialog backdrops are intentionally kept — they must darken arbitrary user content.
 - **Guest page decoration**: Login/Register pages have a decorative amber radial gradient glow at the top (defined in `GuestLayout.tsx`).
 - **Mobile nav active state**: Current page's icon highlighted in amber via `useLocation()` comparison in `AppLayout.tsx`.
+- **Custom background**: Users can customize the full-page background (AppLayout root container). Three categories of presets (solid colors, gradients, CSS patterns) plus custom image upload. Preference stored in DB (`users.background` column) + localStorage (`moments-background`). In dark mode, a semi-transparent overlay (`dark:bg-black/55`) automatically dims custom backgrounds for readability.
+  - **Background store**: `apps/web/src/store/background.store.ts` — Zustand with `persist` middleware. Value is preset ID (e.g. `'gradient-sunset'`), image URL, or `null` (default).
+  - **Presets**: Defined in `apps/web/src/lib/backgroundPresets.ts` — 6 solids + 6 gradients + 5 CSS patterns. Each preset has `id`, `nameKey`, `type`, and `style: CSSProperties`. `resolveBackgroundStyle()` converts stored value → inline style.
+  - **useBackground hook**: `apps/web/src/hooks/useBackground.ts` — reads store, returns `{ backgroundStyle, hasCustomBackground }` for AppLayout to consume.
+  - **Upload**: `POST /api/users/me/background` (5MB limit) → reuses `MediaService.uploadFile()` → URL stored in `users.background`.
+  - **UI**: `BackgroundPicker` component in EditProfileDialog — horizontal scrollable swatch row with live preview strip. Optimistic preview: background changes instantly on selection, reverts on save failure.
+  - **AppLayout integration**: Conditional `style` on root div when custom bg is set; `bg-background` class when default. Dark overlay div (`fixed inset-0 pointer-events-none`) for dark mode.
 
 ### Icons
 - **Library**: `lucide-react` — all图标统一使用 Lucide React 组件，禁止手写内嵌 `<svg>`。

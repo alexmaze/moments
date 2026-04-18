@@ -42,7 +42,7 @@ const MediaLightbox = forwardRef<MediaLightboxHandle, MediaLightboxProps>(
         <LightGallery
           onInit={onInit}
           plugins={[lgZoom, lgVideo]}
-          licenseKey="0000-0000-000-0000"
+          licenseKey="GPLv3-open-source"
           dynamic={true}
           dynamicEl={slides}
           speed={300}

@@ -13,6 +13,7 @@ export interface UserDto {
   bio: string | null;
   locale: SupportedLocale | null;
   theme: SupportedTheme | null;
+  background: string | null;
   createdAt: string;
 }
 

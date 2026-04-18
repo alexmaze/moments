@@ -8,6 +8,7 @@ interface ProfileHeaderProps {
   isOwner?: boolean;
   onAvatarEdit?: () => void;
   isAvatarUploading?: boolean;
+  onEdit?: () => void;
 }
 
 export default function ProfileHeader({
@@ -15,6 +16,7 @@ export default function ProfileHeader({
   isOwner,
   onAvatarEdit,
   isAvatarUploading,
+  onEdit,
 }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
 
@@ -59,10 +61,24 @@ export default function ProfileHeader({
         )}
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-foreground">
-            {profile.displayName}
-          </h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h1 className="text-xl font-bold text-foreground">
+                {profile.displayName}
+              </h1>
+              <p className="text-sm text-muted-foreground">@{profile.username}</p>
+            </div>
+
+            {isOwner && onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="shrink-0 rounded-lg px-3 py-1.5 border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                {t('edit.button')}
+              </button>
+            )}
+          </div>
 
           {profile.bio && (
             <p className="mt-2 text-sm text-foreground whitespace-pre-wrap">

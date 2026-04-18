@@ -34,6 +34,7 @@ export class UsersService {
       bio: user.bio,
       locale: user.locale,
       theme: user.theme,
+      background: user.background,
       postCount: postCountResult.count,
       createdAt: user.createdAt.toISOString(),
     };
@@ -45,6 +46,7 @@ export class UsersService {
     if (dto.bio !== undefined) updateData.bio = dto.bio;
     if (dto.locale !== undefined) updateData.locale = dto.locale;
     if (dto.theme !== undefined) updateData.theme = dto.theme;
+    if (dto.background !== undefined) updateData.background = dto.background;
 
     const [updated] = await this.db
       .update(users)
@@ -60,6 +62,7 @@ export class UsersService {
       bio: updated.bio,
       locale: updated.locale,
       theme: updated.theme,
+      background: updated.background,
       createdAt: updated.createdAt.toISOString(),
     };
   }
@@ -79,6 +82,27 @@ export class UsersService {
       bio: updated.bio,
       locale: updated.locale,
       theme: updated.theme,
+      background: updated.background,
+      createdAt: updated.createdAt.toISOString(),
+    };
+  }
+
+  async updateBackground(userId: string, backgroundUrl: string) {
+    const [updated] = await this.db
+      .update(users)
+      .set({ background: backgroundUrl, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.displayName,
+      avatarUrl: updated.avatarUrl,
+      bio: updated.bio,
+      locale: updated.locale,
+      theme: updated.theme,
+      background: updated.background,
       createdAt: updated.createdAt.toISOString(),
     };
   }

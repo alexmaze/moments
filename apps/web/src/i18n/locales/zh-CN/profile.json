@@ -32,6 +32,12 @@
     "avatarUploading": "上传中...",
     "avatarZoom": "缩放",
     "avatarSuccess": "头像已更新!",
-    "avatarError": "头像更新失败。"
+    "avatarError": "头像更新失败。",
+    "backgroundLabel": "背景",
+    "backgroundDefault": "默认",
+    "backgroundUpload": "上传自定义",
+    "backgroundRemove": "移除",
+    "backgroundUploadSuccess": "背景已更新!",
+    "backgroundUploadError": "背景更新失败。"
   }
 }

@@ -62,4 +62,19 @@ export class UsersController {
     const asset = await this.mediaService.uploadFile(file, user.id);
     return this.usersService.updateAvatar(user.id, asset.publicUrl);
   }
+
+  @Post('users/me/background')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async uploadBackground(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: { id: string },
+  ) {
+    const asset = await this.mediaService.uploadFile(file, user.id);
+    return this.usersService.updateBackground(user.id, asset.publicUrl);
+  }
 }

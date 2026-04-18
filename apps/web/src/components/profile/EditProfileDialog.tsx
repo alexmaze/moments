@@ -7,7 +7,10 @@ import { updateProfileApi } from '@/api/users.api';
 import { useAuthStore } from '@/store/auth.store';
 import { detectBrowserLocale } from '@/store/locale.store';
 import { useThemeStore } from '@/store/theme.store';
+import { useBackgroundStore } from '@/store/background.store';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
+import { useBackgroundUpload } from '@/hooks/useBackgroundUpload';
+import BackgroundPicker from './BackgroundPicker';
 import i18n from '@/i18n';
 import {
   Dialog,
@@ -37,7 +40,26 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
   const [themeValue, setThemeValue] = useState<string>(profile.theme ?? 'system');
   const setTheme = useThemeStore((s) => s.setTheme);
 
+  // Background
+  const setBackground = useBackgroundStore((s) => s.setBackground);
+  const [backgroundValue, setBackgroundValue] = useState<string | null>(profile.background ?? null);
+  const bgUpload = useBackgroundUpload();
+
   const avatarUpload = useAvatarUpload({ username: profile.username });
+
+  // Optimistic preview: apply background immediately on selection
+  const handleBackgroundChange = (bg: string | null) => {
+    setBackgroundValue(bg);
+    setBackground(bg); // instant visual preview in AppLayout
+  };
+
+  const handleBgFileUpload = async (file: File) => {
+    const url = await bgUpload.uploadFile(file);
+    if (url) {
+      setBackgroundValue(url);
+      // store is already updated by the upload hook
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: updateProfileApi,
@@ -58,6 +80,9 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
       // Revert optimistic theme change
       setTheme(profile.theme ?? null);
       setThemeValue(profile.theme ?? 'system');
+      // Revert optimistic background change
+      setBackground(profile.background ?? null);
+      setBackgroundValue(profile.background ?? null);
       toast.error(t('edit.saveError'));
     },
   });
@@ -69,6 +94,7 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
       bio: bio.trim() || undefined,
       locale: localeValue === 'auto' ? null : (localeValue as SupportedLocale),
       theme: themeValue === 'system' ? null : (themeValue as SupportedTheme),
+      background: backgroundValue,
     });
   };
 
@@ -183,6 +209,14 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
               <option value="dark">{t('edit.themeDark')}</option>
             </select>
           </div>
+
+          {/* Background */}
+          <BackgroundPicker
+            value={backgroundValue}
+            onChange={handleBackgroundChange}
+            isUploading={bgUpload.isUploading}
+            onUploadFile={handleBgFileUpload}
+          />
 
           {/* Actions */}
           <div className="flex justify-end pt-2">
