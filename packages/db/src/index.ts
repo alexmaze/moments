@@ -1,2 +1,2 @@
 export * from './schema';
-export { createDrizzleClient, type DrizzleClient } from './client';
+export { createDrizzleClient, createMigratedDrizzleClient, resolveMigrationsFolder, type DrizzleClient } from './client';

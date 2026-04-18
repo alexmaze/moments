@@ -15,7 +15,6 @@ cd docker
 # 设置必需的环境变量
 export JWT_SECRET="your-secret-key-at-least-32-chars"
 export DB_PASSWORD="your-secure-db-password"
-export BASE_URL="https://your-domain.com"  # 可选，默认 http://localhost:3000
 
 # 启动
 docker compose -f docker-compose.prod.yml up -d
@@ -31,7 +30,6 @@ docker compose -f docker-compose.prod.yml up -d
 | `DB_USER` | 否 | `moments` | PostgreSQL 用户名 |
 | `DB_PASSWORD` | 否 | `moments_prod` | PostgreSQL 密码，生产环境务必修改 |
 | `DATABASE_URL` | 否 | 自动拼接 | 数据库连接字符串（Docker 内部自动生成） |
-| `BASE_URL` | 否 | `http://localhost:3000` | 对外访问地址，影响媒体文件 URL |
 | `UPLOAD_DIR` | 否 | `/app/uploads` | 媒体存储目录（Docker 内挂载为 volume） |
 | `PORT` | 否 | `3000` | 服务端口 |
 | `NODE_ENV` | 否 | `production` | 环境标识 |
@@ -107,4 +105,4 @@ server {
 }
 ```
 
-注意设置 `BASE_URL` 为 HTTPS 地址，否则媒体文件 URL 会生成 HTTP 链接。
+本地存储返回相对路径 `/uploads/...`，由当前站点域名承载；如需 CDN 或独立媒体域名，应新增对应存储 provider，而不是依赖环境变量拼接绝对地址。

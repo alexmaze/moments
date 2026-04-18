@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { extname, join } from 'path';
 import * as fs from 'fs/promises';
@@ -8,11 +7,9 @@ import { IStorageProvider, SavedFile } from './storage.interface';
 @Injectable()
 export class LocalStorageProvider implements IStorageProvider {
   private uploadRoot: string;
-  private baseUrl: string;
 
-  constructor(private config: ConfigService) {
-    this.uploadRoot = config.get<string>('UPLOAD_DIR', './uploads');
-    this.baseUrl = config.get<string>('BASE_URL', 'http://localhost:3000');
+  constructor() {
+    this.uploadRoot = process.env.UPLOAD_DIR ?? './uploads';
   }
 
   async save(file: Express.Multer.File, subpath: string): Promise<SavedFile> {
@@ -28,7 +25,7 @@ export class LocalStorageProvider implements IStorageProvider {
     const storagePath = join(subpath, filename);
     return {
       storagePath,
-      publicUrl: `${this.baseUrl}/uploads/${storagePath}`,
+      publicUrl: this.buildPublicUrl(storagePath),
       sizeBytes: file.size,
     };
   }
@@ -43,7 +40,7 @@ export class LocalStorageProvider implements IStorageProvider {
     const storagePath = join(subpath, filename);
     return {
       storagePath,
-      publicUrl: `${this.baseUrl}/uploads/${storagePath}`,
+      publicUrl: this.buildPublicUrl(storagePath),
       sizeBytes: buffer.length,
     };
   }
@@ -57,7 +54,12 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   getPublicUrl(storagePath: string): string {
-    return `${this.baseUrl}/uploads/${storagePath}`;
+    return this.buildPublicUrl(storagePath);
+  }
+
+  private buildPublicUrl(storagePath: string): string {
+    const normalizedPath = storagePath.replace(/\\/g, '/');
+    return `/uploads/${normalizedPath}`;
   }
 
   private getExtFromMime(mime: string): string {

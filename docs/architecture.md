@@ -262,7 +262,7 @@ video buffer
               │
               ▼
          media_assets.cover_path = "yyyy/MM/dd/<uuid>_cover.jpg"
-         media_assets.cover_url  = "{BASE_URL}/uploads/yyyy/MM/dd/<uuid>_cover.jpg"
+         media_assets.cover_url  = "/uploads/yyyy/MM/dd/<uuid>_cover.jpg"
 ```
 
 临时文件在处理完成后通过 `fs.rm(tmpDir, { recursive: true })` 清理。
@@ -286,7 +286,7 @@ video buffer
   │ dd/<uuid>.<ext>     │    │                      │
   │                     │    │                      │
   │ publicUrl:          │    │ publicUrl:           │
-  │ {BASE_URL}/uploads/ │    │ https://cdn.../...   │
+  │ /uploads/...        │    │ https://cdn.../...   │
   │ yyyy/MM/dd/<uuid>   │    │                      │
   └─────────────────────┘    └──────────────────────┘
 ```
@@ -343,7 +343,6 @@ Stage 3: runner (node:22-alpine + ffmpeg)
 | -------------- | ----------------------- | ------------------------- |
 | `DATABASE_URL` | PostgreSQL 连接字符串   | (compose 内部拼接)        |
 | `JWT_SECRET`   | JWT 签名密钥            | (必填, 无默认值)          |
-| `BASE_URL`     | 服务公网地址            | `http://localhost:3000`   |
 | `UPLOAD_DIR`   | 上传文件存储目录        | `/app/uploads`            |
 | `PORT`         | 监听端口                | `3000`                    |
 | `NODE_ENV`     | 运行环境                | `production`              |
