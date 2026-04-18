@@ -14,6 +14,14 @@
     "postError": "Failed to publish. Please try again.",
     "uploadError": "File upload failed."
   },
+  "quickComposer": {
+    "placeholder": "Share what's on your mind...",
+    "submit": "Post"
+  },
+  "quickComposer": {
+    "placeholder": "Share what's on your mind...",
+    "submit": "Post"
+  },
   "uploader": {
     "dropzone": "Drop photos or videos here, or tap to browse",
     "failed": "Failed"

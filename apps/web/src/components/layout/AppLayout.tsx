@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
-import { Home, Plus, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { Home, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -105,12 +105,6 @@ export default function AppLayout() {
           <Link to="/" className={`flex flex-col items-center gap-0.5 transition-colors p-2 ${isHome ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             <Home className="w-5 h-5" />
             <span className="text-[10px]">{t('nav.home')}</span>
-          </Link>
-
-          <Link to="/?compose=1" className="flex flex-col items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors p-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <Plus className="w-4 h-4 text-primary-foreground" strokeWidth={2.5} />
-            </div>
           </Link>
 
           {currentUser && (

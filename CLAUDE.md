@@ -188,7 +188,7 @@ src/
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
-│   ├── composer/     # PostComposer, MediaUploader
+│   ├── composer/     # PostComposer, QuickComposer, MediaUploader
 │   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
@@ -254,6 +254,14 @@ pnpm db:migrate    # applies it to the database
 - Posts feed uses **cursor-based pagination** (ISO timestamp cursor from `createdAt`).
 - Comments use **page-based pagination** (`page` + `pageSize`).
 - Feed API embeds the first 10 comments per post (`comments` array + `hasMoreComments` flag) to enable inline display without extra requests.
+
+### Quick Composer (快捷发帖入口)
+- **Component**: `@/components/composer/QuickComposer.tsx` — inline expandable post composer at the top of the feed.
+- **Collapsed state**: Card with current user's avatar + placeholder text + image icon hint. Clicking anywhere expands it.
+- **Expanded state**: Avatar + auto-resizing textarea, MediaUploader below, bottom toolbar with media add button (left) and submit button (right).
+- **State management**: Local `expanded` state; reuses `useMediaUpload()` and `useCreatePost()` hooks. On successful post, auto-collapses and resets.
+- **Click-outside behavior**: Collapses when clicking outside **only if** no content or media has been entered (prevents accidental data loss).
+- **Replaces FAB**: The desktop FAB and the mobile bottom-nav compose button have been removed. QuickComposer is the sole post creation entry point.
 
 ### Inline comments in feed
 - PostCard includes a toggle button to expand/collapse an inline comment section.

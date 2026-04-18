@@ -14,6 +14,10 @@
     "postError": "发布失败，请重试。",
     "uploadError": "文件上传失败。"
   },
+  "quickComposer": {
+    "placeholder": "分享你的近况...",
+    "submit": "发布"
+  },
   "uploader": {
     "dropzone": "拖拽图片或视频到此处，或点击选择",
     "failed": "失败"
