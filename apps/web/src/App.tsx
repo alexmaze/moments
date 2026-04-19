@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import GuestLayout from '@/components/layout/GuestLayout';
 import AuthGuard from '@/components/layout/AuthGuard';
@@ -14,7 +15,10 @@ import { Toaster } from '@/components/ui/sonner';
 import { useTheme } from '@/hooks/useTheme';
 
 function App() {
+  const { t } = useTranslation();
   useTheme();
+
+  document.title = t('brand');
 
   return (
     <>
