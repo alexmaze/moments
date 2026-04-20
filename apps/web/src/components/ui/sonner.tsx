@@ -4,6 +4,8 @@ export function Toaster() {
   return (
     <SonnerToaster
       position="bottom-right"
+      offset={{ bottom: 72 }}
+      mobileOffset={{ bottom: 72 }}
       toastOptions={{
         classNames: {
           toast:
