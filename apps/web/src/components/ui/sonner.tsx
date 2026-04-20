@@ -9,7 +9,7 @@ export function Toaster() {
       toastOptions={{
         classNames: {
           toast:
-            'group border bg-card text-card-foreground border-border shadow-lg rounded-lg',
+            'group border surface-toast text-card-foreground border-border shadow-lg rounded-lg',
           description: 'text-muted-foreground',
           actionButton: 'bg-primary text-primary-foreground',
           cancelButton: 'bg-muted text-muted-foreground',

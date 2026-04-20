@@ -67,7 +67,7 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-border bg-card shadow-md">
+        <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-border surface-overlay shadow-md">
           {isLoading && (
             <div className="px-3 py-4 text-center text-sm text-muted-foreground">
               ...

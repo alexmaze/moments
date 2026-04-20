@@ -43,7 +43,7 @@ export function GrowthChart({ records }: GrowthChartProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+    <div className="rounded-xl border border-border surface-card p-4 shadow-sm">
       <h3 className="mb-4 text-sm font-semibold text-foreground">
         {t('growth.title')}
       </h3>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTagPosts } from '@/hooks/useTags';
+import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import PostCard from '@/components/feed/PostCard';
 import { ArrowLeft, Hash } from 'lucide-react';
 import type { PostDto } from '@/types/dto';
@@ -25,10 +26,11 @@ export default function TagPage() {
   const posts = data?.pages.flatMap((p) => p.posts.data) ?? [];
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollRoot = useScrollContainer();
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el) return;
+    if (!el || !scrollRoot) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -36,12 +38,12 @@ export default function TagPage() {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { root: scrollRoot, threshold: 0.1 },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, scrollRoot]);
 
   return (
     <div className="space-y-4">

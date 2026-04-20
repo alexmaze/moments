@@ -45,7 +45,7 @@ export default function RegisterPage() {
   const isPending = registerMutation.isPending || login.isPending;
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="surface-card rounded-xl shadow-sm border border-border p-6">
       <h2 className="text-lg font-semibold text-foreground text-center mb-6">
         {t('register.title')}
       </h2>

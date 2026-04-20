@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSpacePosts } from '@/hooks/useSpaces';
+import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import PostCard from '@/components/feed/PostCard';
 import QuickComposer from '@/components/composer/QuickComposer';
 
@@ -21,22 +22,23 @@ export function SpacePostsTab({ slug, spaceId, isMember }: SpacePostsTabProps) {
     isLoading,
   } = useSpacePosts(slug);
 
+  const scrollRoot = useScrollContainer();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (observerRef.current) observerRef.current.disconnect();
-      if (!node) return;
+      if (!node || !scrollRoot) return;
       observerRef.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
         },
-        { rootMargin: '200px' },
+        { root: scrollRoot, rootMargin: '200px' },
       );
       observerRef.current.observe(node);
     },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
+    [fetchNextPage, hasNextPage, isFetchingNextPage, scrollRoot],
   );
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export function SpacePostsTab({ slug, spaceId, isMember }: SpacePostsTabProps) {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-40 animate-pulse rounded-xl border border-border bg-card"
+            className="h-40 animate-pulse rounded-xl border border-border surface-card"
           />
         ))}
       </div>

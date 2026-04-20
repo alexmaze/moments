@@ -13,7 +13,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
   return (
     <Link
       to={`/spaces/${space.slug}`}
-      className="group block overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group block overflow-hidden rounded-xl border border-border surface-card shadow-sm transition-shadow hover:shadow-md"
     >
       {/* Cover */}
       {space.coverUrl ? (

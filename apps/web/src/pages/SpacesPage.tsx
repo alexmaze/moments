@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { useInfiniteSpaces } from '@/hooks/useSpaces';
+import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { SpaceCard } from '@/components/spaces/SpaceCard';
 import { CreateSpaceDialog } from '@/components/spaces/CreateSpaceDialog';
 
@@ -17,22 +18,23 @@ export default function SpacesPage() {
     isLoading,
   } = useInfiniteSpaces();
 
+  const scrollRoot = useScrollContainer();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (observerRef.current) observerRef.current.disconnect();
-      if (!node) return;
+      if (!node || !scrollRoot) return;
       observerRef.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
         },
-        { rootMargin: '200px' },
+        { root: scrollRoot, rootMargin: '200px' },
       );
       observerRef.current.observe(node);
     },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
+    [fetchNextPage, hasNextPage, isFetchingNextPage, scrollRoot],
   );
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function SpacesPage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-52 animate-pulse rounded-xl border border-border bg-card"
+              className="h-52 animate-pulse rounded-xl border border-border surface-card"
             />
           ))}
         </div>

@@ -69,7 +69,7 @@ export function EmojiPickerPopover({
   return createPortal(
     <div
       ref={containerRef}
-      className="fixed z-[9999] rounded-xl border border-border bg-card shadow-lg overflow-hidden"
+      className="fixed z-[9999] rounded-xl border border-border surface-overlay shadow-lg overflow-hidden"
       style={{ top, left }}
     >
       <EmojiPicker

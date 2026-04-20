@@ -23,7 +23,7 @@ export function GrowthRecordsList({ records, slug }: GrowthRecordsListProps) {
   const deleteRecord = useDeleteGrowthRecord(slug);
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-border surface-card shadow-sm overflow-hidden">
       {/* Table header */}
       <div className="grid grid-cols-5 gap-2 border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
         <span>{t('growth.date')}</span>

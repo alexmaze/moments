@@ -99,7 +99,7 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   }, []);
 
   return (
-    <div ref={cardRef} className="bg-card rounded-xl shadow-sm border border-border mb-4">
+    <div ref={cardRef} className="surface-card rounded-xl shadow-sm border border-border mb-4">
       {!expanded ? (
         <button
           onClick={handleExpand}

@@ -149,7 +149,7 @@ function MenuComponent(props: BeautifulMentionsMenuProps) {
   const { loading, children, ...rest } = props;
   return (
     <ul
-      className="absolute z-50 bg-card border border-border rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto min-w-[200px]"
+      className="absolute z-50 surface-overlay border border-border rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto min-w-[200px]"
       {...rest}
     >
       {loading ? (

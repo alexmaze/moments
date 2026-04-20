@@ -13,7 +13,7 @@ export default function PostDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-4 animate-pulse">
+        <div className="surface-card rounded-xl shadow-sm border border-border p-4 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-muted" />
             <div className="space-y-2 flex-1">

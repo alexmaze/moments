@@ -28,7 +28,7 @@ export default function CommentSection({
 
   if (isInitialLoad) {
     return (
-      <div className={isCard ? 'bg-card rounded-xl shadow-sm border border-border' : ''}>
+      <div className={isCard ? 'surface-card rounded-xl shadow-sm border border-border' : ''}>
         {isCard && (
           <div className="p-4 border-b border-border">
             <h3 className="font-medium text-foreground text-sm">{t('comments.title')}</h3>
@@ -50,7 +50,7 @@ export default function CommentSection({
   }
 
   return (
-    <div className={isCard ? 'bg-card rounded-xl shadow-sm border border-border' : ''}>
+    <div className={isCard ? 'surface-card rounded-xl shadow-sm border border-border' : ''}>
       {isCard && (
         <div className="p-4 border-b border-border">
           <h3 className="font-medium text-foreground text-sm">{t('comments.title')}</h3>

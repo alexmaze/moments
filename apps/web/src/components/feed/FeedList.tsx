@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteFeed } from '@/hooks/usePosts';
+import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import PostCard from './PostCard';
 
 export default function FeedList() {
@@ -15,10 +16,11 @@ export default function FeedList() {
   } = useInfiniteFeed();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollRoot = useScrollContainer();
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el) return;
+    if (!el || !scrollRoot) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -26,12 +28,12 @@ export default function FeedList() {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { root: scrollRoot, threshold: 0.1 },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, scrollRoot]);
 
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
 
@@ -39,7 +41,7 @@ export default function FeedList() {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-4 animate-pulse">
+          <div key={i} className="surface-card rounded-xl shadow-sm border border-border p-4 animate-pulse">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-muted" />
               <div className="space-y-2 flex-1">

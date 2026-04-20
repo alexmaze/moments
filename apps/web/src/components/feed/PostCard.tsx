@@ -65,7 +65,7 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
 
   return (
     <div
-      className="bg-card rounded-xl shadow-sm border border-border p-4 cursor-pointer"
+      className="surface-card rounded-xl shadow-sm border border-border p-4 cursor-pointer"
       onClick={() => navigate(`/posts/${post.id}`)}
     >
       {/* Header */}

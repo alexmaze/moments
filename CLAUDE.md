@@ -194,7 +194,7 @@ src/
 │       useBackgroundUpload.ts # Background image upload flow
 ├── components/
 │   ├── ui/           # Reusable UI primitives: Dialog, AlertDialog, Toaster (sonner)
-│   ├── layout/       # AppLayout, GuestLayout, AuthGuard
+│   ├── layout/       # AppLayout, GuestLayout, AuthGuard, ScrollContainerContext
 │   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
 │   ├── composer/     # QuickComposer, MediaUploader, RichTextEditor, EmojiPickerPopover
@@ -309,7 +309,12 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Like/heart color**: Separate `--like` token (`hsl(5, 85%, 57%)`) — warm red, not reusing `--destructive`. Utility class: `text-like`.
 - **Fonts**: Inter (Latin) + Noto Sans SC (Chinese) via Google Fonts CDN (`font-display: swap`). Fallback chain: `system-ui → -apple-system → PingFang SC → Microsoft YaHei → sans-serif`. Loaded in `apps/web/index.html`.
 - **Border radius**: Base `--radius: 0.75rem` (12px). Cards use `rounded-xl` (16px), buttons/inputs use `rounded-lg` (12px), avatars use `rounded-full`.
-- **Shadows**: Warm-tinted shadows (hue 20° brown instead of cold black) via `--shadow-sm/md/lg` overrides in `@theme inline`.
+- **Shadows**: Warm-tinted shadows (hue 20° brown instead of cold black) via `--shadow-sm/md/lg` overrides in `@theme inline`. Softened and diffused (2026-04) for a lighter, airier feel.
+- **Card material**: Three surface variants in `index.css`, all driven by CSS tokens so the whole site can be tuned from one place:
+  - `surface-card` — cards stacked in the feed (alpha 0.50 light / 0.42 dark, blur 24px). Strong glassy feel; custom background textures show through clearly.
+  - `surface-overlay` — dialogs, dropdowns, popovers, mention menus (alpha 0.94 / 0.90, blur 20px). Higher opacity so transient overlays read cleanly without looking gray from the modal backdrop.
+  - `surface-toast` — sonner toasts (alpha 0.88 / 0.84, blur 24px). High readability for short-duration content.
+  - Dialog/AlertDialog backdrop uses `bg-black/35` (not `/50`) to avoid darkening the backdrop too much in combination with the overlay blur. `--border` token is also softened one notch (light 92%, dark 18%) to reinforce the lighter look.
 - **Dark mode**: Full dark mode support with three options: Light / Dark / Follow System (default). CSS variables defined in `.dark` class with warm dark tones (not cold gray). Theme preference stored in DB (`users.theme` column) + localStorage (`moments-theme`). FOUT prevention via synchronous inline script in `<head>` that reads localStorage before CSS paints.
   - **Theme store**: `apps/web/src/store/theme.store.ts` — Zustand with `persist` middleware, mirrors locale store pattern. `null` = follow system, `'light'` / `'dark'` = explicit preference.
   - **useTheme hook**: `apps/web/src/hooks/useTheme.ts` — mounted once in `App.tsx`, toggles `.dark` class on `<html>`, listens to `prefers-color-scheme` media query when in "Follow System" mode.
@@ -318,12 +323,22 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Hardcoded overlays**: `bg-black/*` on media thumbnails, avatar hover overlays, and dialog backdrops are intentionally kept — they must darken arbitrary user content.
 - **Guest page decoration**: Login/Register pages have a decorative amber radial gradient glow at the top (defined in `GuestLayout.tsx`).
 - **Mobile nav active state**: Current page's icon highlighted in amber via `useLocation()` comparison in `AppLayout.tsx`.
-- **Custom background**: Users can customize the full-page background (AppLayout root container) with 11 built-in tiling texture presets. Preference stored in DB (`users.background` column) + localStorage (`moments-background`). Each preset has light and dark mode variants with dedicated fill colours.
+- **Custom background**: Users can customize the full-page background with 11 built-in tiling texture presets. Preference stored in DB (`users.background` column) + localStorage (`moments-background`). Each preset has light and dark mode variants with dedicated fill colours.
   - **Background store**: `apps/web/src/store/background.store.ts` — Zustand with `persist` middleware. Value is preset ID (e.g. `'texture-food'`) or `null` (default).
   - **Presets**: Defined in `apps/web/src/lib/backgroundPresets.ts` — 11 texture presets (food, connected, gplay, geometry, wool, plaid, grey, robots, skulls, subtle, dots). Each preset has `id`, `nameKey`, `textureFile` (PNG path), and `light`/`dark` variants with `fillColor` and `intensity`. Textures are transparent PNGs from Transparent Textures (CC BY-SA 3.0).
   - **useBackground hook**: `apps/web/src/hooks/useBackground.ts` — reads store + current theme, returns `{ backgroundStyle, hasCustomBackground }` for AppLayout. `resolveBackgroundStyle()` takes `isDark` to select appropriate variant.
   - **UI**: `BackgroundPicker` component in EditProfileDialog — 7 swatches (default + 6 textures) with live preview strip. Preview respects current theme mode.
-  - **AppLayout integration**: Conditional `style` on root div when custom bg is set; `bg-background` class when default. No overlay needed — each preset defines its own dark fill colour.
+  - **AppLayout integration**: Rendered as a dedicated `fixed inset-0 -z-10` layer inside AppLayout's `relative isolate` root, so the texture stays pinned to the viewport while the feed scrolls on top of it. `isolate` traps the `-z-10` layer in the local stacking context so portaled Dialogs/Toasts are unaffected. Default background falls back to the `bg-background` class when no preset is active. No overlay needed — each preset defines its own dark fill colour.
+
+### Scroll architecture
+The app uses **internal container scrolling**, not page-level scrolling. This keeps the header/bottom nav physically stationary while the feed scrolls, and lets the fixed background stay pinned to the viewport.
+
+- **`html` + `body`**: `height: 100%; overflow: hidden`. `body` additionally has `position: fixed; inset: 0` — physically pinning the document so iOS Safari's viewport rubber-band has nothing to drag. Without this, pulling past the top of the feed would drag the entire viewport (including `<header>`) down with the finger.
+- **AppLayout root**: `h-screen flex flex-col overflow-hidden` with `<header>` (`shrink-0`), `<main>` (`flex-1 overflow-y-auto overscroll-y-contain`), and bottom `<nav>` (`fixed`) as three siblings. Only `<main>` scrolls.
+- **ScrollContainerContext**: `apps/web/src/components/layout/ScrollContainerContext.tsx` exposes the live `<main>` element to descendants. Stored as React state (not a ref) so consumers re-render when the element mounts.
+- **IntersectionObserver callers MUST consume this context**: any infinite-scroll observer needs `{ root: scrollRoot }` passed to `new IntersectionObserver(...)`. With the default `root: null` the observer watches the viewport, which no longer correlates with the scroll position — observers will silently stop firing. Five call sites already wired up: `FeedList`, `TagPage`, `SpacesPage`, `SpacePostsTab`, `SpaceMembersTab`. New infinite-scroll pages must do the same.
+- **useBodyScrollbar**: attaches OverlayScrollbars to the `<main>` element (not `document.body` despite the legacy hook name). Accepts an optional element arg.
+- **Known limitation**: on iOS Safari, the top-edge rubber-band bounce only fires when the feed is already scrolled (`scrollTop > 0`). Dragging down from the very top does nothing — a Safari-level quirk with internal scroll containers. Common workarounds (nudging `scrollTop` on touchstart, `overscroll-behavior: contain`) don't reliably activate the edge bounce. Accept until a proper pull-to-refresh affordance is built.
 
 ### Icons
 - **Library**: `lucide-react` — all图标统一使用 Lucide React 组件，禁止手写内嵌 `<svg>`。

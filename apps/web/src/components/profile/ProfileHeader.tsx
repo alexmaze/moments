@@ -33,7 +33,7 @@ export default function ProfileHeader({
   );
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="surface-card rounded-xl shadow-sm border border-border p-6">
       <div className="flex items-start gap-4">
         {isOwner && onAvatarEdit ? (
           <button

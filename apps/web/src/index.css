@@ -32,7 +32,7 @@
     --destructive-foreground: 0 0% 98%;
 
     /* Chrome */
-    --border: 30 18% 88%;
+    --border: 30 18% 92%;
     --input: 30 18% 88%;
     --ring: 24 80% 50%;
 
@@ -41,6 +41,16 @@
 
     /* Like/heart action color */
     --like: 5 85% 57%;
+
+    /* Surface material — semi-transparent cards + light backdrop blur.
+       Gives the app a lighter, airier feel and lets custom background
+       textures subtly show through. Adjust here to tune globally. */
+    --card-alpha: 0.50;
+    --card-blur: 24px;
+    --overlay-alpha: 0.94;
+    --overlay-blur: 20px;
+    --toast-alpha: 0.88;
+    --toast-blur: 24px;
   }
 
   /* ── Dark mode — warm dark tones ───────────────────────────── */
@@ -65,11 +75,20 @@
     --destructive: 0 62% 48%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 20 8% 22%;
+    --border: 20 8% 18%;
     --input: 20 8% 22%;
     --ring: 24 80% 62%;
 
     --like: 5 75% 63%;
+
+    /* Surface material — slightly lower alpha in dark mode so cards
+       don't feel heavy against the dark background. */
+    --card-alpha: 0.42;
+    --card-blur: 24px;
+    --overlay-alpha: 0.90;
+    --overlay-blur: 20px;
+    --toast-alpha: 0.84;
+    --toast-blur: 24px;
   }
 }
 
@@ -78,9 +97,20 @@
   * {
     @apply border-border;
   }
+  html,
+  body {
+    /* Physically pin the page so iOS Safari's viewport rubber-band
+       has nothing to drag. Without this, pulling past the top of the
+       feed drags the entire viewport (including <header>) down. The
+       real scroll lives inside <main> which gets its own native bounce. */
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     margin: 0;
+    position: fixed;
+    inset: 0;
     font-family:
       'Inter',
       'Noto Sans SC',
@@ -126,16 +156,16 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
 
-  /* Warm-tinted shadows */
+  /* Warm-tinted shadows — softened and more diffuse for a lighter feel */
   --shadow-sm:
-    0 1px 3px 0 hsl(20 30% 15% / 0.08),
-    0 1px 2px -1px hsl(20 30% 15% / 0.08);
+    0 2px 8px 0 hsl(20 30% 15% / 0.05),
+    0 1px 2px -1px hsl(20 30% 15% / 0.04);
   --shadow-md:
-    0 4px 6px -1px hsl(20 30% 15% / 0.10),
-    0 2px 4px -2px hsl(20 30% 15% / 0.10);
+    0 6px 16px -2px hsl(20 30% 15% / 0.06),
+    0 2px 6px -2px hsl(20 30% 15% / 0.05);
   --shadow-lg:
-    0 10px 15px -3px hsl(20 30% 15% / 0.10),
-    0 4px 6px -4px hsl(20 30% 15% / 0.10);
+    0 16px 32px -8px hsl(20 30% 15% / 0.08),
+    0 4px 12px -4px hsl(20 30% 15% / 0.06);
 }
 
 /* ─── Dialog & Overlay animations ───────────────────────────── */
@@ -204,4 +234,31 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* ─── Utility: semi-transparent card surfaces ──────────────
+   Use `surface-card` in place of `bg-card` on any card-like
+   container to get the lighter, glassy material. Alpha & blur
+   are driven by --card-alpha / --card-blur tokens so the whole
+   site can be tuned from one place. `surface-overlay` is a
+   higher-opacity variant for dialogs/popovers/menus that need
+   stronger separation from content behind them. `surface-toast`
+   is a variant for sonner toasts that need high readability. */
+
+@utility surface-card {
+  background-color: hsl(var(--card) / var(--card-alpha));
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+}
+
+@utility surface-overlay {
+  background-color: hsl(var(--card) / var(--overlay-alpha));
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+}
+
+@utility surface-toast {
+  background-color: hsl(var(--card) / var(--toast-alpha));
+  backdrop-filter: blur(var(--toast-blur));
+  -webkit-backdrop-filter: blur(var(--toast-blur));
 }

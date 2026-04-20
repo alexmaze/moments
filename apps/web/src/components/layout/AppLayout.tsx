@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
 import { useBackground } from '@/hooks/useBackground';
 import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
+import { ScrollContainerContext } from './ScrollContainerContext';
 import { cn } from '@/lib/utils';
 import { Home, User, LogOut, Sun, Moon, Monitor, Users } from 'lucide-react';
 import {
@@ -25,7 +27,12 @@ export default function AppLayout() {
 
   const { backgroundStyle, hasCustomBackground } = useBackground();
 
-  useBodyScrollbar();
+  // Main = the real scroll container. We keep it in state rather than a
+  // ref so consumers re-render once the element exists (Context reads
+  // the ref object itself which doesn't trigger updates).
+  const [mainEl, setMainEl] = useState<HTMLElement | null>(null);
+
+  useBodyScrollbar(mainEl);
 
   // Cycles: null (system) → 'light' → 'dark' → null
   function cycleTheme() {
@@ -59,13 +66,25 @@ export default function AppLayout() {
   return (
     <div
       className={cn(
-        'min-h-screen flex flex-col',
+        'relative isolate h-screen flex flex-col overflow-hidden',
         !hasCustomBackground && 'bg-background',
       )}
-      style={hasCustomBackground ? backgroundStyle : undefined}
     >
-      {/* Top nav */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
+      {/* Custom background — fixed to viewport so it stays put while the
+          feed scrolls. `isolate` on the parent keeps this -z-10 layer
+          trapped in the local stacking context (Dialogs/Toasts are
+          portaled into document.body and remain unaffected). */}
+      {hasCustomBackground && (
+        <div
+          aria-hidden
+          className="fixed inset-0 -z-10 pointer-events-none"
+          style={backgroundStyle}
+        />
+      )}
+
+      {/* Top nav — sits OUTSIDE the scroll container so it never moves.
+          iOS rubber-band overscroll only applies to the inner <main>. */}
+      <header className="shrink-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-6">
             <Link to="/" className="text-xl font-bold tracking-tight text-primary">
@@ -126,12 +145,25 @@ export default function AppLayout() {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-4 pb-20 md:pb-4">
-        <Outlet />
+      {/* Main content — the real scroll container.
+          `overscroll-y-contain` is the key to top-edge bounce on iOS:
+          it tells Safari to bounce locally instead of chaining the
+          overscroll to the parent (body is position:fixed so the chain
+          would otherwise dead-end silently and no bounce would fire).
+          Ref is exposed via Context so infinite-scroll observers can
+          target this element instead of the viewport. */}
+      <main
+        ref={setMainEl}
+        className="flex-1 overflow-y-auto overscroll-y-contain"
+      >
+        <ScrollContainerContext.Provider value={mainEl}>
+          <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-20 md:pb-4">
+            <Outlet />
+          </div>
+        </ScrollContainerContext.Provider>
       </main>
 
-      {/* Bottom mobile nav */}
+      {/* Bottom mobile nav — also outside the scroll container, fixed to viewport */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm border-t border-border md:hidden">
         <div className="flex items-center justify-around h-14">
           <Link to="/" className={`flex flex-col items-center gap-0.5 transition-colors p-2 ${isHome ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
 import { useSpaceMembers } from '@/hooks/useSpaces';
+import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { formatRelativeTime } from '@/lib/utils';
 import type { SpaceMemberRole } from '@/types/dto';
 
@@ -40,22 +41,23 @@ export function SpaceMembersTab({ slug }: SpaceMembersTabProps) {
     isLoading,
   } = useSpaceMembers(slug);
 
+  const scrollRoot = useScrollContainer();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (observerRef.current) observerRef.current.disconnect();
-      if (!node) return;
+      if (!node || !scrollRoot) return;
       observerRef.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
         },
-        { rootMargin: '200px' },
+        { root: scrollRoot, rootMargin: '200px' },
       );
       observerRef.current.observe(node);
     },
-    [fetchNextPage, hasNextPage, isFetchingNextPage],
+    [fetchNextPage, hasNextPage, isFetchingNextPage, scrollRoot],
   );
 
   useEffect(() => {
