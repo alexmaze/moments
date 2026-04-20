@@ -125,6 +125,7 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
         {post.content && (
           <PostContent
             content={post.content}
+            mentions={post.mentions}
             className="mt-3 text-foreground text-sm whitespace-pre-wrap break-words"
           />
         )}

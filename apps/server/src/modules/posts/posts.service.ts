@@ -537,6 +537,8 @@ export class PostsService {
       createdAt: string;
       isDeleted: boolean;
       author: { id: string; username: string; displayName: string; avatarUrl: string | null };
+      replyTo: null;
+      mentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[];
     }>>();
 
     if (postIds.length === 0) return result;
@@ -571,16 +573,43 @@ export class PostsService {
       )
       .orderBy(asc(postComments.createdAt));
 
+    // Collect all unique mentioned user IDs across all preview comments
+    const allMentionedUserIds = new Set<string>();
+    for (const row of rows) {
+      for (const m of parseMentions(row.content)) allMentionedUserIds.add(m.userId);
+    }
+
+    // Batch-fetch mention user data in one query
+    const mentionUserMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null }>();
+    if (allMentionedUserIds.size > 0) {
+      const mentionUsers = await this.usersService.findByIds([...allMentionedUserIds]);
+      for (const u of mentionUsers) mentionUserMap.set(u.id, u);
+    }
+
     // Group by postId and take first COMMENT_PREVIEW_LIMIT per post
     for (const row of rows) {
       const list = result.get(row.postId)!;
       if (list.length < this.COMMENT_PREVIEW_LIMIT) {
+        // Resolve mentions for this comment
+        const parsed = parseMentions(row.content);
+        const seen = new Set<string>();
+        const mentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[] = [];
+        for (const m of parsed) {
+          if (!seen.has(m.userId)) {
+            seen.add(m.userId);
+            const user = mentionUserMap.get(m.userId);
+            if (user) mentions.push(user);
+          }
+        }
+
         list.push({
           id: row.id,
           content: row.content,
           createdAt: row.createdAt.toISOString(),
           isDeleted: row.isDeleted,
           author: row.author,
+          replyTo: null,
+          mentions,
         });
       }
     }

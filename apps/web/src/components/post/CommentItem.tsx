@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Trash2, MessageSquare } from 'lucide-react';
-import type { CommentDto } from '@/types/dto';
+import type { CommentDto, MentionUserDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';
@@ -24,7 +24,7 @@ interface CommentItemProps {
   onReply?: (comment: CommentDto) => void;
 }
 
-function renderContent(content: string) {
+function renderContent(content: string, mentions: MentionUserDto[]) {
   const parts = renderContentWithTagsAndMentions(content);
   return parts.map((part, i) => {
     if (part.type === 'tag') {
@@ -39,10 +39,11 @@ function renderContent(content: string) {
       );
     }
     if (part.type === 'mention') {
+      const username = mentions.find(m => m.id === part.userId)?.username;
       return (
         <Link
           key={i}
-          to={`/users/${part.userId}`}
+          to={`/users/${username ?? part.userId}`}
           className="text-primary hover:underline font-medium"
         >
           @{part.displayName}
@@ -117,7 +118,7 @@ export default function CommentItem({ comment, postId, onReply }: CommentItemPro
         )}
 
         <p className="text-sm text-foreground mt-1 whitespace-pre-wrap break-words">
-          {renderContent(comment.content)}
+          {renderContent(comment.content, comment.mentions)}
         </p>
 
         {onReply && (

@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { renderContentWithTagsAndMentions } from '@moments/shared';
+import type { MentionUserDto } from '@/types/dto';
 
 interface PostContentProps {
   content: string;
+  mentions?: MentionUserDto[];
   className?: string;
 }
 
-export const PostContent = memo(function PostContent({ content, className }: PostContentProps) {
+export const PostContent = memo(function PostContent({ content, mentions, className }: PostContentProps) {
   if (!content) return null;
 
   const parts = renderContentWithTagsAndMentions(content);
@@ -28,10 +30,11 @@ export const PostContent = memo(function PostContent({ content, className }: Pos
           );
         }
         if (part.type === 'mention') {
+          const username = mentions?.find(m => m.id === part.userId)?.username;
           return (
             <Link
               key={i}
-              to={`/users/${part.userId}`}
+              to={`/users/${username ?? part.userId}`}
               className="text-primary hover:underline font-medium"
               onClick={(e) => e.stopPropagation()}
             >
