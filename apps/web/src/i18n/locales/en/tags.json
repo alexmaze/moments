@@ -1,0 +1,13 @@
+{
+  "postCount": "{{count}} posts",
+  "sort": {
+    "latest": "Latest",
+    "hot": "Hot"
+  },
+  "error": {
+    "loadFailed": "Failed to load, please try again",
+    "notFound": "Tag not found"
+  },
+  "empty": "No posts with this tag yet",
+  "loadMore": "Load more"
+}

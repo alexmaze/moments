@@ -20,9 +20,15 @@ export class PostsController {
   async getFeed(
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
+    @Query('tag') tag?: string,
     @CurrentUser() user?: { id: string },
   ) {
-    return this.postsService.getFeed(cursor, limit ? parseInt(limit, 10) : 20, user?.id);
+    return this.postsService.getFeed(
+      cursor,
+      limit ? parseInt(limit, 10) : 20,
+      user?.id,
+      tag ? decodeURIComponent(tag) : undefined,
+    );
   }
 
   @Post()

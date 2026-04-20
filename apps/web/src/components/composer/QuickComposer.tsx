@@ -4,8 +4,10 @@ import { Image, User, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { useTagSuggestion } from '@/hooks/useTagSuggestion';
 import MediaUploader from './MediaUploader';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';
+import { TagSuggestionDropdown } from './TagSuggestionDropdown';
 
 interface QuickComposerProps {
   /** When set, locks the composer to this space (hides SpaceSelector) */
@@ -24,6 +26,28 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const createPost = useCreatePost();
   const { items, addFiles, removeItem, readyIds, allUploaded, reset } =
     useMediaUpload();
+
+  const {
+    isOpen: tagSuggestionOpen,
+    selectedIndex: tagSelectedIndex,
+    suggestions: tagSuggestions,
+    query: tagQuery,
+    onKeyDown: onTagKeyDown,
+    selectTag,
+    close: closeTagSuggestion,
+    getCaretCoordinates,
+  } = useTagSuggestion(content, setContent, textareaRef);
+
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (tagSuggestionOpen && expanded) {
+      const coords = getCaretCoordinates();
+      setDropdownPosition(coords);
+    } else {
+      setDropdownPosition(null);
+    }
+  }, [tagSuggestionOpen, expanded, content, getCaretCoordinates]);
 
   const hasContent = content.trim().length > 0;
   const hasMedia = items.length > 0;
@@ -130,7 +154,7 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
         </button>
       ) : (
         /* --- Expanded state --- */
-        <div className="p-4">
+        <div className="p-4 relative">
           {/* Avatar + textarea */}
           <div className="flex gap-3">
             {currentUser?.avatarUrl ? (
@@ -152,11 +176,24 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
                 setContent(e.target.value);
                 autoResize();
               }}
+              onKeyDown={(e) => {
+                if (onTagKeyDown(e)) return;
+              }}
               placeholder={t('quickComposer.placeholder')}
               rows={3}
               className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground resize-none focus:outline-none text-sm min-h-[72px]"
             />
           </div>
+
+          <TagSuggestionDropdown
+            isOpen={tagSuggestionOpen}
+            suggestions={tagSuggestions}
+            query={tagQuery}
+            selectedIndex={tagSelectedIndex}
+            position={dropdownPosition}
+            onSelect={selectTag}
+            onClose={closeTagSuggestion}
+          />
 
           {/* Media uploader */}
           <div className="mt-3">

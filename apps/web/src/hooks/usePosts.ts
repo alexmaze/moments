@@ -80,30 +80,33 @@ export function useToggleLike() {
     mutationFn: toggleLikeApi,
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
-      // Also cancel any space post queries
       await queryClient.cancelQueries({ queryKey: ["spaces"] });
+      await queryClient.cancelQueries({ queryKey: ["tags"] });
 
       // Helper to toggle like in a paginated cache
       const toggleInPages = (
-        old: { pages: PaginatedResponse<PostDto>[] } | undefined,
+        old: { pages: { data: PostDto[] }[] } | undefined,
       ) => {
-        if (!old) return old;
+        if (!old?.pages?.length) return old;
         return {
           ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((post) =>
-              post.id === postId
-                ? {
-                    ...post,
-                    isLikedByMe: !post.isLikedByMe,
-                    likeCount: post.isLikedByMe
-                      ? post.likeCount - 1
-                      : post.likeCount + 1,
-                  }
-                : post,
-            ),
-          })),
+          pages: old.pages.map((page) => {
+            if (!page?.data) return page;
+            return {
+              ...page,
+              data: page.data.map((post) =>
+                post.id === postId
+                  ? {
+                      ...post,
+                      isLikedByMe: !post.isLikedByMe,
+                      likeCount: post.isLikedByMe
+                        ? post.likeCount - 1
+                        : post.likeCount + 1,
+                    }
+                  : post,
+              ),
+            };
+          }),
         };
       };
 
@@ -115,17 +118,53 @@ export function useToggleLike() {
 
       // Optimistically update all space post caches
       const spacePostQueries = queryClient.getQueriesData<{
-        pages: PaginatedResponse<PostDto>[];
+        pages: { data: PostDto[] }[];
       }>({ queryKey: ["spaces"] });
       const previousSpacePosts = new Map<
         readonly unknown[],
-        { pages: PaginatedResponse<PostDto>[] } | undefined
+        { pages: { data: PostDto[] }[] } | undefined
       >();
       for (const [key, data] of spacePostQueries) {
-        // Only target space post queries (["spaces", "posts", slug])
-        if (key[1] === "posts" && data) {
+        if (key[1] === "posts" && data?.pages?.length) {
           previousSpacePosts.set(key, data);
           queryClient.setQueryData(key, toggleInPages);
+        }
+      }
+
+      // Optimistically update all tag post caches
+      const tagPostQueries = queryClient.getQueriesData<{
+        pages: { posts: { data: PostDto[] } }[];
+      }>({ queryKey: ["tags"] });
+      const previousTagPosts = new Map<
+        readonly unknown[],
+        { pages: { posts: { data: PostDto[] } }[] } | undefined
+      >();
+      for (const [key, data] of tagPostQueries) {
+        if (key[1] === "posts" && data?.pages?.length) {
+          previousTagPosts.set(key, data);
+          queryClient.setQueryData(key, {
+            ...data,
+            pages: data.pages.map((page) => {
+              if (!page?.posts?.data) return page;
+              return {
+                ...page,
+                posts: {
+                  ...page.posts,
+                  data: page.posts.data.map((post) =>
+                    post.id === postId
+                      ? {
+                          ...post,
+                          isLikedByMe: !post.isLikedByMe,
+                          likeCount: post.isLikedByMe
+                            ? post.likeCount - 1
+                            : post.likeCount + 1,
+                        }
+                      : post,
+                  ),
+                },
+              };
+            }),
+          });
         }
       }
 
@@ -143,7 +182,7 @@ export function useToggleLike() {
         });
       }
 
-      return { previousFeed, previousDetail, previousSpacePosts };
+      return { previousFeed, previousDetail, previousSpacePosts, previousTagPosts };
     },
     onError: (_err, postId, context) => {
       if (context?.previousFeed) {
@@ -160,15 +199,20 @@ export function useToggleLike() {
           queryClient.setQueryData(key, data);
         }
       }
+      if (context?.previousTagPosts) {
+        for (const [key, data] of context.previousTagPosts) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       toast.error(i18n.t("feed:postCard.likeError"), { duration: 2000 });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
-      // Also invalidate space post queries so they refetch
       queryClient.invalidateQueries({
         queryKey: ["spaces"],
         predicate: (query) => query.queryKey[1] === "posts",
       });
+      queryClient.invalidateQueries({ queryKey: ["tags", "posts"] });
     },
   });
 }

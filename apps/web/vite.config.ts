@@ -10,6 +10,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['@moments/shared'],
+  },
   server: {
     host: true,
     port: 5173,

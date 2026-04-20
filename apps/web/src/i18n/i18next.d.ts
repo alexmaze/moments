@@ -6,6 +6,7 @@ import type enFeed from './locales/en/feed.json';
 import type enPost from './locales/en/post.json';
 import type enProfile from './locales/en/profile.json';
 import type enSpaces from './locales/en/spaces.json';
+import type enTags from './locales/en/tags.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -17,6 +18,7 @@ declare module 'i18next' {
       post: typeof enPost;
       profile: typeof enProfile;
       spaces: typeof enSpaces;
+      tags: typeof enTags;
     };
   }
 }

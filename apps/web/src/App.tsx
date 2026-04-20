@@ -10,6 +10,7 @@ import PostDetailPage from '@/pages/PostDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
 import SpacesPage from '@/pages/SpacesPage';
 import SpaceDetailPage from '@/pages/SpaceDetailPage';
+import TagPage from '@/pages/TagPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Toaster } from '@/components/ui/sonner';
 import { useTheme } from '@/hooks/useTheme';
@@ -35,6 +36,7 @@ function App() {
           <Route path="/users/:username" element={<ProfilePage />} />
           <Route path="/spaces" element={<SpacesPage />} />
           <Route path="/spaces/:slug" element={<SpaceDetailPage />} />
+          <Route path="/tags/:name" element={<TagPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />

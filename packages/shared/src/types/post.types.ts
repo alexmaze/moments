@@ -17,6 +17,8 @@ export interface PostDto {
   comments: CommentDto[];
   /** true when commentCount > preview comments length, i.e., there are more to load. */
   hasMoreComments: boolean;
+  /** Hashtags extracted from content, e.g. ['JavaScript', '前端开发'] */
+  tags: string[];
 }
 
 export interface PostDetailDto extends PostDto {}

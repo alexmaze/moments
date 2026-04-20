@@ -5,7 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { eq, and, desc, lt, asc, inArray, sql } from 'drizzle-orm';
+import { eq, and, desc, lt, asc, inArray, sql, ilike } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import {
   type DrizzleClient,
@@ -17,7 +17,10 @@ import {
   users,
   spaces,
   spaceMembers,
+  tags,
+  postTags,
 } from '@moments/db';
+import { parseHashtags, normalizeHashtag } from '@moments/shared';
 import { CreatePostDto } from './dto';
 
 @Injectable()
@@ -111,28 +114,57 @@ export class PostsService {
           .where(eq(spaces.id, dto.spaceId));
       }
 
+      if (hasContent && dto.content!.trim()) {
+        const tagNames = parseHashtags(dto.content!);
+        for (const tagName of tagNames) {
+          const nameLower = normalizeHashtag(tagName);
+          const [tag] = await tx
+            .insert(tags)
+            .values({ name: tagName, nameLower })
+            .onConflictDoUpdate({
+              target: tags.nameLower,
+              set: { postCount: sql`${tags.postCount} + 1` },
+            })
+            .returning();
+          await tx.insert(postTags).values({ postId: newPost.id, tagId: tag.id });
+        }
+      }
+
       return newPost;
     });
 
     return this.getById(post.id, authorId);
   }
 
-  async getFeed(cursor?: string, limit = 20, currentUserId?: string) {
+  async getFeed(cursor?: string, limit = 20, currentUserId?: string, tagName?: string) {
     const safeLimit = Math.min(limit, 50);
 
-    // Build conditions
     const conditions = [eq(posts.isDeleted, false)];
     if (cursor) {
       conditions.push(lt(posts.createdAt, new Date(cursor)));
     }
 
-    // Query posts
-    const postRows = await this.db
-      .select()
-      .from(posts)
-      .where(and(...conditions))
-      .orderBy(desc(posts.createdAt))
-      .limit(safeLimit + 1);
+    let postRows: (typeof posts.$inferSelect)[];
+
+    if (tagName) {
+      const nameLower = normalizeHashtag(tagName);
+      const rows = await this.db
+        .select({ post: posts })
+        .from(postTags)
+        .innerJoin(tags, eq(postTags.tagId, tags.id))
+        .innerJoin(posts, eq(postTags.postId, posts.id))
+        .where(and(eq(tags.nameLower, nameLower), ...conditions))
+        .orderBy(desc(posts.createdAt))
+        .limit(safeLimit + 1);
+      postRows = rows.map((r: { post: typeof posts.$inferSelect }) => r.post);
+    } else {
+      postRows = await this.db
+        .select()
+        .from(posts)
+        .where(and(...conditions))
+        .orderBy(desc(posts.createdAt))
+        .limit(safeLimit + 1);
+    }
 
     const hasMore = postRows.length > safeLimit;
     const resultPosts = hasMore ? postRows.slice(0, safeLimit) : postRows;
@@ -239,12 +271,26 @@ export class PostsService {
         .set({ isDeleted: true, deletedAt: new Date() })
         .where(eq(posts.id, id));
 
-      // Decrement space post count if applicable
       if (post.spaceId) {
         await tx
           .update(spaces)
           .set({ postCount: sql`${spaces.postCount} - 1` })
           .where(eq(spaces.id, post.spaceId));
+      }
+
+      const postTagRows = await tx
+        .select({ tagId: postTags.tagId })
+        .from(postTags)
+        .where(eq(postTags.postId, id));
+
+      if (postTagRows.length > 0) {
+        await tx.delete(postTags).where(eq(postTags.postId, id));
+        for (const row of postTagRows) {
+          await tx
+            .update(tags)
+            .set({ postCount: sql`${tags.postCount} - 1` })
+            .where(eq(tags.id, row.tagId));
+        }
       }
     });
 
@@ -369,12 +415,25 @@ export class PostsService {
       }
     }
 
-    // Assemble
+    const postTagRows = await this.db
+      .select({ postId: postTags.postId, tagName: tags.name })
+      .from(postTags)
+      .innerJoin(tags, eq(postTags.tagId, tags.id))
+      .where(inArray(postTags.postId, postIds));
+
+    const tagsByPost = new Map<string, string[]>();
+    for (const row of postTagRows) {
+      const list = tagsByPost.get(row.postId) || [];
+      list.push(row.tagName);
+      tagsByPost.set(row.postId, list);
+    }
+
     return postRows.map((post) => {
       const author = authorMap.get(post.authorId)!;
       const mediaRels = mediaByPost.get(post.id) || [];
       const previewComments = commentPreviewMap.get(post.id) || [];
       const spaceInfo = post.spaceId ? spaceMap.get(post.spaceId) ?? null : null;
+      const postTagsList = tagsByPost.get(post.id) || [];
 
       return {
         id: post.id,
@@ -406,6 +465,7 @@ export class PostsService {
         } : null,
         comments: previewComments,
         hasMoreComments: post.commentCount > previewComments.length,
+        tags: postTagsList,
       };
     });
   }

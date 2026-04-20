@@ -5,7 +5,7 @@
 - **数据库**: PostgreSQL 16 (Docker: `postgres:16-alpine`)
 - **ORM**: Drizzle ORM (`drizzle-orm/node-postgres`)
 - **连接池**: `pg.Pool`, 最大连接数 10
-- **表数量**: 7 张表
+- **表数量**: 9 张表
 - **自定义枚举**: 2 个 (`media_type`, `media_status`)
 - **Schema 定义位置**: `packages/db/src/schema/`
 
@@ -47,6 +47,15 @@
 │ FK media_id          │
 │    sort_order        │
 └──────────────────────┘
+
+┌──────────────┐     ┌──────────────┐
+│    tags      │     │  post_tags   │
+│──────────────│     │──────────────│
+│ PK id        │     │PK(post_id,   │
+│    name      │────│    tag_id)    │
+│    name_lower│     │ FK post_id   │
+│    post_count│     │ FK tag_id    │
+└──────────────┘     └──────────────┘
 
 ┌──────────────┐
 │  event_log   │  (独立表, 无外键关联)
@@ -168,19 +177,45 @@
 | `user_agent`    | `text`                       | 可空                      | 客户端 User-Agent  |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`    | 事件时间           |
 
+### 3.8 tags
+
+话题标签表。`name_lower` 为小写标准化版本，用于唯一性约束和查询（不区分大小写）。`post_count` 为反范式冗余字段。
+
+| 字段名          | 类型                         | 约束                      | 说明               |
+| --------------- | ---------------------------- | ------------------------- | ------------------ |
+| `id`            | `uuid`                       | PK, 默认 `gen_random_uuid()` | 标签唯一标识       |
+| `name`          | `varchar(50)`                | NOT NULL                  | 原始大小写，用于显示 |
+| `name_lower`    | `varchar(50)`                | NOT NULL, UNIQUE          | 小写标准化，用于去重查询 |
+| `post_count`    | `integer`                    | NOT NULL, 默认 `0`        | 关联帖子数 (反范式) |
+| `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`    | 创建时间           |
+
+### 3.9 post_tags
+
+帖子与标签的关联表 (多对多中间表)。复合主键 `(post_id, tag_id)` 防止重复关联。
+
+| 字段名          | 类型                         | 约束                               | 说明             |
+| --------------- | ---------------------------- | ---------------------------------- | ---------------- |
+| `post_id`       | `uuid`                       | NOT NULL, FK → `posts.id` (CASCADE), PK | 所属帖子         |
+| `tag_id`        | `uuid`                       | NOT NULL, FK → `tags.id` (CASCADE), PK  | 关联标签         |
+| `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`             | 创建时间         |
+
 ## 4. 索引列表
 
 | 索引名                        | 表                     | 字段                         | 说明                     |
 | ----------------------------- | ---------------------- | ---------------------------- | ------------------------ |
 | `idx_posts_feed`              | `posts`                | `created_at`                 | Feed 列表时间排序查询    |
 | `idx_posts_author`            | `posts`                | `author_id, created_at`      | 用户个人帖子列表查询     |
+| `idx_posts_space`             | `posts`                | `space_id, created_at`       | 空间帖子列表查询         |
 | `uniq_post_likes`             | `post_likes`           | `post_id, user_id` (UNIQUE)  | 防止重复点赞             |
 | `idx_comments_post`           | `post_comments`        | `post_id, created_at`        | 帖子评论列表查询         |
 | `idx_event_log_user_id`       | `event_log`            | `user_id`                    | 按用户查询事件           |
 | `idx_event_log_event_type`    | `event_log`            | `event_type`                 | 按事件类型查询           |
 | `idx_event_log_created_at`    | `event_log`            | `created_at`                 | 按时间范围查询事件       |
+| `idx_tags_name_lower`         | `tags`                 | `name_lower`                 | 标签前缀联想查询         |
+| `idx_tags_post_count`         | `tags`                 | `post_count DESC`            | 热门标签排序             |
+| `idx_post_tags_tag`           | `post_tags`            | `tag_id, created_at`         | 按标签查询帖子           |
 
-此外，所有表的 `id` 字段 (UUID PK) 自动拥有主键索引，`users.username` 的 UNIQUE 约束自动创建唯一索引。
+此外，所有表的 `id` 字段 (UUID PK) 自动拥有主键索引，`users.username` 的 UNIQUE 约束自动创建唯一索引，`tags.name_lower` 的 UNIQUE 约束自动创建唯一索引。
 
 ## 5. 枚举类型
 

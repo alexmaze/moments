@@ -233,6 +233,8 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 | `spaces` | Public spaces: name, slug (unique), description, coverUrl, type (general/baby), creatorId, memberCount, postCount, soft-delete |
 | `space_members` | Space membership: spaceId + userId (unique pair), role (owner/admin/member), joinedAt |
 | `growth_records` | Baby space growth data: spaceId, recordedBy, date, heightCm, weightKg, headCircumferenceCm |
+| `tags` | Hashtags: name (original case), nameLower (unique, for case-insensitive lookup), postCount (denormalized) |
+| `post_tags` | Many-to-many posts ↔ tags, composite PK (postId, tagId) |
 | `event_log` | Audit log: eventType, entityType, entityId, payload, ipAddress, userAgent |
 
 Migrations live in `packages/db/src/migrations/`. Schema source of truth is `packages/db/src/schema/`.
@@ -381,11 +383,28 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 - **Navigation**: Bottom nav has 4 items: Home / Spaces / Profile. `AppLayout` uses `isSpaces = location.pathname.startsWith('/spaces')`.
 - **PostComposer**: Accepts optional `spaceId` prop. When no fixed space, shows `SpaceSelector` dropdown using `useMySpaces()`.
 
+### Hashtags (话题标签)
+- **Backend module**: `apps/server/src/modules/tags/` — TagsService, TagsController
+- **Database tables**: `tags` (name, nameLower UNIQUE, postCount), `post_tags` (composite PK: postId + tagId). `nameLower` stores lowercase for case-insensitive uniqueness.
+- **Tag parsing**: `packages/shared/src/utils/hashtag.ts` — `parseHashtags()` extracts `#tagName` from content. Regex: `/\B#([\p{L}\p{N}_]{1,50})(?=\s|$|[^\p{L}\p{N}_])/gu`. Supports Chinese, letters, numbers, underscore. Ends at whitespace/punctuation. Case-insensitive (normalized via `normalizeHashtag()`).
+- **Rendering**: `@/components/feed/PostContent.tsx` — uses `renderContentWithTags()` from shared package to split content into text/tag segments. Tags render as `<Link to="/tags/{name}">` with amber primary color.
+- **PostDto extension**: `tags: string[]` field on `PostDto` — populated in `enrichPosts()` via batch-loading `postTags` + `tags` join.
+- **Create flow**: `PostsService.create()` extracts tags in-transaction, upserts `tags` (increments `postCount`), inserts `postTags` relations.
+- **Delete flow**: `PostsService.deleteOwn()` removes `postTags` and decrements `tags.postCount` in-transaction.
+- **API routes**: `GET /api/tags?q=prefix&limit=10` (prefix search), `GET /api/tags/:name/posts?sort=latest|hot` (tag detail page). `GET /api/posts?tag=name` adds tag filter to main feed.
+- **Frontend**:
+  - Page: `TagPage` at `/tags/:name` — header with tag name + post count, sort toggle (latest/hot), infinite scroll PostCard list
+  - API: `apps/web/src/api/tags.api.ts`
+  - Hooks: `apps/web/src/hooks/useTags.ts` — `useTags(q)` for search, `useTagPosts(name, sort)` for infinite list
+  - i18n namespace: `tags` (in `locales/{en,zh-CN}/tags.json`)
+- **Case handling**: `#JavaScript` and `#javascript` are the same tag. `name` stores original case, `nameLower` (UNIQUE) stores lowercase. First occurrence's case is preserved.
+- **Tag suggestion**: `useTagSuggestion` hook detects `#` + characters in textarea, queries `/api/tags?q=`, shows `TagSuggestionDropdown` at caret position. Keyboard navigation: ↑↓ select, Enter/Tab confirm, Esc close. Debounced 150ms. Integrated in both QuickComposer and PostComposer.
+
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`
 - **Supported locales**: `en` (English), `zh-CN` (Simplified Chinese)
 - **Translation files**: `apps/web/src/i18n/locales/{en,zh-CN}/*.json`
-- **Namespaces**: `common`, `auth`, `feed`, `post`, `profile`, `spaces` — each page/feature uses its own namespace
+- **Namespaces**: `common`, `auth`, `feed`, `post`, `profile`, `spaces`, `tags` — each page/feature uses its own namespace
 - **Language detection priority**: `localStorage` (key `moments-locale`) → `navigator.language`
 - **User preference sync**: On login, DB `users.locale` overrides localStorage. Changes via Edit Profile dialog are saved to both DB and localStorage.
 - **Date/time formatting**: Uses `Intl.RelativeTimeFormat` and `Intl.DateTimeFormat` for locale-aware output.

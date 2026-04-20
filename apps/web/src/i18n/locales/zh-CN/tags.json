@@ -1,0 +1,13 @@
+{
+  "postCount": "{{count}} 篇帖子",
+  "sort": {
+    "latest": "最新",
+    "hot": "热门"
+  },
+  "error": {
+    "loadFailed": "加载失败，请重试",
+    "notFound": "该标签不存在"
+  },
+  "empty": "还没有帖子使用这个标签",
+  "loadMore": "加载更多"
+}

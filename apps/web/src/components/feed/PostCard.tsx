@@ -9,6 +9,7 @@ import { mediaToLightGallerySlides } from '@/lib/mediaToLightGallery';
 import { User, Trash2, Heart, MessageSquare, Users } from 'lucide-react';
 import MediaGrid from './MediaGrid';
 import MediaLightbox from './MediaLightbox';
+import { PostContent } from './PostContent';
 import type { MediaLightboxHandle } from './MediaLightbox';
 import CommentSection from '@/components/post/CommentSection';
 import {
@@ -122,9 +123,10 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
       {/* Content */}
       <div>
         {post.content && (
-          <p className="mt-3 text-foreground text-sm whitespace-pre-wrap break-words">
-            {post.content}
-          </p>
+          <PostContent
+            content={post.content}
+            className="mt-3 text-foreground text-sm whitespace-pre-wrap break-words"
+          />
         )}
 
         {/* Media */}

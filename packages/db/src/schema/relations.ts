@@ -3,6 +3,7 @@ import { users } from './users';
 import { mediaAssets } from './media';
 import { posts, postMediaRelations, postLikes, postComments } from './posts';
 import { spaces, spaceMembers, growthRecords } from './spaces';
+import { tags, postTags } from './tags';
 
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
@@ -19,6 +20,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   mediaRelations: many(postMediaRelations),
   likes: many(postLikes),
   comments: many(postComments),
+  postTags: many(postTags),
 }));
 
 export const postMediaRelationsRelations = relations(postMediaRelations, ({ one }) => ({
@@ -55,4 +57,13 @@ export const spaceMembersRelations = relations(spaceMembers, ({ one }) => ({
 export const growthRecordsRelations = relations(growthRecords, ({ one }) => ({
   space: one(spaces, { fields: [growthRecords.spaceId], references: [spaces.id] }),
   recorder: one(users, { fields: [growthRecords.recordedBy], references: [users.id] }),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  postTags: many(postTags),
+}));
+
+export const postTagsRelations = relations(postTags, ({ one }) => ({
+  post: one(posts, { fields: [postTags.postId], references: [posts.id] }),
+  tag: one(tags, { fields: [postTags.tagId], references: [tags.id] }),
 }));

@@ -59,6 +59,7 @@ export interface PostDto {
   comments: CommentDto[];
   /** true when there are more comments beyond the preview. */
   hasMoreComments: boolean;
+  tags: string[];
 }
 
 export interface CommentDto {
