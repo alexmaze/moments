@@ -35,9 +35,20 @@
     "avatarError": "Failed to update avatar.",
     "backgroundLabel": "Background",
     "backgroundDefault": "Default",
-    "backgroundUpload": "Upload custom",
-    "backgroundRemove": "Remove",
     "backgroundUploadSuccess": "Background updated!",
-    "backgroundUploadError": "Failed to upload background."
+    "backgroundUploadError": "Failed to upload background.",
+    "bg": {
+      "food": "Food",
+      "connected": "Connected",
+      "gplay": "Grid",
+      "geometry": "Geometry",
+      "wool": "Wool",
+      "plaid": "Plaid",
+      "grey": "Grey",
+      "robots": "Robots",
+      "skulls": "Skulls",
+      "subtle": "Subtle",
+      "dots": "Dots"
+    }
   }
 }

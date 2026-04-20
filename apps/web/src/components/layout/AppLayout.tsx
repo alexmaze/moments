@@ -64,14 +64,6 @@ export default function AppLayout() {
       )}
       style={hasCustomBackground ? backgroundStyle : undefined}
     >
-      {/* Dark-mode overlay: dims custom background in dark mode for readability */}
-      {hasCustomBackground && (
-        <div
-          aria-hidden="true"
-          className="fixed inset-0 pointer-events-none bg-black/0 dark:bg-black/55 transition-colors duration-300"
-        />
-      )}
-
       {/* Top nav */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">

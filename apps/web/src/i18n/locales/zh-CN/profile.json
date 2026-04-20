@@ -35,9 +35,20 @@
     "avatarError": "头像更新失败。",
     "backgroundLabel": "背景",
     "backgroundDefault": "默认",
-    "backgroundUpload": "上传自定义",
-    "backgroundRemove": "移除",
     "backgroundUploadSuccess": "背景已更新!",
-    "backgroundUploadError": "背景更新失败。"
+    "backgroundUploadError": "背景更新失败。",
+    "bg": {
+      "food": "食物",
+      "connected": "连接",
+      "gplay": "网格",
+      "geometry": "几何",
+      "wool": "羊毛",
+      "plaid": "格子",
+      "grey": "灰调",
+      "robots": "机器人",
+      "skulls": "骷髅",
+      "subtle": "淡灰",
+      "dots": "点阵"
+    }
   }
 }

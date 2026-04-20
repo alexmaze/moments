@@ -9,7 +9,6 @@ import { detectBrowserLocale } from '@/store/locale.store';
 import { useThemeStore } from '@/store/theme.store';
 import { useBackgroundStore } from '@/store/background.store';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
-import { useBackgroundUpload } from '@/hooks/useBackgroundUpload';
 import BackgroundPicker from './BackgroundPicker';
 import i18n from '@/i18n';
 import {
@@ -43,22 +42,12 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
   // Background
   const setBackground = useBackgroundStore((s) => s.setBackground);
   const [backgroundValue, setBackgroundValue] = useState<string | null>(profile.background ?? null);
-  const bgUpload = useBackgroundUpload();
 
   const avatarUpload = useAvatarUpload({ username: profile.username });
 
-  // Optimistic preview: apply background immediately on selection
   const handleBackgroundChange = (bg: string | null) => {
     setBackgroundValue(bg);
-    setBackground(bg); // instant visual preview in AppLayout
-  };
-
-  const handleBgFileUpload = async (file: File) => {
-    const url = await bgUpload.uploadFile(file);
-    if (url) {
-      setBackgroundValue(url);
-      // store is already updated by the upload hook
-    }
+    setBackground(bg);
   };
 
   const mutation = useMutation({
@@ -214,8 +203,6 @@ export default function EditProfileDialog({ open, onClose, profile }: EditProfil
           <BackgroundPicker
             value={backgroundValue}
             onChange={handleBackgroundChange}
-            isUploading={bgUpload.isUploading}
-            onUploadFile={handleBgFileUpload}
           />
 
           {/* Actions */}

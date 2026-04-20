@@ -1,28 +1,21 @@
 import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, ImagePlus, Loader2, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  BACKGROUND_PRESETS,
-  PRESET_MAP,
-  resolveBackgroundStyle,
-  isCustomUrl,
-} from '@/lib/backgroundPresets';
+import { TEXTURE_PRESETS, PRESET_MAP } from '@/lib/backgroundPresets';
+import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
 import type { CSSProperties } from 'react';
 
-// ── Swatch button ────────────────────────────────────────────────────────
 function Swatch({
   style,
   label,
   selected,
   onClick,
-  children,
 }: {
-  style?: CSSProperties;
+  style: CSSProperties;
   label: string;
   selected: boolean;
   onClick: () => void;
-  children?: React.ReactNode;
 }) {
   return (
     <button
@@ -30,7 +23,7 @@ function Swatch({
       title={label}
       onClick={onClick}
       className={cn(
-        'relative w-10 h-10 rounded-lg shrink-0 border-2 transition-all duration-150',
+        'relative w-12 h-12 rounded-lg shrink-0 border-2 transition-all duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
         selected
           ? 'border-primary shadow-md scale-110'
@@ -38,42 +31,25 @@ function Swatch({
       )}
       style={style}
     >
-      {selected && !children && (
+      {selected && (
         <span className="absolute inset-0 flex items-center justify-center">
-          <Check className="h-4 w-4 text-white" style={{ filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.8))' }} />
+          <Check className="h-5 w-5 text-white" style={{ filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.8))' }} />
         </span>
       )}
-      {children}
     </button>
   );
 }
 
-// ── Vertical divider between groups ─────────────────────────────────────
-function Divider() {
-  return <div className="h-8 w-px bg-border shrink-0 mx-1" />;
-}
-
-// ── Public component ─────────────────────────────────────────────────────
 interface BackgroundPickerProps {
   value: string | null;
   onChange: (bg: string | null) => void;
-  isUploading?: boolean;
-  onUploadFile: (file: File) => void;
 }
 
-export default function BackgroundPicker({
-  value,
-  onChange,
-  isUploading,
-  onUploadFile,
-}: BackgroundPickerProps) {
+export default function BackgroundPicker({ value, onChange }: BackgroundPickerProps) {
   const { t } = useTranslation('profile');
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isCustom = isCustomUrl(value);
+  const theme = useThemeStore((s) => s.theme);
 
-  // Convert vertical mouse wheel → horizontal scroll for the swatch row
-  // Must use addEventListener with { passive: false } to allow preventDefault
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -86,14 +62,22 @@ export default function BackgroundPicker({
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
 
-  const solids = BACKGROUND_PRESETS.filter((p) => p.type === 'solid');
-  const gradients = BACKGROUND_PRESETS.filter((p) => p.type === 'gradient');
-  const patterns = BACKGROUND_PRESETS.filter((p) => p.type === 'pattern');
+  const effectiveTheme = theme ?? getEffectiveTheme();
+  const isDark = effectiveTheme === 'dark';
 
-  // Preview style for the strip at the bottom
-  const previewStyle = isCustom
-    ? resolveBackgroundStyle(value)
-    : PRESET_MAP.get(value ?? '')?.style;
+  const getSwatchStyle = (presetId: string): CSSProperties => {
+    const preset = PRESET_MAP.get(presetId);
+    if (!preset) return {};
+    const variant = isDark ? preset.dark : preset.light;
+    return {
+      backgroundColor: variant.fillColor,
+      backgroundImage: `url(${preset.textureFile})`,
+      backgroundRepeat: 'repeat',
+    };
+  };
+
+  const selectedPreset = PRESET_MAP.get(value ?? '');
+  const previewStyle = selectedPreset ? getSwatchStyle(value!) : null;
 
   return (
     <div className="space-y-2">
@@ -101,112 +85,36 @@ export default function BackgroundPicker({
         {t('edit.backgroundLabel')}
       </label>
 
-      {/* Horizontal scrollable swatch row */}
       <div ref={scrollRef} className="overflow-x-auto rounded-md scrollbar-none">
-        <div className="flex gap-2 py-1 px-0.5 items-center min-w-min">
-          {/* Default (reset to theme background) */}
+        <div className="flex gap-3 py-1 px-0.5 items-center min-w-min">
           <Swatch
-            label={t('edit.backgroundDefault')}
-            selected={!value}
-            onClick={() => onChange(null)}
             style={{
               background:
                 'repeating-linear-gradient(45deg, #e0e0e0 0, #e0e0e0 4px, #f8f8f8 0, #f8f8f8 8px)',
             }}
+            label={t('edit.backgroundDefault')}
+            selected={!value}
+            onClick={() => onChange(null)}
           />
-          <Divider />
 
-          {/* Solid colours */}
-          {solids.map((p) => (
+          <div className="h-10 w-px bg-border shrink-0 mx-1" />
+
+          {TEXTURE_PRESETS.map((preset) => (
             <Swatch
-              key={p.id}
-              style={p.style}
-              label={p.nameKey}
-              selected={value === p.id}
-              onClick={() => onChange(p.id)}
+              key={preset.id}
+              style={getSwatchStyle(preset.id)}
+              label={t(`edit.bg.${preset.nameKey}`)}
+              selected={value === preset.id}
+              onClick={() => onChange(preset.id)}
             />
           ))}
-          <Divider />
-
-          {/* Gradients */}
-          {gradients.map((p) => (
-            <Swatch
-              key={p.id}
-              style={p.style}
-              label={p.nameKey}
-              selected={value === p.id}
-              onClick={() => onChange(p.id)}
-            />
-          ))}
-          <Divider />
-
-          {/* Patterns */}
-          {patterns.map((p) => (
-            <Swatch
-              key={p.id}
-              style={p.style}
-              label={p.nameKey}
-              selected={value === p.id}
-              onClick={() => onChange(p.id)}
-            />
-          ))}
-          <Divider />
-
-          {/* Custom upload button */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="sr-only"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onUploadFile(file);
-              e.target.value = '';
-            }}
-          />
-          <button
-            type="button"
-            title={t('edit.backgroundUpload')}
-            disabled={isUploading}
-            onClick={() => fileInputRef.current?.click()}
-            className={cn(
-              'relative w-10 h-10 rounded-lg shrink-0 border-2 transition-all duration-150',
-              'flex items-center justify-center',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-              isCustom
-                ? 'border-primary scale-110'
-                : 'border-dashed border-muted-foreground/40 hover:border-muted-foreground/70 hover:bg-muted/50',
-            )}
-            style={isCustom ? { ...resolveBackgroundStyle(value), backgroundAttachment: 'scroll' } : undefined}
-          >
-            {isUploading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : isCustom ? (
-              <Check className="h-4 w-4 text-white" style={{ filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.8))' }} />
-            ) : (
-              <ImagePlus className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
-
-          {/* Clear custom — only shown when a URL is selected */}
-          {isCustom && (
-            <button
-              type="button"
-              title={t('edit.backgroundRemove')}
-              onClick={() => onChange(null)}
-              className="w-6 h-6 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center shrink-0 transition-colors"
-            >
-              <X className="h-3 w-3 text-destructive" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Full-width preview strip */}
       {value && previewStyle && (
         <div
           aria-label="Background preview"
-          className="w-full h-16 rounded-lg border transition-all duration-300"
+          className="w-full h-20 rounded-lg border transition-all duration-300"
           style={previewStyle}
         />
       )}

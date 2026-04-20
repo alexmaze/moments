@@ -86,24 +86,4 @@ export class UsersService {
       createdAt: updated.createdAt.toISOString(),
     };
   }
-
-  async updateBackground(userId: string, backgroundUrl: string) {
-    const [updated] = await this.db
-      .update(users)
-      .set({ background: backgroundUrl, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return {
-      id: updated.id,
-      username: updated.username,
-      displayName: updated.displayName,
-      avatarUrl: updated.avatarUrl,
-      bio: updated.bio,
-      locale: updated.locale,
-      theme: updated.theme,
-      background: updated.background,
-      createdAt: updated.createdAt.toISOString(),
-    };
-  }
 }
