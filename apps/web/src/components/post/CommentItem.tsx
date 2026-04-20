@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Trash2 } from 'lucide-react';
+import { User, Trash2, MessageSquare } from 'lucide-react';
 import type { CommentDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';
+import { renderContentWithTagsAndMentions } from '@moments/shared';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -20,10 +21,39 @@ import {
 interface CommentItemProps {
   comment: CommentDto;
   postId: string;
-  onDelete?: () => void;
+  onReply?: (comment: CommentDto) => void;
 }
 
-export default function CommentItem({ comment, postId }: CommentItemProps) {
+function renderContent(content: string) {
+  const parts = renderContentWithTagsAndMentions(content);
+  return parts.map((part, i) => {
+    if (part.type === 'tag') {
+      return (
+        <Link
+          key={i}
+          to={`/tags/${encodeURIComponent(part.value)}`}
+          className="text-primary hover:underline font-medium"
+        >
+          #{part.value}
+        </Link>
+      );
+    }
+    if (part.type === 'mention') {
+      return (
+        <Link
+          key={i}
+          to={`/users/${part.userId}`}
+          className="text-primary hover:underline font-medium"
+        >
+          @{part.displayName}
+        </Link>
+      );
+    }
+    return <span key={i}>{part.value}</span>;
+  });
+}
+
+export default function CommentItem({ comment, postId, onReply }: CommentItemProps) {
   const { t } = useTranslation('post');
   const currentUser = useAuthStore((s) => s.currentUser);
   const deleteComment = useDeleteComment();
@@ -73,12 +103,34 @@ export default function CommentItem({ comment, postId }: CommentItemProps) {
             </button>
           )}
         </div>
+
+        {comment.replyTo && (
+          <div className="text-xs text-muted-foreground mb-1">
+            {t('comments.replyTo')}{' '}
+            <Link
+              to={`/users/${comment.replyTo.author.username}`}
+              className="text-primary hover:underline"
+            >
+              @{comment.replyTo.author.displayName}
+            </Link>
+          </div>
+        )}
+
         <p className="text-sm text-foreground mt-1 whitespace-pre-wrap break-words">
-          {comment.content}
+          {renderContent(comment.content)}
         </p>
+
+        {onReply && (
+          <button
+            onClick={() => onReply(comment)}
+            className="mt-1 text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          >
+            <MessageSquare className="w-3 h-3" />
+            {t('comments.reply')}
+          </button>
+        )}
       </div>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

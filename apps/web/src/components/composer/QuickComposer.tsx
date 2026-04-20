@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, User, Loader2, Smile, Hash } from 'lucide-react';
+import { Image, User, Loader2, Smile } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
-import { useTagSuggestion } from '@/hooks/useTagSuggestion';
 import MediaUploader from './MediaUploader';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';
-import { TagSuggestionDropdown } from './TagSuggestionDropdown';
-import { HighlightTextarea } from './HighlightTextarea';
 import { EmojiPickerPopover } from './EmojiPickerPopover';
+import { RichTextEditor, type RichTextEditorRef } from './rich-editor';
 
 interface QuickComposerProps {
   fixedSpaceId?: string;
@@ -21,7 +19,7 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState('');
   const [spaceId, setSpaceId] = useState<string | undefined>(fixedSpaceId);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<RichTextEditorRef>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -30,28 +28,6 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const { items, addFiles, removeItem, readyIds, allUploaded, reset } =
     useMediaUpload();
 
-  const {
-    isOpen: tagSuggestionOpen,
-    selectedIndex: tagSelectedIndex,
-    suggestions: tagSuggestions,
-    query: tagQuery,
-    onKeyDown: onTagKeyDown,
-    selectTag,
-    close: closeTagSuggestion,
-    getCaretCoordinates,
-  } = useTagSuggestion(content, setContent, textareaRef);
-
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
-
-  useEffect(() => {
-    if (tagSuggestionOpen && expanded) {
-      const coords = getCaretCoordinates();
-      setDropdownPosition(coords);
-    } else {
-      setDropdownPosition(null);
-    }
-  }, [tagSuggestionOpen, expanded, content, getCaretCoordinates]);
-
   const hasContent = content.trim().length > 0;
   const hasMedia = items.length > 0;
   const hasMediaReady = hasMedia && allUploaded;
@@ -59,17 +35,10 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const isDirty = hasContent || hasMedia || !!spaceId;
 
   useEffect(() => {
-    if (expanded && textareaRef.current) {
-      textareaRef.current.focus();
+    if (expanded && editorRef.current) {
+      editorRef.current.focus();
     }
   }, [expanded]);
-
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  }, []);
 
   useEffect(() => {
     if (!expanded) return;
@@ -93,9 +62,11 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const handleSubmit = () => {
     if (!canSubmit) return;
 
+    const serializedContent = editorRef.current?.getSerializedContent() || content;
+
     createPost.mutate(
       {
-        content: content.trim() || undefined,
+        content: serializedContent.trim() || undefined,
         mediaIds: readyIds,
         spaceId,
       },
@@ -123,28 +94,9 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
     input.click();
   };
 
-  const insertAtCursor = useCallback((text: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newContent = content.slice(0, start) + text + content.slice(end);
-    setContent(newContent);
-
-    setTimeout(() => {
-      textarea.setSelectionRange(start + text.length, start + text.length);
-      textarea.focus();
-    }, 0);
-  }, [content, setContent]);
-
   const handleEmojiSelect = useCallback((emoji: string) => {
-    insertAtCursor(emoji);
-  }, [insertAtCursor]);
-
-  const handleInsertHashtag = useCallback(() => {
-    insertAtCursor('#');
-  }, [insertAtCursor]);
+    setContent(prev => prev + emoji);
+  }, []);
 
   return (
     <div ref={cardRef} className="bg-card rounded-xl shadow-sm border border-border mb-4">
@@ -186,30 +138,14 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
               </div>
             )}
 
-            <HighlightTextarea
+            <RichTextEditor
+              ref={editorRef}
               value={content}
-              onChange={(value) => {
-                setContent(value);
-                autoResize();
-              }}
-              onKeyDown={(e) => {
-                if (onTagKeyDown(e)) return true;
-              }}
+              onChange={setContent}
               placeholder={t('quickComposer.placeholder')}
-              ref={textareaRef}
               className="flex-1 min-h-[72px]"
             />
           </div>
-
-          <TagSuggestionDropdown
-            isOpen={tagSuggestionOpen}
-            suggestions={tagSuggestions}
-            query={tagQuery}
-            selectedIndex={tagSelectedIndex}
-            position={dropdownPosition}
-            onSelect={selectTag}
-            onClose={closeTagSuggestion}
-          />
 
           <div className="mt-3">
             <MediaUploader
@@ -245,15 +181,6 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
               onEmojiSelect={handleEmojiSelect}
               anchorRef={emojiButtonRef}
             />
-
-            <button
-              onClick={handleInsertHashtag}
-              type="button"
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-accent"
-              title={t('quickComposer.insertHashtag')}
-            >
-              <Hash className="w-5 h-5" />
-            </button>
 
             {!fixedSpaceId && (
               <SpaceSelector selectedSpaceId={spaceId} onChange={setSpaceId} />

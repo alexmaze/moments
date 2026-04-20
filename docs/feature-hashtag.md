@@ -1144,26 +1144,18 @@ en: {
 
 ---
 
-## 七、发帖联想（后续迭代）
+## 七、发帖联想
 
-### 7.1 需求
+### 7.1 实现方案
 
-- 用户输入 `#` 后触发联想
-- 根据后续字符进行前缀搜索
-- 显示下拉列表供选择
+标签联想已通过 Lexical 富文本编辑器 + `lexical-beautiful-mentions` 插件实现：
 
-### 7.2 实现方案（概述）
-
-1. **监听输入**：在 QuickComposer 的 textarea `onChange` 中检测 `#` 输入
-2. **触发联想**：`#` 后输入第一个字符后调用 `useTags(query)` 
-3. **定位浮层**：使用 `textarea.selectionStart` 计算光标位置，定位下拉菜单
-4. **键盘交互**：↑↓ 选择、Enter 确认、Esc 关闭
-5. **插入标签**：选中后替换当前输入的 `#xxx` 为 `#完整标签名 `
-
-### 7.3 参考组件
-
-- `SpaceSelector` 的浮层 UI 模式
-- 可选方案：引入 `@tiptap/extension-mention` 或轻量 mention 库
+- **编辑器**: `@/components/composer/rich-editor/RichTextEditor.tsx` — Lexical-based editor
+- **插件**: `BeautifulMentionsPlugin` with `triggers={['@', '#']}` — 同时支持 @提及 和 #标签联想
+- **搜索**: `onSearch` 回调对接 `/api/tags?q=` 和 `/api/users/search?q=` API
+- **键盘交互**: ↑↓ 选择、Enter/Tab 确认、Esc 关闭（由插件内置处理）
+- **插入标签**: 选中后插入原子节点 `#tagName`，自动补空格
+- **创建新标签**: `creatable={{ '#': true }}` 允许用户创建不存在的标签
 
 ---
 

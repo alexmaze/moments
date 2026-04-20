@@ -16,6 +16,9 @@
     "deleteConfirmTitle": "删除这条评论？",
     "deleteConfirmDesc": "此操作无法撤销。",
     "deleteConfirmAction": "删除",
-    "deleteConfirmCancel": "取消"
+    "deleteConfirmCancel": "取消",
+    "replyTo": "回复",
+    "reply": "回复",
+    "replyPlaceholder": "回复 {{name}}..."
   }
 }

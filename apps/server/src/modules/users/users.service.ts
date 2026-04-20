@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { eq, and, count } from 'drizzle-orm';
+import { eq, and, count, ilike, or } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, users, posts } from '@moments/db';
 import { UpdateProfileDto } from './dto';
@@ -38,6 +38,41 @@ export class UsersService {
       postCount: postCountResult.count,
       createdAt: user.createdAt.toISOString(),
     };
+  }
+
+  async search(query: string, limit = 10) {
+    const searchTerm = `%${query}%`;
+    
+    const rows = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(users)
+      .where(or(
+        ilike(users.username, searchTerm),
+        ilike(users.displayName, searchTerm),
+      ))
+      .limit(limit);
+
+    return rows;
+  }
+
+  async findByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    
+    const rows = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(users);
+    
+    return rows.filter(u => ids.includes(u.id));
   }
 
   async updateMe(userId: string, dto: UpdateProfileDto) {

@@ -106,8 +106,8 @@ export function useCreateComment() {
   const currentUser = useAuthStore((s) => s.currentUser);
 
   return useMutation({
-    mutationFn: ({ postId, content }: { postId: string; content: string }) =>
-      createCommentApi(postId, content),
+    mutationFn: ({ postId, content, replyToId }: { postId: string; content: string; replyToId?: string }) =>
+      createCommentApi(postId, content, replyToId),
 
     onMutate: async ({ postId, content }) => {
       await Promise.all([
@@ -137,6 +137,8 @@ export function useCreateComment() {
           displayName: currentUser?.displayName ?? "",
           avatarUrl: currentUser?.avatarUrl ?? null,
         },
+        replyTo: null,
+        mentions: [],
       };
 
       // Append to comments cache (last page)

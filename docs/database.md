@@ -5,7 +5,7 @@
 - **数据库**: PostgreSQL 16 (Docker: `postgres:16-alpine`)
 - **ORM**: Drizzle ORM (`drizzle-orm/node-postgres`)
 - **连接池**: `pg.Pool`, 最大连接数 10
-- **表数量**: 9 张表
+- **表数量**: 11 张表
 - **自定义枚举**: 2 个 (`media_type`, `media_status`)
 - **Schema 定义位置**: `packages/db/src/schema/`
 
@@ -149,7 +149,7 @@
 
 ### 3.6 post_comments
 
-帖子评论表。使用软删除 (`is_deleted` + `deleted_at`) 而非物理删除，保留评论历史记录。
+帖子评论表。使用软删除 (`is_deleted` + `deleted_at`) 而非物理删除，保留评论历史记录。`reply_to_id` 用于记录回复关系（单层扁平，所有回复在同一层级，通过 @mention 标识回复对象）。
 
 | 字段名          | 类型                         | 约束                               | 说明             |
 | --------------- | ---------------------------- | ---------------------------------- | ---------------- |
@@ -157,6 +157,7 @@
 | `post_id`       | `uuid`                       | NOT NULL, FK → `posts.id` (CASCADE)| 所属帖子         |
 | `author_id`     | `uuid`                       | NOT NULL, FK → `users.id`         | 评论作者         |
 | `content`       | `text`                       | NOT NULL                           | 评论内容         |
+| `reply_to_id`   | `uuid`                       | 可空, FK → `post_comments.id`     | 回复的父评论 ID  |
 | `is_deleted`    | `boolean`                    | NOT NULL, 默认 `false`             | 软删除标记       |
 | `deleted_at`    | `timestamptz`                | 可空                               | 删除时间         |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`             | 评论时间         |
@@ -198,6 +199,18 @@
 | `post_id`       | `uuid`                       | NOT NULL, FK → `posts.id` (CASCADE), PK | 所属帖子         |
 | `tag_id`        | `uuid`                       | NOT NULL, FK → `tags.id` (CASCADE), PK  | 关联标签         |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`             | 创建时间         |
+
+### 3.10 mentions
+
+提及关系表。记录帖子/评论中对用户的 @提及，为后续通知功能做储备。`post_id` 和 `comment_id` 至少有一个非空。
+
+| 字段名          | 类型                         | 约束                               | 说明             |
+| --------------- | ---------------------------- | ---------------------------------- | ---------------- |
+| `id`            | `uuid`                       | PK, 默认 `gen_random_uuid()`      | 提及唯一标识     |
+| `post_id`       | `uuid`                       | 可空, FK → `posts.id` (CASCADE)   | 关联帖子         |
+| `comment_id`    | `uuid`                       | 可空, FK → `post_comments.id` (CASCADE) | 关联评论  |
+| `mentioned_user_id` | `uuid`                  | NOT NULL, FK → `users.id` (CASCADE) | 被提及的用户   |
+| `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`             | 提及时间         |
 
 ## 4. 索引列表
 

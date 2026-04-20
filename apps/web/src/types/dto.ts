@@ -21,6 +21,13 @@ export interface UserProfileDto extends UserDto {
   postCount: number;
 }
 
+export interface MentionUserDto {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
 export interface PostMediaDto {
   id: string;
   type: 'image' | 'video';
@@ -60,6 +67,19 @@ export interface PostDto {
   /** true when there are more comments beyond the preview. */
   hasMoreComments: boolean;
   tags: string[];
+  /** Users mentioned in the post content */
+  mentions: MentionUserDto[];
+}
+
+export interface ReplyToCommentDto {
+  id: string;
+  author: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+  };
+  contentPreview: string;
 }
 
 export interface CommentDto {
@@ -73,6 +93,10 @@ export interface CommentDto {
     displayName: string;
     avatarUrl: string | null;
   };
+  /** The comment this is replying to, null for top-level comments */
+  replyTo: ReplyToCommentDto | null;
+  /** Users mentioned in the comment content */
+  mentions: MentionUserDto[];
 }
 
 export interface PaginatedResponse<T> {

@@ -4,7 +4,8 @@
 
 | 层级     | 技术                                        |
 | -------- | ------------------------------------------- |
-| 前端     | React, Vite, TailwindCSS, lightGallery    |
+| 前端     | React, Vite, TailwindCSS, lightGallery, Lexical |
+| 富文本   | Lexical + lexical-beautiful-mentions        |
 | 后端     | NestJS (Express), Passport, JWT             |
 | 数据库   | PostgreSQL 16                               |
 | ORM      | Drizzle ORM                                 |

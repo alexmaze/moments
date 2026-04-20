@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
-import { renderContentWithTags } from '@moments/shared';
+import { renderContentWithTagsAndMentions } from '@moments/shared';
 
 interface PostContentProps {
   content: string;
@@ -10,7 +10,7 @@ interface PostContentProps {
 export const PostContent = memo(function PostContent({ content, className }: PostContentProps) {
   if (!content) return null;
 
-  const parts = renderContentWithTags(content);
+  const parts = renderContentWithTagsAndMentions(content);
 
   return (
     <p className={className}>
@@ -24,6 +24,18 @@ export const PostContent = memo(function PostContent({ content, className }: Pos
               onClick={(e) => e.stopPropagation()}
             >
               #{part.value}
+            </Link>
+          );
+        }
+        if (part.type === 'mention') {
+          return (
+            <Link
+              key={i}
+              to={`/users/${part.userId}`}
+              className="text-primary hover:underline font-medium"
+              onClick={(e) => e.stopPropagation()}
+            >
+              @{part.displayName}
             </Link>
           );
         }

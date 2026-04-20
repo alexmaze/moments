@@ -10,6 +10,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { UsersModule } from './modules/users/users.module';
 import { SpacesModule } from './modules/spaces/spaces.module';
 import { TagsModule } from './modules/tags/tags.module';
+import { MentionsModule } from './modules/mentions/mentions.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -27,6 +28,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     UsersModule,
     SpacesModule,
     TagsModule,
+    MentionsModule,
   ],
   providers: [
     {

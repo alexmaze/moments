@@ -11,7 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Layer | Technology |
 |---|---|
 | Frontend | React 19 + Vite 8 + Tailwind CSS v4 + TanStack Query v5 |
-| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) + lightGallery (media lightbox) |
+| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) + lightGallery (media lightbox) + Lexical (rich text editor) |
+| Rich Text Editor | Lexical + lexical-beautiful-mentions (atomic mention/tag nodes) |
 | Backend | NestJS 11 + Drizzle ORM + PostgreSQL 16 |
 | Auth | JWT (Passport.js — local + JWT strategies) |
 | Media | Local filesystem storage + sharp (images) + ffmpeg (video thumbnails) |
@@ -196,7 +197,7 @@ src/
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
-│   ├── composer/     # QuickComposer, MediaUploader, HighlightTextarea, EmojiPickerPopover, TagSuggestionDropdown
+│   ├── composer/     # QuickComposer, MediaUploader, RichTextEditor, EmojiPickerPopover
 │   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog, BackgroundPicker
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
@@ -272,10 +273,10 @@ pnpm db:migrate    # applies it to the database
 ### Quick Composer (快捷发帖入口)
 - **Component**: `@/components/composer/QuickComposer.tsx` — inline expandable post composer at the top of the feed.
 - **Collapsed state**: Card with current user's avatar + placeholder text + image icon hint. Clicking anywhere expands it.
-- **Expanded state**: Avatar + `HighlightTextarea` (with #tag highlighting), MediaUploader below, bottom toolbar: `[Image] [Emoji] [#] [SpaceSelector] — [Submit]`.
-- **HighlightTextarea**: Overlay-based textarea with transparent text. An overlay div renders `#hashtags` in amber (`text-primary`). Preserves native textarea behaviors (caret, selection, IME, undo).
+- **Expanded state**: Avatar + `RichTextEditor` (Lexical-based rich text editor), MediaUploader below, bottom toolbar: `[Image] [Emoji] [SpaceSelector] — [Submit]`.
+- **RichTextEditor**: Lexical-based rich text editor with atomic mention/tag nodes. Uses `lexical-beautiful-mentions` plugin for @mention and #hashtag support. Mentions display as `@displayName` in edit mode, serialize to `@{displayName|userId}` for storage. Tags display and store as `#tagName`.
 - **EmojiPickerPopover**: Portal-based emoji picker using `emoji-picker-react`. Supports search, skin tones, categories, recent emojis. Respects dark/light theme.
-- **Toolbar buttons**: Image (file picker), Emoji (toggles picker popover), Hashtag (inserts `#` at cursor, triggers tag suggestion), SpaceSelector (optional, hidden when `fixedSpaceId` prop set).
+- **Toolbar buttons**: Image (file picker), Emoji (toggles picker popover), SpaceSelector (optional, hidden when `fixedSpaceId` prop set).
 - **State management**: Local `expanded` state; reuses `useMediaUpload()` and `useCreatePost()` hooks. On successful post, auto-collapses and resets.
 - **Click-outside behavior**: Collapses when clicking outside **only if** no content or media has been entered (prevents accidental data loss).
 - **Sole entry point**: QuickComposer is the only post creation interface (no FAB, no separate PostComposer).
@@ -383,7 +384,7 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
   - Hooks: `useSpaces.ts` (spaceKeys factory, CRUD/membership hooks), `useGrowthRecords.ts`
   - i18n namespace: `spaces` (in `locales/{en,zh-CN}/spaces.json`)
 - **Navigation**: Bottom nav has 4 items: Home / Spaces / Profile. `AppLayout` uses `isSpaces = location.pathname.startsWith('/spaces')`.
-- **QuickComposer**: Inline expandable post composer at feed top. Collapsed: avatar + placeholder + image icon. Expanded: `HighlightTextarea` with tag highlighting + emoji/hashtag toolbar + media upload + space selector. Uses `useTagSuggestion` for `#` autocomplete, emoji-picker-react for emoji insertion.
+- **QuickComposer**: Inline expandable post composer at feed top. Collapsed: avatar + placeholder + image icon. Expanded: `RichTextEditor` (Lexical-based with @mention and #hashtag atomic nodes) + emoji toolbar + media upload + space selector.
 
 ### Hashtags (话题标签)
 - **Backend module**: `apps/server/src/modules/tags/` — TagsService, TagsController
@@ -400,7 +401,24 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
   - Hooks: `apps/web/src/hooks/useTags.ts` — `useTags(q)` for search, `useTagPosts(name, sort)` for infinite list
   - i18n namespace: `tags` (in `locales/{en,zh-CN}/tags.json`)
 - **Case handling**: `#JavaScript` and `#javascript` are the same tag. `name` stores original case, `nameLower` (UNIQUE) stores lowercase. First occurrence's case is preserved.
-- **Tag suggestion**: `useTagSuggestion` hook detects `#` + characters in textarea, queries `/api/tags?q=`, shows `TagSuggestionDropdown` at caret position. Keyboard navigation: ↑↓ select, Enter/Tab confirm, Esc close. Debounced 150ms. Integrated in QuickComposer.
+- **Tag suggestion**: RichTextEditor (Lexical) detects `#` + characters, queries `/api/tags?q=`, shows dropdown menu. Keyboard navigation: ↑↓ select, Enter/Tab confirm, Esc close.
+
+### @Mentions (@提及)
+- **Backend module**: `apps/server/src/modules/mentions/` — MentionsService (creates mention records for notifications)
+- **Database table**: `mentions` (postId/commentId, mentionedUserId, createdAt). Stores mention relationships for future notification feature.
+- **Mention format**: `@{displayName|userId}` — pipe-delimited, displayName may contain spaces. Example: `@{张三|550e8400-e29b-41d4-a716-446655440000}`.
+- **Parsing**: `packages/shared/src/utils/mention.ts` — `parseMentions()` extracts mentions from content. Regex: `/@\{(.+)\|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\}/gi`. Greedy match with UUID anchor.
+- **Rendering**: `@/components/feed/PostContent.tsx` — uses `renderContentWithTagsAndMentions()` from shared package to split content into text/tag/mention segments. Mentions render as `<Link to="/users/{userId}">` with amber primary color.
+- **Create flow**: `PostsService.create()` and `CommentsService.create()` extract mentions in-transaction, insert `mentions` records.
+- **Comment replies**: `post_comments` table has `reply_to_id` FK. Clicking "Reply" on a comment auto-inserts `@{displayName|userId}` in CommentComposer. Reply relationship stored separately from mention (reply is explicit, mention is derived from content).
+- **API routes**: `GET /api/users/search?q=` — user search for mention suggestions. Returns `MentionUserDto[]` (id, username, displayName, avatarUrl).
+- **Frontend**:
+  - Component: `@/components/composer/rich-editor/RichTextEditor.tsx` — Lexical-based editor with `lexical-beautiful-entions` plugin
+  - Serialization: `rich-editor/serialization.ts` — `$convertToStorageFormat()` and `$convertFromStorageFormat()` for storage ↔ Lexical node conversion
+  - Mentions are atomic nodes (DecoratorNode) — display `@displayName`, store metadata `{ id: userId }` separately
+  - Menu shows user avatar + displayName, loading state during search
+- **Display name handling**: Snapshot at mention time. If user changes displayName, historical mentions keep old name (no auto-update).
+- **Self-mention**: Allowed, no notification created.
 
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`

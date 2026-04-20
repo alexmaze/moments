@@ -21,3 +21,10 @@ export interface UserDto {
 export interface UserProfileDto extends UserDto {
   postCount: number;
 }
+
+export interface MentionUserDto {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}

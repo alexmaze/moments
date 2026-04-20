@@ -52,8 +52,9 @@ export function getCommentsApi(
 export function createCommentApi(
   postId: string,
   content: string,
+  replyToId?: string,
 ): Promise<CommentDto> {
-  return apiClient.post(`/posts/${postId}/comments`, { content });
+  return apiClient.post(`/posts/${postId}/comments`, { content, replyToId });
 }
 
 export function deleteCommentApi(id: string): Promise<void> {

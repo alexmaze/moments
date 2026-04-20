@@ -103,7 +103,7 @@ export default function BackgroundPicker({ value, onChange }: BackgroundPickerPr
             <Swatch
               key={preset.id}
               style={getSwatchStyle(preset.id)}
-              label={t(`edit.bg.${preset.nameKey}`)}
+              label={t(`edit.bg.${preset.nameKey}` as any)}
               selected={value === preset.id}
               onClick={() => onChange(preset.id)}
             />

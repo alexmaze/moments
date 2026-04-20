@@ -31,6 +31,7 @@
     "emojiCategoryFlags": "Flags",
     "insertEmoji": "Insert emoji",
     "insertHashtag": "Insert hashtag",
+    "insertMention": "Mention someone",
     "insertImage": "Insert image"
   },
   "uploader": {

@@ -4,8 +4,9 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  forwardRef,
 } from '@nestjs/common';
-import { eq, and, desc, lt, asc, inArray, sql, ilike } from 'drizzle-orm';
+import { eq, and, desc, lt, asc, inArray, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import {
   type DrizzleClient,
@@ -20,8 +21,10 @@ import {
   tags,
   postTags,
 } from '@moments/db';
-import { parseHashtags, normalizeHashtag } from '@moments/shared';
+import { parseHashtags, normalizeHashtag, parseMentions } from '@moments/shared';
 import { CreatePostDto } from './dto';
+import { MentionsService } from '../mentions/mentions.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PostsService {
@@ -29,6 +32,9 @@ export class PostsService {
 
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
+    private readonly mentionsService: MentionsService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   async create(dto: CreatePostDto, authorId: string) {
@@ -132,6 +138,18 @@ export class PostsService {
 
       return newPost;
     });
+
+    if (hasContent && dto.content!.trim()) {
+      const parsedMentions = parseMentions(dto.content!);
+      if (parsedMentions.length > 0) {
+        await this.mentionsService.createMentions(
+          'post',
+          post.id,
+          authorId,
+          parsedMentions.map(m => m.userId),
+        );
+      }
+    }
 
     return this.getById(post.id, authorId);
   }
@@ -294,6 +312,8 @@ export class PostsService {
       }
     });
 
+    await this.mentionsService.deleteMentionsForEntity('post', id);
+
     return { success: true };
   }
 
@@ -428,12 +448,45 @@ export class PostsService {
       tagsByPost.set(row.postId, list);
     }
 
+    const allMentionedUserIds = new Set<string>();
+    for (const post of postRows) {
+      if (post.content) {
+        const parsed = parseMentions(post.content);
+        for (const m of parsed) {
+          allMentionedUserIds.add(m.userId);
+        }
+      }
+    }
+
+    let mentionsUserMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null }>();
+    if (allMentionedUserIds.size > 0) {
+      const mentionUsers = await this.usersService.findByIds([...allMentionedUserIds]);
+      for (const u of mentionUsers) {
+        mentionsUserMap.set(u.id, u);
+      }
+    }
+
     return postRows.map((post) => {
       const author = authorMap.get(post.authorId)!;
       const mediaRels = mediaByPost.get(post.id) || [];
       const previewComments = commentPreviewMap.get(post.id) || [];
       const spaceInfo = post.spaceId ? spaceMap.get(post.spaceId) ?? null : null;
       const postTagsList = tagsByPost.get(post.id) || [];
+
+      const postMentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[] = [];
+      if (post.content) {
+        const parsed = parseMentions(post.content);
+        const seen = new Set<string>();
+        for (const m of parsed) {
+          if (!seen.has(m.userId)) {
+            seen.add(m.userId);
+            const user = mentionsUserMap.get(m.userId);
+            if (user) {
+              postMentions.push(user);
+            }
+          }
+        }
+      }
 
       return {
         id: post.id,
@@ -466,6 +519,7 @@ export class PostsService {
         comments: previewComments,
         hasMoreComments: post.commentCount > previewComments.length,
         tags: postTagsList,
+        mentions: postMentions,
       };
     });
   }

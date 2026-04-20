@@ -42,11 +42,13 @@ export const postComments = pgTable('post_comments', {
   postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
   authorId: uuid('author_id').notNull().references(() => users.id),
   content: text('content').notNull(),
+  replyToId: uuid('reply_to_id'),
   isDeleted: boolean('is_deleted').notNull().default(false),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index('idx_comments_post').on(table.postId, table.createdAt),
+  index('idx_comments_reply_to').on(table.replyToId),
 ]);
 
 export type Post = typeof posts.$inferSelect;

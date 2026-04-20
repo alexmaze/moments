@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CommentDto } from '@/types/dto';
 import { usePostComments } from '@/hooks/useComments';
 import CommentItem from './CommentItem';
-import CommentInput from './CommentInput';
+import CommentComposer from './CommentComposer';
 
 interface CommentSectionProps {
   postId: string;
@@ -20,6 +21,8 @@ export default function CommentSection({
   const { t } = useTranslation('post');
   const { comments, hasMore, loadMore, isLoadingMore, isInitialLoad } =
     usePostComments(postId, { initialComments, initialHasMore });
+
+  const [replyTo, setReplyTo] = useState<CommentDto | null>(null);
 
   const isCard = variant === 'card';
 
@@ -57,7 +60,12 @@ export default function CommentSection({
       <div className={isCard ? 'divide-y divide-border' : 'divide-y divide-border/50'}>
         {comments.length > 0 ? (
           comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} postId={postId} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              postId={postId}
+              onReply={setReplyTo}
+            />
           ))
         ) : isCard ? (
           <div className="p-4 text-sm text-muted-foreground text-center">
@@ -86,7 +94,11 @@ export default function CommentSection({
       )}
 
       <div className={isCard ? 'border-t border-border' : 'border-t border-border/50'}>
-        <CommentInput postId={postId} />
+        <CommentComposer
+          postId={postId}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
+        />
       </div>
     </div>
   );

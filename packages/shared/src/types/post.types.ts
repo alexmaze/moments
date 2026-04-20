@@ -1,7 +1,6 @@
-import type { UserDto, PostMediaDto } from './index';
+import type { UserDto, PostMediaDto, MentionUserDto } from './index';
 import type { PostSpaceDto } from './space.types';
 
-// Post types
 export interface PostDto {
   id: string;
   content: string | null;
@@ -19,15 +18,26 @@ export interface PostDto {
   hasMoreComments: boolean;
   /** Hashtags extracted from content, e.g. ['JavaScript', '前端开发'] */
   tags: string[];
+  /** Users mentioned in the post content via @{displayName|userId} */
+  mentions: MentionUserDto[];
 }
 
 export interface PostDetailDto extends PostDto {}
 
-// Comment types
+export interface ReplyToCommentDto {
+  id: string;
+  author: UserDto;
+  contentPreview: string;
+}
+
 export interface CommentDto {
   id: string;
   content: string;
   createdAt: string;
   isDeleted: boolean;
   author: UserDto;
+  /** The comment this is replying to, null for top-level comments */
+  replyTo: ReplyToCommentDto | null;
+  /** Users mentioned in the comment content via @{displayName|userId} */
+  mentions: MentionUserDto[];
 }

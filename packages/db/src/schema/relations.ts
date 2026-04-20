@@ -4,6 +4,7 @@ import { mediaAssets } from './media';
 import { posts, postMediaRelations, postLikes, postComments } from './posts';
 import { spaces, spaceMembers, growthRecords } from './spaces';
 import { tags, postTags } from './tags';
+import { mentions } from './mentions';
 
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
@@ -12,6 +13,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   media: many(mediaAssets),
   spaceMembers: many(spaceMembers),
   createdSpaces: many(spaces),
+  mentionsMade: many(mentions, { relationName: 'mentioner' }),
+  mentionsReceived: many(mentions, { relationName: 'mentionedUser' }),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -37,9 +40,15 @@ export const postLikesRelations = relations(postLikes, ({ one }) => ({
   user: one(users, { fields: [postLikes.userId], references: [users.id] }),
 }));
 
-export const postCommentsRelations = relations(postComments, ({ one }) => ({
+export const postCommentsRelations = relations(postComments, ({ one, many }) => ({
   post: one(posts, { fields: [postComments.postId], references: [posts.id] }),
   author: one(users, { fields: [postComments.authorId], references: [users.id] }),
+  replyTo: one(postComments, {
+    fields: [postComments.replyToId],
+    references: [postComments.id],
+    relationName: 'replies',
+  }),
+  replies: many(postComments, { relationName: 'replies' }),
 }));
 
 export const spacesRelations = relations(spaces, ({ one, many }) => ({
@@ -66,4 +75,17 @@ export const tagsRelations = relations(tags, ({ many }) => ({
 export const postTagsRelations = relations(postTags, ({ one }) => ({
   post: one(posts, { fields: [postTags.postId], references: [posts.id] }),
   tag: one(tags, { fields: [postTags.tagId], references: [tags.id] }),
+}));
+
+export const mentionsRelations = relations(mentions, ({ one }) => ({
+  mentioner: one(users, {
+    fields: [mentions.mentionerId],
+    references: [users.id],
+    relationName: 'mentioner',
+  }),
+  mentionedUser: one(users, {
+    fields: [mentions.mentionedUserId],
+    references: [users.id],
+    relationName: 'mentionedUser',
+  }),
 }));

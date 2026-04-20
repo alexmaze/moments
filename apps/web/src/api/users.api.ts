@@ -1,8 +1,12 @@
 import apiClient from "./client";
-import type { UserDto, UserProfileDto, SupportedLocale, SupportedTheme } from "@/types/dto";
+import type { UserDto, UserProfileDto, SupportedLocale, SupportedTheme, MentionUserDto } from "@/types/dto";
 
 export function getUserProfileApi(username: string): Promise<UserProfileDto> {
   return apiClient.get(`/users/${username}`);
+}
+
+export function searchUsersApi(q: string, limit = 10): Promise<MentionUserDto[]> {
+  return apiClient.get(`/users/search`, { params: { q, limit } });
 }
 
 interface UpdateProfileRequest {

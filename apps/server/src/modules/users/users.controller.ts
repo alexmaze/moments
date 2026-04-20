@@ -25,6 +25,14 @@ export class UsersController {
     private readonly mediaService: MediaService,
   ) {}
 
+  @Get('users/search')
+  async searchUsers(
+    @Query('q') q: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.usersService.search(q, limit ? parseInt(limit, 10) : 10);
+  }
+
   @Get('users/:username')
   async getProfile(@Param('username') username: string) {
     return this.usersService.getProfile(username);
