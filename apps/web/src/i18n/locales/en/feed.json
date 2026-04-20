@@ -16,11 +16,22 @@
   },
   "quickComposer": {
     "placeholder": "Share what's on your mind...",
-    "submit": "Post"
-  },
-  "quickComposer": {
-    "placeholder": "Share what's on your mind...",
-    "submit": "Post"
+    "submit": "Post",
+    "emojiSearch": "Search emoji...",
+    "emojiClear": "Clear",
+    "emojiPreview": "What's your mood?",
+    "emojiCategoryRecent": "Recent",
+    "emojiCategorySmileys": "Smileys & People",
+    "emojiCategoryAnimals": "Animals & Nature",
+    "emojiCategoryFood": "Food & Drink",
+    "emojiCategoryTravel": "Travel & Places",
+    "emojiCategoryActivities": "Activities",
+    "emojiCategoryObjects": "Objects",
+    "emojiCategorySymbols": "Symbols",
+    "emojiCategoryFlags": "Flags",
+    "insertEmoji": "Insert emoji",
+    "insertHashtag": "Insert hashtag",
+    "insertImage": "Insert image"
   },
   "uploader": {
     "dropzone": "Drop photos or videos here, or tap to browse",

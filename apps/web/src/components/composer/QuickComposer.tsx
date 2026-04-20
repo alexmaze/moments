@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, User, Loader2 } from 'lucide-react';
+import { Image, User, Loader2, Smile, Hash } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
@@ -8,9 +8,10 @@ import { useTagSuggestion } from '@/hooks/useTagSuggestion';
 import MediaUploader from './MediaUploader';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';
 import { TagSuggestionDropdown } from './TagSuggestionDropdown';
+import { HighlightTextarea } from './HighlightTextarea';
+import { EmojiPickerPopover } from './EmojiPickerPopover';
 
 interface QuickComposerProps {
-  /** When set, locks the composer to this space (hides SpaceSelector) */
   fixedSpaceId?: string;
 }
 
@@ -22,6 +23,8 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const [spaceId, setSpaceId] = useState<string | undefined>(fixedSpaceId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   const createPost = useCreatePost();
   const { items, addFiles, removeItem, readyIds, allUploaded, reset } =
@@ -55,14 +58,12 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const canSubmit = (hasContent || hasMediaReady) && !createPost.isPending;
   const isDirty = hasContent || hasMedia || !!spaceId;
 
-  // Auto-focus textarea when expanded
   useEffect(() => {
     if (expanded && textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [expanded]);
 
-  // Auto-resize textarea
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -70,7 +71,6 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
     el.style.height = `${el.scrollHeight}px`;
   }, []);
 
-  // Click-outside to collapse (only if no content/media)
   useEffect(() => {
     if (!expanded) return;
 
@@ -123,15 +123,36 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
     input.click();
   };
 
+  const insertAtCursor = useCallback((text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newContent = content.slice(0, start) + text + content.slice(end);
+    setContent(newContent);
+
+    setTimeout(() => {
+      textarea.setSelectionRange(start + text.length, start + text.length);
+      textarea.focus();
+    }, 0);
+  }, [content, setContent]);
+
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    insertAtCursor(emoji);
+  }, [insertAtCursor]);
+
+  const handleInsertHashtag = useCallback(() => {
+    insertAtCursor('#');
+  }, [insertAtCursor]);
+
   return (
     <div ref={cardRef} className="bg-card rounded-xl shadow-sm border border-border mb-4">
       {!expanded ? (
-        /* --- Collapsed state --- */
         <button
           onClick={handleExpand}
           className="w-full flex items-center gap-3 p-4 text-left"
         >
-          {/* Avatar */}
           {currentUser?.avatarUrl ? (
             <img
               src={currentUser.avatarUrl}
@@ -144,18 +165,14 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
             </div>
           )}
 
-          {/* Placeholder text */}
           <span className="text-sm text-muted-foreground flex-1">
             {t('quickComposer.placeholder')}
           </span>
 
-          {/* Image icon hint */}
           <Image className="w-5 h-5 text-muted-foreground shrink-0" />
         </button>
       ) : (
-        /* --- Expanded state --- */
         <div className="p-4 relative">
-          {/* Avatar + textarea */}
           <div className="flex gap-3">
             {currentUser?.avatarUrl ? (
               <img
@@ -169,19 +186,18 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
               </div>
             )}
 
-            <textarea
-              ref={textareaRef}
+            <HighlightTextarea
               value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
+              onChange={(value) => {
+                setContent(value);
                 autoResize();
               }}
               onKeyDown={(e) => {
-                if (onTagKeyDown(e)) return;
+                if (onTagKeyDown(e)) return true;
               }}
               placeholder={t('quickComposer.placeholder')}
-              rows={3}
-              className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground resize-none focus:outline-none text-sm min-h-[72px]"
+              ref={textareaRef}
+              className="flex-1 min-h-[72px]"
             />
           </div>
 
@@ -195,7 +211,6 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
             onClose={closeTagSuggestion}
           />
 
-          {/* Media uploader */}
           <div className="mt-3">
             <MediaUploader
               items={items}
@@ -204,14 +219,40 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
             />
           </div>
 
-          {/* Bottom toolbar */}
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
             <button
               onClick={handleFileSelect}
               type="button"
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 -ml-1.5 rounded-lg hover:bg-accent"
+              title={t('quickComposer.insertImage')}
             >
               <Image className="w-5 h-5" />
+            </button>
+
+            <button
+              ref={emojiButtonRef}
+              onClick={() => setEmojiPickerOpen(!emojiPickerOpen)}
+              type="button"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-accent"
+              title={t('quickComposer.insertEmoji')}
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+
+            <EmojiPickerPopover
+              open={emojiPickerOpen}
+              onOpenChange={setEmojiPickerOpen}
+              onEmojiSelect={handleEmojiSelect}
+              anchorRef={emojiButtonRef}
+            />
+
+            <button
+              onClick={handleInsertHashtag}
+              type="button"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-accent"
+              title={t('quickComposer.insertHashtag')}
+            >
+              <Hash className="w-5 h-5" />
             </button>
 
             {!fixedSpaceId && (

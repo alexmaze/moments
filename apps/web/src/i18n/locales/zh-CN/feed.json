@@ -16,7 +16,22 @@
   },
   "quickComposer": {
     "placeholder": "分享你的近况...",
-    "submit": "发布"
+    "submit": "发布",
+    "emojiSearch": "搜索表情...",
+    "emojiClear": "清除",
+    "emojiPreview": "今天心情如何？",
+    "emojiCategoryRecent": "最近使用",
+    "emojiCategorySmileys": "表情与人物",
+    "emojiCategoryAnimals": "动物与自然",
+    "emojiCategoryFood": "食物与饮料",
+    "emojiCategoryTravel": "旅行与地点",
+    "emojiCategoryActivities": "活动",
+    "emojiCategoryObjects": "物品",
+    "emojiCategorySymbols": "符号",
+    "emojiCategoryFlags": "旗帜",
+    "insertEmoji": "插入表情",
+    "insertHashtag": "插入话题",
+    "insertImage": "插入图片"
   },
   "uploader": {
     "dropzone": "拖拽图片或视频到此处，或点击选择",

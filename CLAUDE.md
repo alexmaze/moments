@@ -196,7 +196,7 @@ src/
 │   ├── layout/       # AppLayout, GuestLayout, AuthGuard
 │   ├── feed/         # FeedList, PostCard, MediaGrid, MediaLightbox
 │   ├── post/         # PostDetail, CommentSection, CommentInput, CommentItem
-│   ├── composer/     # PostComposer, QuickComposer, MediaUploader
+│   ├── composer/     # QuickComposer, MediaUploader, HighlightTextarea, EmojiPickerPopover, TagSuggestionDropdown
 │   └── profile/      # ProfileHeader, EditProfileDialog, AvatarCropDialog, BackgroundPicker
 ├── pages/            # LoginPage, RegisterPage, FeedPage, PostDetailPage, ProfilePage, NotFoundPage
 ├── types/
@@ -272,10 +272,13 @@ pnpm db:migrate    # applies it to the database
 ### Quick Composer (快捷发帖入口)
 - **Component**: `@/components/composer/QuickComposer.tsx` — inline expandable post composer at the top of the feed.
 - **Collapsed state**: Card with current user's avatar + placeholder text + image icon hint. Clicking anywhere expands it.
-- **Expanded state**: Avatar + auto-resizing textarea, MediaUploader below, bottom toolbar with media add button (left) and submit button (right).
+- **Expanded state**: Avatar + `HighlightTextarea` (with #tag highlighting), MediaUploader below, bottom toolbar: `[Image] [Emoji] [#] [SpaceSelector] — [Submit]`.
+- **HighlightTextarea**: Overlay-based textarea with transparent text. An overlay div renders `#hashtags` in amber (`text-primary`). Preserves native textarea behaviors (caret, selection, IME, undo).
+- **EmojiPickerPopover**: Portal-based emoji picker using `emoji-picker-react`. Supports search, skin tones, categories, recent emojis. Respects dark/light theme.
+- **Toolbar buttons**: Image (file picker), Emoji (toggles picker popover), Hashtag (inserts `#` at cursor, triggers tag suggestion), SpaceSelector (optional, hidden when `fixedSpaceId` prop set).
 - **State management**: Local `expanded` state; reuses `useMediaUpload()` and `useCreatePost()` hooks. On successful post, auto-collapses and resets.
 - **Click-outside behavior**: Collapses when clicking outside **only if** no content or media has been entered (prevents accidental data loss).
-- **Replaces FAB**: The desktop FAB and the mobile bottom-nav compose button have been removed. QuickComposer is the sole post creation entry point.
+- **Sole entry point**: QuickComposer is the only post creation interface (no FAB, no separate PostComposer).
 
 ### Inline comments in feed
 - PostCard includes a toggle button to expand/collapse an inline comment section.
@@ -337,7 +340,7 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
 ### Dialog & AlertDialog
 - **Library**: `@radix-ui/react-dialog` and `@radix-ui/react-alert-dialog` — headless primitives providing accessibility (ESC close, focus trap, scroll lock, portal rendering).
 - **Wrappers**: `@/components/ui/dialog.tsx` and `@/components/ui/alert-dialog.tsx` — styled with Tailwind CSS, matching project theme tokens.
-- **Dialog**: For general-purpose modals (EditProfileDialog, PostComposer). Supports `hideCloseButton` prop when the content has its own close mechanism.
+- **Dialog**: For general-purpose modals (EditProfileDialog). Supports `hideCloseButton` prop when the content has its own close mechanism.
 - **AlertDialog**: For destructive confirmations (delete post, delete comment). Uses `AlertDialogAction` (destructive style) + `AlertDialogCancel` pattern. Prevents closing on overlay click — requires explicit user action.
 - **Convention**: Never use `window.confirm()` or `window.alert()`. Always use `AlertDialog` for confirmations and `toast` for notifications.
 
@@ -380,7 +383,7 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
   - Hooks: `useSpaces.ts` (spaceKeys factory, CRUD/membership hooks), `useGrowthRecords.ts`
   - i18n namespace: `spaces` (in `locales/{en,zh-CN}/spaces.json`)
 - **Navigation**: Bottom nav has 4 items: Home / Spaces / Profile. `AppLayout` uses `isSpaces = location.pathname.startsWith('/spaces')`.
-- **PostComposer**: Accepts optional `spaceId` prop. When no fixed space, shows `SpaceSelector` dropdown using `useMySpaces()`.
+- **QuickComposer**: Inline expandable post composer at feed top. Collapsed: avatar + placeholder + image icon. Expanded: `HighlightTextarea` with tag highlighting + emoji/hashtag toolbar + media upload + space selector. Uses `useTagSuggestion` for `#` autocomplete, emoji-picker-react for emoji insertion.
 
 ### Hashtags (话题标签)
 - **Backend module**: `apps/server/src/modules/tags/` — TagsService, TagsController
@@ -397,7 +400,7 @@ The `apps/server/test/` directory is empty. There are no automated tests. Rely o
   - Hooks: `apps/web/src/hooks/useTags.ts` — `useTags(q)` for search, `useTagPosts(name, sort)` for infinite list
   - i18n namespace: `tags` (in `locales/{en,zh-CN}/tags.json`)
 - **Case handling**: `#JavaScript` and `#javascript` are the same tag. `name` stores original case, `nameLower` (UNIQUE) stores lowercase. First occurrence's case is preserved.
-- **Tag suggestion**: `useTagSuggestion` hook detects `#` + characters in textarea, queries `/api/tags?q=`, shows `TagSuggestionDropdown` at caret position. Keyboard navigation: ↑↓ select, Enter/Tab confirm, Esc close. Debounced 150ms. Integrated in both QuickComposer and PostComposer.
+- **Tag suggestion**: `useTagSuggestion` hook detects `#` + characters in textarea, queries `/api/tags?q=`, shows `TagSuggestionDropdown` at caret position. Keyboard navigation: ↑↓ select, Enter/Tab confirm, Esc close. Debounced 150ms. Integrated in QuickComposer.
 
 ### Internationalization (i18n)
 - **Library**: `react-i18next` + `i18next` + `i18next-browser-languagedetector`

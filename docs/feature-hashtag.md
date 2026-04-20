@@ -1154,7 +1154,7 @@ en: {
 
 ### 7.2 实现方案（概述）
 
-1. **监听输入**：在 QuickComposer/PostComposer 的 textarea `onChange` 中检测 `#` 输入
+1. **监听输入**：在 QuickComposer 的 textarea `onChange` 中检测 `#` 输入
 2. **触发联想**：`#` 后输入第一个字符后调用 `useTags(query)` 
 3. **定位浮层**：使用 `textarea.selectionStart` 计算光标位置，定位下拉菜单
 4. **键盘交互**：↑↓ 选择、Enter 确认、Esc 关闭
