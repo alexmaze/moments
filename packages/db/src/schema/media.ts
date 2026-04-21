@@ -3,12 +3,14 @@ import { users } from './users';
 
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video']);
 export const mediaStatusEnum = pgEnum('media_status', ['pending', 'attached', 'orphaned']);
+export const mediaPurposeEnum = pgEnum('media_purpose', ['post_attachment', 'user_avatar', 'space_cover']);
 
 export const mediaAssets = pgTable('media_assets', {
   id: uuid('id').primaryKey().defaultRandom(),
   uploaderId: uuid('uploader_id').notNull().references(() => users.id),
   type: mediaTypeEnum('type').notNull(),
   status: mediaStatusEnum('status').notNull().default('pending'),
+  purpose: mediaPurposeEnum('purpose'),
   storagePath: text('storage_path').notNull(),
   publicUrl: text('public_url').notNull(),
   coverPath: text('cover_path'),

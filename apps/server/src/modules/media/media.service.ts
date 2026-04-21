@@ -9,15 +9,16 @@ import { randomUUID } from 'crypto';
 import { join } from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, mediaAssets } from '@moments/db';
+import { type DrizzleClient, mediaAssets, postMediaRelations, spaces, users } from '@moments/db';
 import { STORAGE_PROVIDER } from './storage/storage.module';
 import { IStorageProvider } from './storage/storage.interface';
 
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
 const ALLOWED_MIMES = [...ALLOWED_IMAGE_MIMES, ...ALLOWED_VIDEO_MIMES];
+type MediaPurpose = 'post_attachment' | 'user_avatar' | 'space_cover';
 
 @Injectable()
 export class MediaService {
@@ -106,6 +107,75 @@ export class MediaService {
       .where(eq(mediaAssets.id, id))
       .limit(1);
     return asset || null;
+  }
+
+  async requireOwnedPendingAsset(id: string, uploaderId: string, type: 'image' | 'video' | 'any' = 'any') {
+    const [asset] = await this.db
+      .select()
+      .from(mediaAssets)
+      .where(and(
+        eq(mediaAssets.id, id),
+        eq(mediaAssets.uploaderId, uploaderId),
+        eq(mediaAssets.status, 'pending'),
+      ))
+      .limit(1);
+
+    if (!asset) {
+      throw new BadRequestException('Media asset is invalid, not owned by you, or already attached');
+    }
+
+    if (type !== 'any' && asset.type !== type) {
+      throw new BadRequestException(`Media asset must be a ${type}`);
+    }
+
+    return asset;
+  }
+
+  async markAttached(ids: string[], purpose: MediaPurpose, tx?: any) {
+    if (ids.length === 0) return;
+    const executor = tx ?? this.db;
+    await executor
+      .update(mediaAssets)
+      .set({ status: 'attached', purpose })
+      .where(and(eq(mediaAssets.status, 'pending'), inArray(mediaAssets.id, ids)));
+  }
+
+  async attachAsset(id: string, purpose: MediaPurpose, tx?: any) {
+    const executor = tx ?? this.db;
+    await executor
+      .update(mediaAssets)
+      .set({ status: 'attached', purpose })
+      .where(eq(mediaAssets.id, id));
+  }
+
+  async markOrphanedIfUnreferenced(id: string, tx?: any) {
+    const executor = tx ?? this.db;
+
+    const [postRef] = await executor
+      .select({ id: postMediaRelations.id })
+      .from(postMediaRelations)
+      .where(eq(postMediaRelations.mediaId, id))
+      .limit(1);
+    if (postRef) return;
+
+    const [avatarRef] = await executor
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.avatarMediaId, id))
+      .limit(1);
+    if (avatarRef) return;
+
+    const [coverRef] = await executor
+      .select({ id: spaces.id })
+      .from(spaces)
+      .where(eq(spaces.coverMediaId, id))
+      .limit(1);
+    if (coverRef) return;
+
+    await executor
+      .update(mediaAssets)
+      .set({ status: 'orphaned' })
+      .where(eq(mediaAssets.id, id));
   }
 
   private async extractVideoMetadata(

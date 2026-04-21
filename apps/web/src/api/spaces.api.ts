@@ -39,7 +39,7 @@ export function updateSpaceApi(
   data: {
     name?: string;
     description?: string;
-    coverUrl?: string | null;
+    coverMediaId?: string | null;
     coverPositionY?: number;
   },
 ): Promise<SpaceDetailDto> {

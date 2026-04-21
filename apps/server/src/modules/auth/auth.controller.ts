@@ -25,7 +25,7 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req: { user: { id: string; username: string; displayName: string; avatarUrl: string | null; bio: string | null; locale: string; theme: string | null; background: string | null; passwordHash: string; isActive: boolean; createdAt: Date; updatedAt: Date } }) {
+  async login(@Request() req: { user: { id: string; username: string; displayName: string; avatarMediaId: string | null; bio: string | null; locale: string | null; theme: string | null; background: string | null; passwordHash: string; isActive: boolean; createdAt: Date; updatedAt: Date } }) {
     return this.authService.login(req.user);
   }
 

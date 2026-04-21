@@ -5,7 +5,7 @@ export const users = pgTable('users', {
   username: varchar('username', { length: 50 }).notNull().unique(),
   displayName: varchar('display_name', { length: 100 }).notNull(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-  avatarUrl: text('avatar_url'),
+  avatarMediaId: uuid('avatar_media_id'),
   bio: varchar('bio', { length: 300 }),
   locale: varchar('locale', { length: 10 }),
   theme: varchar('theme', { length: 10 }),

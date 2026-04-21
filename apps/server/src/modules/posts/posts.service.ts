@@ -25,6 +25,7 @@ import { parseHashtags, normalizeHashtag, parseMentions } from '@moments/shared'
 import { CreatePostDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
 import { UsersService } from '../users/users.service';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class PostsService {
@@ -33,6 +34,7 @@ export class PostsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
     private readonly mentionsService: MentionsService,
+    private readonly mediaService: MediaService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {}
@@ -106,10 +108,7 @@ export class PostsService {
         await tx.insert(postMediaRelations).values(relations);
 
         // Mark media as attached
-        await tx
-          .update(mediaAssets)
-          .set({ status: 'attached' })
-          .where(inArray(mediaAssets.id, dto.mediaIds!));
+        await this.mediaService.markAttached(dto.mediaIds!, 'post_attachment', tx);
       }
 
       // Increment space post count
@@ -284,6 +283,11 @@ export class PostsService {
     }
 
     await this.db.transaction(async (tx) => {
+      const attachedMediaIds = await tx
+        .select({ mediaId: postMediaRelations.mediaId })
+        .from(postMediaRelations)
+        .where(eq(postMediaRelations.postId, id));
+
       await tx
         .update(posts)
         .set({ isDeleted: true, deletedAt: new Date() })
@@ -307,7 +311,14 @@ export class PostsService {
           await tx
             .update(tags)
             .set({ postCount: sql`${tags.postCount} - 1` })
-            .where(eq(tags.id, row.tagId));
+          .where(eq(tags.id, row.tagId));
+        }
+      }
+
+      if (attachedMediaIds.length > 0) {
+        await tx.delete(postMediaRelations).where(eq(postMediaRelations.postId, id));
+        for (const { mediaId } of attachedMediaIds) {
+          await this.mediaService.markOrphanedIfUnreferenced(mediaId, tx);
         }
       }
     });
@@ -361,8 +372,14 @@ export class PostsService {
     // Batch load authors
     const authorIds = [...new Set(postRows.map((p) => p.authorId))];
     const authorRows = await this.db
-      .select()
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: mediaAssets.publicUrl,
+      })
       .from(users)
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, authorIds));
     const authorMap = new Map(authorRows.map((a) => [a.id, a]));
 
@@ -560,11 +577,12 @@ export class PostsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: users.avatarUrl,
+          avatarUrl: mediaAssets.publicUrl,
         },
       })
       .from(postComments)
       .innerJoin(users, eq(postComments.authorId, users.id))
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(
         and(
           inArray(postComments.postId, postIds),

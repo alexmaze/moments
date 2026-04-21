@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, users } from '@moments/db';
+import { type DrizzleClient, mediaAssets, users } from '@moments/db';
 import { RegisterDto, LoginDto } from './dto';
 
 @Injectable()
@@ -64,14 +64,18 @@ export class AuthService {
 
     return {
       accessToken,
-      user: this.buildUserResponse(user),
+      user: await this.buildUserResponse(user),
     };
   }
 
   async getProfile(userId: string) {
     const [user] = await this.db
-      .select()
+      .select({
+        user: users,
+        avatarUrl: mediaAssets.publicUrl,
+      })
       .from(users)
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(eq(users.id, userId))
       .limit(1);
 
@@ -79,20 +83,33 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return this.buildUserResponse(user);
+    return this.buildUserResponse(user.user, user.avatarUrl);
   }
 
-  private buildUserResponse(user: typeof users.$inferSelect) {
+  private async buildUserResponse(user: typeof users.$inferSelect, avatarUrlOverride?: string | null) {
+    const avatarUrl = avatarUrlOverride ?? await this.resolveAvatarUrl(user.avatarMediaId);
     return {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
+      avatarUrl,
       bio: user.bio,
       locale: user.locale,
       theme: user.theme,
       background: user.background,
       createdAt: user.createdAt.toISOString(),
     };
+  }
+
+  private async resolveAvatarUrl(avatarMediaId: string | null) {
+    if (!avatarMediaId) return null;
+
+    const [asset] = await this.db
+      .select({ publicUrl: mediaAssets.publicUrl })
+      .from(mediaAssets)
+      .where(eq(mediaAssets.id, avatarMediaId))
+      .limit(1);
+
+    return asset?.publicUrl ?? null;
   }
 }

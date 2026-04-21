@@ -68,6 +68,6 @@ export class UsersController {
     @CurrentUser() user: { id: string },
   ) {
     const asset = await this.mediaService.uploadFile(file, user.id);
-    return this.usersService.updateAvatar(user.id, asset.publicUrl);
+    return this.usersService.updateAvatar(user.id, asset.id);
   }
 }

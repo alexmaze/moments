@@ -77,7 +77,7 @@ export function useUpdateSpace(slug: string) {
     mutationFn: (data: {
       name?: string;
       description?: string;
-      coverUrl?: string | null;
+      coverMediaId?: string | null;
       coverPositionY?: number;
     }) => updateSpaceApi(slug, data),
     onSuccess: () => {

@@ -166,8 +166,14 @@ export class TagsService {
   ) {
     const authorIds = [...new Set(postRows.map(p => p.authorId))];
     const authorRows = await this.db
-      .select()
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: mediaAssets.publicUrl,
+      })
       .from(users)
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, authorIds));
     const authorMap = new Map(authorRows.map(a => [a.id, a]));
 
@@ -305,11 +311,12 @@ export class TagsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: users.avatarUrl,
+          avatarUrl: mediaAssets.publicUrl,
         },
       })
       .from(postComments)
       .innerJoin(users, eq(postComments.authorId, users.id))
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(and(inArray(postComments.postId, postIds), eq(postComments.isDeleted, false)))
       .orderBy(asc(postComments.createdAt));
 

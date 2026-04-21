@@ -8,6 +8,7 @@ export interface SpaceDto {
   name: string;
   slug: string;
   description: string | null;
+  coverMediaId?: string | null;
   coverUrl: string | null;
   coverPositionY: number;
   type: SpaceType;

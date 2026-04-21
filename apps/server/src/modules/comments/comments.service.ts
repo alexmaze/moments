@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { eq, and, sql, count, asc, inArray } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, posts, postComments, users, spaceMembers } from '@moments/db';
+import { type DrizzleClient, mediaAssets, posts, postComments, users, spaceMembers } from '@moments/db';
 import { parseMentions } from '@moments/shared';
 import { CreateCommentDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
@@ -95,9 +95,10 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: users.avatarUrl,
+          avatarUrl: mediaAssets.publicUrl,
         })
         .from(users)
+        .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
         .where(eq(users.id, authorId))
         .limit(1);
 
@@ -119,9 +120,10 @@ export class CommentsService {
               id: users.id,
               username: users.username,
               displayName: users.displayName,
-              avatarUrl: users.avatarUrl,
+              avatarUrl: mediaAssets.publicUrl,
             })
             .from(users)
+            .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
             .where(eq(users.id, replyTargetComment.authorId))
             .limit(1);
 
@@ -174,12 +176,13 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: users.avatarUrl,
+          avatarUrl: mediaAssets.publicUrl,
         },
         replyToId: postComments.replyToId,
       })
       .from(postComments)
       .innerJoin(users, eq(postComments.authorId, users.id))
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(
         and(
           eq(postComments.postId, postId),
@@ -209,9 +212,10 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: users.avatarUrl,
+          avatarUrl: mediaAssets.publicUrl,
         })
         .from(users)
+        .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
         .where(inArray(users.id, replyAuthorIds));
       const replyAuthorMap = new Map(replyAuthorRows.map(a => [a.id, a]));
 

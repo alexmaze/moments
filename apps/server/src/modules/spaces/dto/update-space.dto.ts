@@ -14,7 +14,7 @@ export class UpdateSpaceDto {
 
   @IsOptional()
   @IsString()
-  coverUrl?: string | null;
+  coverMediaId?: string | null;
 
   @IsOptional()
   @IsNumber()

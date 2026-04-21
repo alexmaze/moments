@@ -11,7 +11,7 @@ export const spaces = pgTable('spaces', {
   name: varchar('name', { length: 100 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
   description: text('description'),
-  coverUrl: text('cover_url'),
+  coverMediaId: uuid('cover_media_id'),
   coverPositionY: real('cover_position_y').notNull().default(50),
   type: spaceTypeEnum('type').notNull().default('general'),
   creatorId: uuid('creator_id').notNull().references(() => users.id),

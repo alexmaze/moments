@@ -19,6 +19,7 @@ export default function SpaceEditPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverPositionY, setCoverPositionY] = useState(50);
   const [cropOpen, setCropOpen] = useState(false);
@@ -29,6 +30,7 @@ export default function SpaceEditPage() {
     if (!space) return;
     setName(space.name);
     setDescription(space.description ?? '');
+    setCoverMediaId(space.coverMediaId ?? null);
     setCoverUrl(space.coverUrl);
     setCoverPositionY(space.coverPositionY);
   }, [space]);
@@ -81,7 +83,7 @@ export default function SpaceEditPage() {
   const hasChanges =
     name.trim() !== space.name ||
     description !== (space.description ?? '') ||
-    coverUrl !== space.coverUrl ||
+    coverMediaId !== (space.coverMediaId ?? null) ||
     coverPositionY !== space.coverPositionY;
 
   const handleSelectCover = () => {
@@ -117,6 +119,7 @@ export default function SpaceEditPage() {
     try {
       const file = new File([blob], 'space-cover.jpg', { type: 'image/jpeg' });
       const uploaded = await uploadMediaApi(file);
+      setCoverMediaId(uploaded.id);
       setCoverUrl(uploaded.publicUrl);
       setCoverPositionY(focusY);
       toast.success(t('edit.coverUploadSuccess'));
@@ -133,7 +136,7 @@ export default function SpaceEditPage() {
       {
         name: name.trim(),
         description: description.trim(),
-        coverUrl,
+        coverMediaId,
         coverPositionY,
       },
       {
@@ -206,6 +209,7 @@ export default function SpaceEditPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      setCoverMediaId(null);
                       setCoverUrl(null);
                       setCoverPositionY(50);
                     }}

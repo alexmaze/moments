@@ -6,11 +6,12 @@ import { spaces, spaceMembers, growthRecords } from './spaces';
 import { tags, postTags } from './tags';
 import { mentions } from './mentions';
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   posts: many(posts),
   comments: many(postComments),
   likes: many(postLikes),
   media: many(mediaAssets),
+  avatarMedia: one(mediaAssets, { fields: [users.avatarMediaId], references: [mediaAssets.id] }),
   spaceMembers: many(spaceMembers),
   createdSpaces: many(spaces),
   mentionsMade: many(mentions, { relationName: 'mentioner' }),
@@ -31,8 +32,11 @@ export const postMediaRelationsRelations = relations(postMediaRelations, ({ one 
   media: one(mediaAssets, { fields: [postMediaRelations.mediaId], references: [mediaAssets.id] }),
 }));
 
-export const mediaAssetsRelations = relations(mediaAssets, ({ one }) => ({
+export const mediaAssetsRelations = relations(mediaAssets, ({ one, many }) => ({
   uploader: one(users, { fields: [mediaAssets.uploaderId], references: [users.id] }),
+  attachedPosts: many(postMediaRelations),
+  avatarUsers: many(users),
+  coverSpaces: many(spaces),
 }));
 
 export const postLikesRelations = relations(postLikes, ({ one }) => ({
@@ -53,6 +57,7 @@ export const postCommentsRelations = relations(postComments, ({ one, many }) => 
 
 export const spacesRelations = relations(spaces, ({ one, many }) => ({
   creator: one(users, { fields: [spaces.creatorId], references: [users.id] }),
+  coverMedia: one(mediaAssets, { fields: [spaces.coverMediaId], references: [mediaAssets.id] }),
   members: many(spaceMembers),
   posts: many(posts),
   growthRecords: many(growthRecords),
