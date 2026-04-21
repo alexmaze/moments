@@ -238,10 +238,18 @@ Client                        PostsService                           Database
 **media_assets.status 生命周期：**
 
 ```
-pending ──(创建帖子)──▶ attached
-   │
-   └──(清理任务)──▶ orphaned ──(删除)──▶ 移除
+pending/orphaned ──(挂载到帖子/头像/空间封面)──▶ attached
+        │
+        └──(删除帖子 / 替换头像 / 替换空间封面 / 删除空间后失去引用)──▶ orphaned
+                                                                      │
+                                                                      └──(后台清理 worker 二次校验引用后删除)──▶ 移除
 ```
+
+补充说明：
+- 资源从 `orphaned` 重新挂载时，会清空 `orphaned_at` 和 `cleanup_error`
+- 资源变为 `orphaned` 时，会写入 `orphaned_at = now()`
+- 清理前会再次检查 `post_media_relations.media_id`、`users.avatar_media_id`、`spaces.cover_media_id`
+- 视频资源清理时会同时删除主文件和 `cover_path`
 
 ## 6. 视频封面提取
 

@@ -314,10 +314,20 @@ export class SpacesService {
       throw new ForbiddenException('Only space owner can delete the space');
     }
 
-    await this.db
-      .update(spaces)
-      .set({ isDeleted: true, deletedAt: new Date() })
-      .where(eq(spaces.id, space.id));
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(spaces)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+          coverMediaId: null,
+        })
+        .where(eq(spaces.id, space.id));
+
+      if (space.coverMediaId) {
+        await this.mediaService.markOrphanedIfUnreferenced(space.coverMediaId, tx);
+      }
+    });
 
     return { success: true };
   }

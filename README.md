@@ -46,6 +46,7 @@ pnpm dev
 | [数据库设计](docs/database.md) | 表结构、ER 关系、索引 |
 | [本地开发](docs/development.md) | 开发环境搭建、常用命令 |
 | [部署指南](docs/deployment.md) | Docker 生产部署、环境变量、备份 |
+| [媒体清理方案](docs/media-cleanup.md) | 废弃媒体生命周期、定时回收与配置项 |
 
 ## 项目结构
 

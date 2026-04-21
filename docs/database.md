@@ -103,7 +103,7 @@
 
 ### 3.3 media_assets
 
-媒体资源表。通过 `status` 枚举管理生命周期：上传后为 `pending`，关联帖子后变为 `attached`，未关联的资源可标记为 `orphaned` 进行清理。
+媒体资源表。通过 `status` 枚举管理生命周期：上传后为 `pending`，关联到帖子/头像/空间封面后变为 `attached`，无业务引用时标记为 `orphaned`，由后台任务延迟清理。
 
 | 字段名          | 类型                         | 约束                      | 说明               |
 | --------------- | ---------------------------- | ------------------------- | ------------------ |
@@ -111,6 +111,10 @@
 | `uploader_id`   | `uuid`                       | NOT NULL, FK → `users.id` | 上传者             |
 | `type`          | `media_type` 枚举            | NOT NULL                  | `image` 或 `video` |
 | `status`        | `media_status` 枚举          | NOT NULL, 默认 `pending`  | 生命周期状态       |
+| `purpose`       | `media_purpose` 枚举         | 可空                      | 最近一次正式挂载用途 |
+| `orphaned_at`   | `timestamptz`                | 可空                      | 进入 `orphaned` 的时间 |
+| `last_cleanup_attempt_at` | `timestamptz`       | 可空                      | 最近一次清理尝试时间 |
+| `cleanup_error` | `text`                       | 可空                      | 最近一次清理失败原因 |
 | `storage_path`  | `text`                       | NOT NULL                  | 存储相对路径       |
 | `public_url`    | `text`                       | NOT NULL                  | 公开访问 URL       |
 | `cover_path`    | `text`                       | 可空                      | 视频封面存储路径   |
@@ -248,16 +252,18 @@
 | 值         | 说明                           |
 | ---------- | ------------------------------ |
 | `pending`  | 已上传, 尚未关联到帖子         |
-| `attached` | 已关联到帖子                   |
-| `orphaned` | 未被关联且超期, 待清理         |
+| `attached` | 已被帖子附件、头像或空间封面引用 |
+| `orphaned` | 当前无业务引用, 等待保留期后清理 |
 
 ```
 上传文件
   │
   ▼
-pending ──(POST /posts 关联)──▶ attached
+pending/orphaned ──(挂载到帖子/头像/封面)──▶ attached
   │
-  └──(超期未关联 / 帖子删除)──▶ orphaned ──(清理任务)──▶ 删除文件 + 数据库记录
+  └──(帖子删除 / 替换头像 / 替换封面 / 删除空间后失去引用)──▶ orphaned
+                                                             │
+                                                             └──(超过保留期 + 清理任务)──▶ 删除文件 + 数据库记录
 ```
 
 ## 6. 迁移工作流

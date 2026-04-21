@@ -28,6 +28,21 @@ DATABASE_URL=postgresql://moments:moments_dev@localhost:5432/moments
 JWT_SECRET=dev_secret_at_least_32_characters_long
 ```
 
+如需验证废弃媒体回收，可额外配置：
+
+```env
+MEDIA_CLEANUP_ENABLED=true
+MEDIA_CLEANUP_RETENTION_DAYS=7
+MEDIA_CLEANUP_BATCH_SIZE=100
+MEDIA_CLEANUP_DRY_RUN=false
+```
+
+说明：
+- `MEDIA_CLEANUP_ENABLED`：是否启用服务端后台清理 worker
+- `MEDIA_CLEANUP_RETENTION_DAYS`：`orphaned` 媒体保留期
+- `MEDIA_CLEANUP_BATCH_SIZE`：每轮最多处理数量
+- `MEDIA_CLEANUP_DRY_RUN`：只打日志，不删文件和数据库记录
+
 ## 启动数据库
 
 用 Docker/Podman：
@@ -87,6 +102,11 @@ cat packages/db/src/migrations/XXXX_*.sql
 # 3. 应用迁移
 pnpm db:migrate
 ```
+
+本次媒体清理能力落地后，拉取最新代码必须执行一次 `pnpm db:migrate`，以补齐：
+- `media_assets.orphaned_at`
+- `media_assets.last_cleanup_attempt_at`
+- `media_assets.cleanup_error`
 
 ## 包依赖关系
 

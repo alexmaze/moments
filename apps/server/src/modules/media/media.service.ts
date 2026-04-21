@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 import { join } from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, lte, or } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets, postMediaRelations, spaces, users } from '@moments/db';
 import { STORAGE_PROVIDER } from './storage/storage.module';
@@ -19,6 +19,7 @@ const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
 const ALLOWED_MIMES = [...ALLOWED_IMAGE_MIMES, ...ALLOWED_VIDEO_MIMES];
 type MediaPurpose = 'post_attachment' | 'user_avatar' | 'space_cover';
+type DbExecutor = DrizzleClient | any;
 
 @Injectable()
 export class MediaService {
@@ -116,12 +117,12 @@ export class MediaService {
       .where(and(
         eq(mediaAssets.id, id),
         eq(mediaAssets.uploaderId, uploaderId),
-        eq(mediaAssets.status, 'pending'),
+        or(eq(mediaAssets.status, 'pending'), eq(mediaAssets.status, 'orphaned')),
       ))
       .limit(1);
 
     if (!asset) {
-      throw new BadRequestException('Media asset is invalid, not owned by you, or already attached');
+      throw new BadRequestException('Media asset is invalid, not owned by you, or already attached elsewhere');
     }
 
     if (type !== 'any' && asset.type !== type) {
@@ -133,49 +134,149 @@ export class MediaService {
 
   async markAttached(ids: string[], purpose: MediaPurpose, tx?: any) {
     if (ids.length === 0) return;
-    const executor = tx ?? this.db;
+    const executor = this.getExecutor(tx);
     await executor
       .update(mediaAssets)
-      .set({ status: 'attached', purpose })
-      .where(and(eq(mediaAssets.status, 'pending'), inArray(mediaAssets.id, ids)));
+      .set({
+        status: 'attached',
+        purpose,
+        orphanedAt: null,
+        cleanupError: null,
+      })
+      .where(inArray(mediaAssets.id, ids));
   }
 
   async attachAsset(id: string, purpose: MediaPurpose, tx?: any) {
-    const executor = tx ?? this.db;
+    const executor = this.getExecutor(tx);
     await executor
       .update(mediaAssets)
-      .set({ status: 'attached', purpose })
+      .set({
+        status: 'attached',
+        purpose,
+        orphanedAt: null,
+        cleanupError: null,
+      })
       .where(eq(mediaAssets.id, id));
   }
 
   async markOrphanedIfUnreferenced(id: string, tx?: any) {
-    const executor = tx ?? this.db;
+    const executor = this.getExecutor(tx);
 
+    if (await this.hasAnyReference(id, executor)) {
+      await executor
+        .update(mediaAssets)
+        .set({
+          status: 'attached',
+          orphanedAt: null,
+          cleanupError: null,
+        })
+        .where(eq(mediaAssets.id, id));
+      return false;
+    }
+
+    await executor
+      .update(mediaAssets)
+      .set({
+        status: 'orphaned',
+        orphanedAt: new Date(),
+      })
+      .where(eq(mediaAssets.id, id));
+
+    return true;
+  }
+
+  async listExpiredOrphanedAssets(retentionDays: number, batchSize: number) {
+    const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+
+    return this.db
+      .select()
+      .from(mediaAssets)
+      .where(and(
+        eq(mediaAssets.status, 'orphaned'),
+        lte(mediaAssets.orphanedAt, cutoff),
+      ))
+      .orderBy(mediaAssets.orphanedAt)
+      .limit(batchSize);
+  }
+
+  async isReferenced(id: string, tx?: any) {
+    return this.hasAnyReference(id, this.getExecutor(tx));
+  }
+
+  async restoreAttachedIfReferenced(id: string, tx?: any) {
+    const executor = this.getExecutor(tx);
+
+    if (!(await this.hasAnyReference(id, executor))) {
+      return false;
+    }
+
+    await executor
+      .update(mediaAssets)
+      .set({
+        status: 'attached',
+        orphanedAt: null,
+        cleanupError: null,
+      })
+      .where(eq(mediaAssets.id, id));
+
+    return true;
+  }
+
+  async deleteStoredFiles(asset: typeof mediaAssets.$inferSelect) {
+    await this.storageProvider.delete(asset.storagePath);
+
+    if (asset.coverPath) {
+      await this.storageProvider.delete(asset.coverPath);
+    }
+  }
+
+  async deleteAssetRecord(id: string, tx?: any) {
+    const executor = this.getExecutor(tx);
+    await executor.delete(mediaAssets).where(eq(mediaAssets.id, id));
+  }
+
+  async recordCleanupFailure(id: string, error: unknown, tx?: any) {
+    const executor = this.getExecutor(tx);
+    const message = error instanceof Error ? error.message : String(error);
+
+    await executor
+      .update(mediaAssets)
+      .set({
+        lastCleanupAttemptAt: new Date(),
+        cleanupError: message,
+      })
+      .where(eq(mediaAssets.id, id));
+  }
+
+  private getExecutor(tx?: any): DbExecutor {
+    return tx ?? this.db;
+  }
+
+  private async hasAnyReference(id: string, executor: DbExecutor) {
     const [postRef] = await executor
       .select({ id: postMediaRelations.id })
       .from(postMediaRelations)
       .where(eq(postMediaRelations.mediaId, id))
       .limit(1);
-    if (postRef) return;
+    if (postRef) return true;
 
     const [avatarRef] = await executor
       .select({ id: users.id })
       .from(users)
       .where(eq(users.avatarMediaId, id))
       .limit(1);
-    if (avatarRef) return;
+    if (avatarRef) return true;
 
     const [coverRef] = await executor
       .select({ id: spaces.id })
       .from(spaces)
-      .where(eq(spaces.coverMediaId, id))
+      .where(and(
+        eq(spaces.coverMediaId, id),
+        eq(spaces.isDeleted, false),
+      ))
       .limit(1);
-    if (coverRef) return;
 
-    await executor
-      .update(mediaAssets)
-      .set({ status: 'orphaned' })
-      .where(eq(mediaAssets.id, id));
+    return Boolean(coverRef);
   }
 
   private async extractVideoMetadata(

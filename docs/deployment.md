@@ -31,6 +31,10 @@ docker compose -f docker-compose.prod.yml up -d
 | `DB_PASSWORD` | 否 | `moments_prod` | PostgreSQL 密码，生产环境务必修改 |
 | `DATABASE_URL` | 否 | 自动拼接 | 数据库连接字符串（Docker 内部自动生成） |
 | `UPLOAD_DIR` | 否 | `/app/uploads` | 媒体存储目录（Docker 内挂载为 volume） |
+| `MEDIA_CLEANUP_ENABLED` | 否 | `true` | 是否启用废弃媒体后台清理任务 |
+| `MEDIA_CLEANUP_RETENTION_DAYS` | 否 | `7` | `orphaned` 媒体保留天数 |
+| `MEDIA_CLEANUP_BATCH_SIZE` | 否 | `100` | 每轮清理的最大条数 |
+| `MEDIA_CLEANUP_DRY_RUN` | 否 | `false` | 只输出命中日志，不实际删除文件和数据库记录 |
 | `PORT` | 否 | `3000` | 服务端口 |
 | `NODE_ENV` | 否 | `production` | 环境标识 |
 
@@ -46,6 +50,8 @@ Stage 3 (runner)  → node:22-alpine + ffmpeg, 仅复制:
 ```
 
 最终镜像包含 ffmpeg（用于视频封面抽帧）。
+
+应用启动后会在服务端进程内启动一个轻量后台 worker，默认每小时扫描一次过期 `orphaned` 媒体。删除前会再次校验帖子附件、用户头像、空间封面三类引用，避免误删刚被重新绑定的资源。
 
 ### docker-compose.prod.yml 服务
 
@@ -78,8 +84,17 @@ docker cp $(docker compose -f docker-compose.prod.yml ps -q app):/app/uploads ./
 ```bash
 cd docker
 git pull
+pnpm db:migrate
 docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+如果准备先观察命中范围，再正式启用删除，可先设置：
+
+```env
+MEDIA_CLEANUP_DRY_RUN=true
+```
+
+确认日志输出符合预期后，再改回 `false` 并重启应用。
 
 ### 反向代理（可选）
 

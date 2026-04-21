@@ -202,7 +202,7 @@ POST /api/posts
 | `content`  | `string`   | 否   | 不超过 5000 字符                      |
 | `mediaIds` | `string[]` | 否   | UUID v4 数组，引用已上传的媒体资源 ID |
 
-> `content` 和 `mediaIds` 至少需要提供一个。`mediaIds` 引用的媒体必须属于当前用户且状态为 `pending`。
+> `content` 和 `mediaIds` 至少需要提供一个。`mediaIds` 引用的媒体必须属于当前用户，且不能已被其他业务实体占用。未被清理的 `orphaned` 媒体也允许重新挂载。
 
 **响应** `201`: 返回创建的帖子详情（结构同动态流中的单条帖子）。
 
@@ -244,7 +244,7 @@ DELETE /api/posts/:id
 
 **认证**: Bearer token
 
-**描述**: 删除自己的帖子（软删除）。
+**描述**: 删除自己的帖子（软删除）。帖子关联的媒体会解除引用；若该媒体不再被其他业务引用，则会标记为 `orphaned`，后续由后台清理任务延迟回收。
 
 **路径参数**:
 
