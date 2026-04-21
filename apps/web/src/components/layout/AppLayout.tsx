@@ -83,9 +83,10 @@ export default function AppLayout() {
         />
       )}
 
-      {/* Top nav — sits OUTSIDE the scroll container so it never moves.
-          iOS rubber-band overscroll only applies to the inner <main>. */}
-      <header className="shrink-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
+      {/* Top nav — fixed over the scroll container so feed content moves
+          underneath it. That gives the backdrop blur actual pixels to
+          sample, making the frosted effect match the mobile bottom tab. */}
+      <header className="fixed top-0 left-0 right-0 z-40 surface-card border-b border-border/80 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-6">
             <Link to="/" className="text-xl font-bold tracking-tight text-primary">
@@ -155,7 +156,7 @@ export default function AppLayout() {
           target this element instead of the viewport. */}
       <main
         ref={setMainEl}
-        className="flex-1 overflow-y-auto overscroll-y-contain"
+        className="flex-1 overflow-y-auto overscroll-y-contain pt-14"
       >
         <ScrollContainerContext.Provider value={mainEl}>
           <MediaLightboxProvider>
@@ -167,7 +168,7 @@ export default function AppLayout() {
       </main>
 
       {/* Bottom mobile nav — also outside the scroll container, fixed to viewport */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-sm border-t border-border md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 surface-card border-t border-border/80 shadow-sm md:hidden">
         <div className="flex items-center justify-around h-14">
           <Link to="/" className={`flex flex-col items-center gap-0.5 transition-colors p-2 ${isHome ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             <Home className="w-5 h-5" />
