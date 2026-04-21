@@ -9,6 +9,8 @@
     "cancel": "取消",
     "title": "发布动态",
     "submit": "发布",
+    "editSuccess": "动态已更新。",
+    "editError": "更新失败，请重试。",
     "placeholder": "分享你的想法...",
     "postSuccess": "动态已发布!",
     "postError": "发布失败，请重试。",
@@ -19,7 +21,9 @@
   },
   "quickComposer": {
     "placeholder": "分享你的近况...",
+    "editPlaceholder": "更新这条动态...",
     "submit": "发布",
+    "save": "保存",
     "emojiSearch": "搜索表情...",
     "emojiClear": "清除",
     "emojiPreview": "今天心情如何？",
@@ -45,9 +49,14 @@
   },
   "uploader": {
     "dropzone": "拖拽图片或视频到此处，或点击选择",
-    "failed": "失败"
+    "failed": "失败",
+    "moveEarlier": "前移",
+    "moveLater": "后移"
   },
   "postCard": {
+    "actionsTitle": "帖子操作",
+    "editTitle": "编辑动态",
+    "editAction": "编辑",
     "deleteConfirm": "确定要删除这条动态吗？",
     "deleteTitle": "删除动态",
     "deleteSuccess": "动态已删除。",

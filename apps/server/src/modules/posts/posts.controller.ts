@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -14,7 +15,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto';
+import { CreatePostDto, UpdatePostDto } from './dto';
 import { CurrentUser } from '../../common/decorators';
 
 @Controller('posts')
@@ -42,6 +43,15 @@ export class PostsController {
     @CurrentUser() user: { id: string },
   ) {
     return this.postsService.create(dto, user.id);
+  }
+
+  @Patch(':id')
+  async updateOwn(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePostDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.postsService.updateOwn(id, dto, user.id);
   }
 
   @Post('audio-upload')

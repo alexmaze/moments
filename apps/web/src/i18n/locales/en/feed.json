@@ -9,6 +9,8 @@
     "cancel": "Cancel",
     "title": "New Post",
     "submit": "Post",
+    "editSuccess": "Post updated.",
+    "editError": "Failed to update post.",
     "placeholder": "What's on your mind?",
     "postSuccess": "Post published!",
     "postError": "Failed to publish. Please try again.",
@@ -19,7 +21,9 @@
   },
   "quickComposer": {
     "placeholder": "Share what's on your mind...",
+    "editPlaceholder": "Update this post...",
     "submit": "Post",
+    "save": "Save",
     "emojiSearch": "Search emoji...",
     "emojiClear": "Clear",
     "emojiPreview": "What's your mood?",
@@ -45,9 +49,14 @@
   },
   "uploader": {
     "dropzone": "Drop photos or videos here, or tap to browse",
-    "failed": "Failed"
+    "failed": "Failed",
+    "moveEarlier": "Move earlier",
+    "moveLater": "Move later"
   },
   "postCard": {
+    "actionsTitle": "Post actions",
+    "editTitle": "Edit post",
+    "editAction": "Edit",
     "deleteConfirm": "Delete this post?",
     "deleteTitle": "Delete post",
     "deleteSuccess": "Post deleted.",

@@ -1,14 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { Plus, X, Play, Image } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Play, Image } from 'lucide-react';
 import type { UploadItem } from '@/hooks/useMediaUpload';
 
 interface MediaUploaderProps {
   items: UploadItem[];
   addFiles: (files: File[]) => void;
   removeItem: (id: string) => void;
+  reorderItems: (fromIndex: number, toIndex: number) => void;
 }
 
-export default function MediaUploader({ items, addFiles, removeItem }: MediaUploaderProps) {
+export default function MediaUploader({ items, addFiles, removeItem, reorderItems }: MediaUploaderProps) {
   const { t } = useTranslation('feed');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +34,7 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
     <div className="space-y-3">
       {items.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <div key={item.localId} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
               {item.type === 'video' ? (
                 <>
@@ -90,6 +91,29 @@ export default function MediaUploader({ items, addFiles, removeItem }: MediaUplo
               >
                 <X className="w-3.5 h-3.5" stroke="white" />
               </button>
+
+              {items.length > 1 && (
+                <div className="absolute bottom-1 right-1 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => reorderItems(index, Math.max(0, index - 1))}
+                    disabled={index === 0}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 transition-colors hover:bg-black/70 disabled:opacity-40"
+                    title={t('uploader.moveEarlier')}
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" stroke="white" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => reorderItems(index, Math.min(items.length - 1, index + 1))}
+                    disabled={index === items.length - 1}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 transition-colors hover:bg-black/70 disabled:opacity-40"
+                    title={t('uploader.moveLater')}
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" stroke="white" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

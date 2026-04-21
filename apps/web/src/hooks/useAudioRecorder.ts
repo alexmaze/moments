@@ -38,6 +38,12 @@ function extensionForMimeType(mimeType: string) {
   return "bin";
 }
 
+function revokeObjectUrlIfNeeded(url: string | null) {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function createFakeWaveform(size = WAVEFORM_SAMPLE_COUNT) {
   return Array.from({ length: size }, (_, index) => {
     const position = index / Math.max(1, size - 1);
@@ -154,8 +160,25 @@ export function useAudioRecorder() {
     setWaveform([]);
     setStatus("idle");
     setPreviewUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
+      revokeObjectUrlIfNeeded(current);
       return null;
+    });
+  }, [cleanupPreview]);
+
+  const loadPreview = useCallback((audio: {
+    url: string;
+    durationMs: number;
+    waveform: number[];
+  }) => {
+    cleanupPreview();
+    setAudioFile(null);
+    setDurationMs(audio.durationMs);
+    setPreviewDurationMs(audio.durationMs);
+    setWaveform(audio.waveform);
+    setStatus("ready");
+    setPreviewUrl((current) => {
+      revokeObjectUrlIfNeeded(current);
+      return audio.url;
     });
   }, [cleanupPreview]);
 
@@ -346,6 +369,7 @@ export function useAudioRecorder() {
     clearRecording,
     durationMs,
     isPreviewPlaying,
+    loadPreview,
     previewCurrentTimeMs,
     previewDurationMs,
     previewUrl,
@@ -361,6 +385,7 @@ export function useAudioRecorder() {
     clearRecording,
     durationMs,
     isPreviewPlaying,
+    loadPreview,
     previewCurrentTimeMs,
     previewDurationMs,
     previewUrl,

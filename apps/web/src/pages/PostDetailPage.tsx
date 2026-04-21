@@ -1,14 +1,19 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { usePost } from '@/hooks/usePosts';
 import PostDetail from '@/components/post/PostDetail';
+import QuickComposer from '@/components/composer/QuickComposer';
+import { useAuthStore } from '@/store/auth.store';
 
 export default function PostDetailPage() {
   const { t } = useTranslation('post');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentUser = useAuthStore((s) => s.currentUser);
   const { data: post, isLoading, isError } = usePost(id!);
+  const isEditMode = searchParams.get('edit') === '1';
 
   if (isLoading) {
     return (
@@ -56,7 +61,16 @@ export default function PostDetailPage() {
         {t('back')}
       </button>
 
-      <PostDetail post={post} />
+      {isEditMode && currentUser?.id === post.author.id ? (
+        <QuickComposer
+          mode="edit"
+          initialPost={post}
+          onCancel={() => navigate(`/posts/${post.id}`)}
+          onSuccess={() => navigate(`/posts/${post.id}`, { replace: true })}
+        />
+      ) : (
+        <PostDetail post={post} />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   getFeedApi,
   getPostApi,
   createPostApi,
+  updatePostApi,
   deletePostApi,
   toggleLikeApi,
   getUserPostsApi,
@@ -54,6 +55,30 @@ export function useCreatePost() {
     },
     onError: () => {
       toast.error(i18n.t("feed:composer.postError"));
+    },
+  });
+}
+
+export function useUpdatePost(postId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      content?: string | null;
+      mediaIds?: string[];
+      audio?: {
+        mediaId: string;
+        waveform: number[];
+      } | null;
+    }) => updatePostApi(postId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["spaces"] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success(i18n.t("feed:composer.editSuccess"));
+    },
+    onError: () => {
+      toast.error(i18n.t("feed:composer.editError"));
     },
   });
 }

@@ -6,12 +6,18 @@ import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import { mediaToLightboxSlides } from '@/lib/mediaToLightbox';
-import { User, Trash2, Heart, MessageSquare, Users } from 'lucide-react';
+import { User, Trash2, Heart, MessageSquare, Users, Ellipsis, Pencil } from 'lucide-react';
 import MediaGrid from './MediaGrid';
 import PostAudioPlayer from './PostAudioPlayer';
 import { useMediaLightbox } from './MediaLightboxProvider';
 import { PostContent } from './PostContent';
 import CommentSection from '@/components/post/CommentSection';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -50,12 +56,6 @@ function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
     e.preventDefault();
     e.stopPropagation();
     toggleLike.mutate(post.id);
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDeleteOpen(true);
   };
 
   const handleDeleteConfirm = () => {
@@ -112,13 +112,35 @@ function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
         </div>
 
         {isOwner && (
-          <button
-            onClick={handleDeleteClick}
-            className="rounded-lg p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-destructive"
-            title={t('postCard.deleteTitle')}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="rounded-lg p-2 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                title={t('postCard.actionsTitle')}
+              >
+                <Ellipsis className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem
+                onSelect={() => navigate(`/posts/${post.id}?edit=1`)}
+              >
+                <Pencil className="w-4 h-4" />
+                {t('postCard.editAction')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => setDeleteOpen(true)}
+                destructive
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('postCard.deleteTitle')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 

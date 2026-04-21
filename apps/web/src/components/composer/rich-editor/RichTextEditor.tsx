@@ -14,7 +14,7 @@ import {
   type BeautifulMentionsMenuProps,
   type BeautifulMentionsMenuItemProps,
 } from 'lexical-beautiful-mentions';
-import { $convertToStorageFormat } from './serialization';
+import { $convertFromStorageFormat, $convertToStorageFormat } from './serialization';
 import { searchUsersApi } from '@/api/users.api';
 import { getTagsApi } from '@/api/tags.api';
 import { Loader2, User } from 'lucide-react';
@@ -25,6 +25,7 @@ export interface RichTextEditorRef {
   insertText: (text: string) => void;
   insertMention: (displayName: string, userId: string) => void;
   clear: () => void;
+  setSerializedContent: (value: string) => void;
 }
 
 interface RichTextEditorProps {
@@ -119,6 +120,22 @@ function InsertMentionPlugin({ ref }: { ref: React.Ref<RichTextEditorRef> }) {
       editor.update(() => {
         $getRoot().clear();
         $getRoot().append($createParagraphNode());
+      });
+    },
+    setSerializedContent: (value: string) => {
+      editor.update(() => {
+        const root = $getRoot();
+        root.clear();
+
+        const paragraph = $createParagraphNode();
+        const nodes = $convertFromStorageFormat(value);
+        if (nodes.length === 0) {
+          root.append(paragraph);
+          return;
+        }
+
+        paragraph.append(...nodes);
+        root.append(paragraph);
       });
     },
   }), [editor]);

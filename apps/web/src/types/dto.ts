@@ -54,6 +54,7 @@ export interface PostDto {
   id: string;
   content: string | null;
   createdAt: string;
+  updatedAt: string;
   author: {
     id: string;
     username: string;

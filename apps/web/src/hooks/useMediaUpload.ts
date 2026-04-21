@@ -5,12 +5,19 @@ import { uploadMediaApi } from "@/api/media.api";
 
 export interface UploadItem {
   localId: string;
-  file: File;
+  file: File | null;
   preview: string;
   status: "uploading" | "done" | "error";
   progress: number;
   assetId: string | null;
   type: "image" | "video";
+  coverUrl: string | null;
+}
+
+export interface ExistingUploadItemSeed {
+  assetId: string;
+  type: "image" | "video";
+  preview: string;
   coverUrl: string | null;
 }
 
@@ -21,6 +28,12 @@ function nextLocalId() {
 
 function getMediaType(file: File): "image" | "video" {
   return file.type.startsWith("video/") ? "video" : "image";
+}
+
+function revokePreviewUrl(item: Pick<UploadItem, "preview">) {
+  if (item.preview.startsWith("blob:")) {
+    URL.revokeObjectURL(item.preview);
+  }
 }
 
 /**
@@ -164,8 +177,8 @@ export function useMediaUpload() {
   const removeItem = useCallback((localId: string) => {
     setItems((prev) => {
       const item = prev.find((i) => i.localId === localId);
-      if (item && item.type === "image" && item.preview) {
-        URL.revokeObjectURL(item.preview);
+      if (item && item.preview) {
+        revokePreviewUrl(item);
       }
       return prev.filter((i) => i.localId !== localId);
     });
@@ -183,11 +196,32 @@ export function useMediaUpload() {
   const reset = useCallback(() => {
     setItems((prev) => {
       for (const item of prev) {
-        if (item.type === "image" && item.preview) {
-          URL.revokeObjectURL(item.preview);
+        if (item.preview) {
+          revokePreviewUrl(item);
         }
       }
       return [];
+    });
+  }, []);
+
+  const setExistingItems = useCallback((existingItems: ExistingUploadItemSeed[]) => {
+    setItems((prev) => {
+      for (const item of prev) {
+        if (item.preview) {
+          revokePreviewUrl(item);
+        }
+      }
+
+      return existingItems.map((item, index) => ({
+        localId: `existing-${item.assetId}-${index}`,
+        file: null,
+        preview: item.preview,
+        status: "done" as const,
+        progress: 100,
+        assetId: item.assetId,
+        type: item.type,
+        coverUrl: item.coverUrl,
+      }));
     });
   }, []);
 
@@ -215,6 +249,7 @@ export function useMediaUpload() {
     removeItem,
     reorderItems,
     reset,
+    setExistingItems,
     readyIds,
     allUploaded,
     isUploading,

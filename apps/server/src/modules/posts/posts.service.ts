@@ -22,7 +22,7 @@ import {
   postTags,
 } from '@moments/db';
 import { parseHashtags, normalizeHashtag, parseMentions } from '@moments/shared';
-import { CreatePostDto } from './dto';
+import { CreatePostDto, UpdatePostDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
 import { UsersService } from '../users/users.service';
 import { MediaService } from '../media/media.service';
@@ -47,14 +47,72 @@ export class PostsService {
     return normalized;
   }
 
+  private normalizePostContent(content?: string | null) {
+    return content && content.trim().length > 0 ? content.trim() : null;
+  }
+
+  private ensurePostHasEditableContent(content: string | null, mediaIds: string[], audioMediaId: string | null) {
+    if (!content && mediaIds.length === 0 && !audioMediaId) {
+      throw new BadRequestException('Post must have either text content, audio, or at least one media attachment');
+    }
+  }
+
+  private async replacePostTags(postId: string, content: string | null, tx: any) {
+    const postTagRows = await tx
+      .select({ tagId: postTags.tagId })
+      .from(postTags)
+      .where(eq(postTags.postId, postId));
+
+    if (postTagRows.length > 0) {
+      await tx.delete(postTags).where(eq(postTags.postId, postId));
+      for (const row of postTagRows) {
+        await tx
+          .update(tags)
+          .set({ postCount: sql`${tags.postCount} - 1` })
+          .where(eq(tags.id, row.tagId));
+      }
+    }
+
+    if (!content) return;
+
+    const tagNames = parseHashtags(content);
+    for (const tagName of tagNames) {
+      const nameLower = normalizeHashtag(tagName);
+      const [tag] = await tx
+        .insert(tags)
+        .values({ name: tagName, nameLower })
+        .onConflictDoUpdate({
+          target: tags.nameLower,
+          set: { postCount: sql`${tags.postCount} + 1` },
+        })
+        .returning();
+      await tx.insert(postTags).values({ postId, tagId: tag.id });
+    }
+  }
+
+  private async replacePostMentions(postId: string, authorId: string, content: string | null) {
+    await this.mentionsService.deleteMentionsForEntity('post', postId);
+
+    if (!content) return;
+
+    const parsedMentions = parseMentions(content);
+    if (parsedMentions.length === 0) return;
+
+    await this.mentionsService.createMentions(
+      'post',
+      postId,
+      authorId,
+      parsedMentions.map((m) => m.userId),
+    );
+  }
+
   async create(dto: CreatePostDto, authorId: string) {
-    const hasContent = dto.content && dto.content.trim().length > 0;
+    const normalizedContent = this.normalizePostContent(dto.content);
+    const hasContent = !!normalizedContent;
     const hasMedia = dto.mediaIds && dto.mediaIds.length > 0;
     const hasAudio = !!dto.audio;
 
-    if (!hasContent && !hasMedia && !hasAudio) {
-      throw new BadRequestException('Post must have either text content, audio, or at least one media attachment');
-    }
+    this.ensurePostHasEditableContent(normalizedContent, dto.mediaIds ?? [], dto.audio?.mediaId ?? null);
 
     // If posting to a space, verify membership
     if (dto.spaceId) {
@@ -86,7 +144,7 @@ export class PostsService {
       // Insert post
       const [newPost] = await tx.insert(posts).values({
         authorId,
-        content: hasContent ? dto.content!.trim() : null,
+        content: normalizedContent,
         spaceId: dto.spaceId ?? null,
         audioMediaId: dto.audio?.mediaId ?? null,
       }).returning();
@@ -138,38 +196,127 @@ export class PostsService {
           .where(eq(spaces.id, dto.spaceId));
       }
 
-      if (hasContent && dto.content!.trim()) {
-        const tagNames = parseHashtags(dto.content!);
-        for (const tagName of tagNames) {
-          const nameLower = normalizeHashtag(tagName);
-          const [tag] = await tx
-            .insert(tags)
-            .values({ name: tagName, nameLower })
-            .onConflictDoUpdate({
-              target: tags.nameLower,
-              set: { postCount: sql`${tags.postCount} + 1` },
-            })
-            .returning();
-          await tx.insert(postTags).values({ postId: newPost.id, tagId: tag.id });
-        }
-      }
+      await this.replacePostTags(newPost.id, normalizedContent, tx);
 
       return newPost;
     });
 
-    if (hasContent && dto.content!.trim()) {
-      const parsedMentions = parseMentions(dto.content!);
-      if (parsedMentions.length > 0) {
-        await this.mentionsService.createMentions(
-          'post',
-          post.id,
-          authorId,
-          parsedMentions.map(m => m.userId),
-        );
-      }
-    }
+    await this.replacePostMentions(post.id, authorId, normalizedContent);
 
     return this.getById(post.id, authorId);
+  }
+
+  async updateOwn(id: string, dto: UpdatePostDto, userId: string) {
+    const [post] = await this.db
+      .select()
+      .from(posts)
+      .where(and(eq(posts.id, id), eq(posts.isDeleted, false)))
+      .limit(1);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.authorId !== userId) {
+      throw new ForbiddenException('You can only edit your own posts');
+    }
+
+    const normalizedContent = this.normalizePostContent(dto.content);
+    const nextMediaIds = dto.mediaIds ?? [];
+    const nextAudioMediaId = dto.audio?.mediaId ?? null;
+
+    this.ensurePostHasEditableContent(normalizedContent, nextMediaIds, nextAudioMediaId);
+
+    const uniqueMediaIds = [...new Set(nextMediaIds)];
+    if (uniqueMediaIds.length !== nextMediaIds.length) {
+      throw new BadRequestException('Duplicate media assets are not allowed');
+    }
+
+    await this.db.transaction(async (tx) => {
+      const currentMediaRows = await tx
+        .select({ mediaId: postMediaRelations.mediaId })
+        .from(postMediaRelations)
+        .where(eq(postMediaRelations.postId, id));
+      const currentMediaIds = currentMediaRows.map((row: { mediaId: string }) => row.mediaId);
+      const currentMediaIdSet = new Set(currentMediaIds);
+      const currentAudioMediaId = post.audioMediaId;
+
+      if (uniqueMediaIds.length > 0) {
+        const mediaRows = await tx
+          .select()
+          .from(mediaAssets)
+          .where(inArray(mediaAssets.id, uniqueMediaIds));
+
+        if (mediaRows.length !== uniqueMediaIds.length) {
+          throw new BadRequestException('Some media assets are invalid');
+        }
+
+        for (const asset of mediaRows) {
+          if (asset.type === 'audio') {
+            throw new BadRequestException('Post attachments cannot include audio assets');
+          }
+
+          const isCurrentAttachment = currentMediaIdSet.has(asset.id);
+          if (isCurrentAttachment) continue;
+
+          if (asset.uploaderId !== userId || (asset.status !== 'pending' && asset.status !== 'orphaned')) {
+            throw new BadRequestException('Some media assets are invalid, not owned by you, or already attached');
+          }
+        }
+      }
+
+      if (nextAudioMediaId && nextAudioMediaId !== currentAudioMediaId) {
+        await this.mediaService.requireOwnedPendingAsset(nextAudioMediaId, userId, 'audio');
+        await tx
+          .update(mediaAssets)
+          .set({ waveform: JSON.stringify(dto.audio!.waveform) })
+          .where(eq(mediaAssets.id, nextAudioMediaId));
+      }
+
+      await tx
+        .update(posts)
+        .set({
+          content: normalizedContent,
+          audioMediaId: nextAudioMediaId,
+          updatedAt: new Date(),
+        })
+        .where(eq(posts.id, id));
+
+      await tx.delete(postMediaRelations).where(eq(postMediaRelations.postId, id));
+      if (uniqueMediaIds.length > 0) {
+        await tx.insert(postMediaRelations).values(
+          uniqueMediaIds.map((mediaId, index) => ({
+            postId: id,
+            mediaId,
+            sortOrder: index,
+          })),
+        );
+      }
+
+      const newlyAttachedMediaIds = uniqueMediaIds.filter((mediaId) => !currentMediaIdSet.has(mediaId));
+      if (newlyAttachedMediaIds.length > 0) {
+        await this.mediaService.markAttached(newlyAttachedMediaIds, 'post_attachment', tx);
+      }
+
+      const removedMediaIds = currentMediaIds.filter((mediaId) => !uniqueMediaIds.includes(mediaId));
+      for (const mediaId of removedMediaIds) {
+        await this.mediaService.markOrphanedIfUnreferenced(mediaId, tx);
+      }
+
+      if (nextAudioMediaId && nextAudioMediaId !== currentAudioMediaId) {
+        await this.mediaService.attachAsset(nextAudioMediaId, 'post_attachment', tx);
+      }
+
+      if (currentAudioMediaId && currentAudioMediaId !== nextAudioMediaId) {
+        await this.mediaService.markOrphanedIfUnreferenced(currentAudioMediaId, tx);
+      }
+
+      await this.replacePostTags(id, normalizedContent, tx);
+    });
+
+    await this.replacePostMentions(id, userId, normalizedContent);
+
+    return this.getById(id, userId);
   }
 
   async uploadAudio(file: Express.Multer.File, _uploaderId: string, clientDurationMs?: number) {
@@ -568,6 +715,7 @@ export class PostsService {
         id: post.id,
         content: post.content,
         createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
         author: {
           id: author.id,
           username: author.username,

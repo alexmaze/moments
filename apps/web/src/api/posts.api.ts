@@ -34,6 +34,19 @@ export function createPostApi(data: CreatePostRequest): Promise<PostDto> {
   return apiClient.post("/posts", data);
 }
 
+export interface UpdatePostRequest {
+  content?: string | null;
+  mediaIds?: string[];
+  audio?: {
+    mediaId: string;
+    waveform: number[];
+  } | null;
+}
+
+export function updatePostApi(id: string, data: UpdatePostRequest): Promise<PostDto> {
+  return apiClient.patch(`/posts/${id}`, data);
+}
+
 export interface UploadPostAudioResponse {
   id: string;
   type: "audio";
