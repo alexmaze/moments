@@ -156,9 +156,6 @@ importers:
       lexical-beautiful-mentions:
         specifier: ^0.1.48
         version: 0.1.48(@lexical/react@0.43.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(yjs@13.6.30))(@lexical/utils@0.43.0)(lexical@0.43.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      lightgallery:
-        specifier: ^2.9.0
-        version: 2.9.0
       lucide-react:
         specifier: ^1.8.0
         version: 1.8.0(react@19.2.5)
@@ -195,6 +192,9 @@ importers:
       use-debounce:
         specifier: ^10.1.1
         version: 10.1.1(react@19.2.5)
+      yet-another-react-lightbox:
+        specifier: ^3.31.0
+        version: 3.31.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -2911,10 +2911,6 @@ packages:
   libphonenumber-js@1.12.41:
     resolution: {integrity: sha512-lsmMmGXBxXIK/VMLEj0kL6MtUs1kBGj1nTCzi6zgQoG1DEwqwt2DQyHxcLykceIxAnfE3hya7NuIh6PpC6S3fA==}
 
-  lightgallery@2.9.0:
-    resolution: {integrity: sha512-58Ud1DyhD2ao58t+kPEqSZrjFxg23tGd5ZKr75erm7q31g5xhUtWUJH3sTUkhHzlyJAKHj5eTrJ37HQRXG4Wbg==}
-    engines: {node: '>=6.0.0'}
-
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
     engines: {node: '>= 12.0.0'}
@@ -3942,6 +3938,20 @@ packages:
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
+
+  yet-another-react-lightbox@3.31.0:
+    resolution: {integrity: sha512-qcj8Vz5Gpbl2/XCXW/4vAdLGganPHEL1D5VgHxBQWbPF8ZeomH1DSN2ci++kv/1hMlccpUkg/nNx2CrMf9cLAg==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      '@types/react': ^16 || ^17 || ^18 || ^19
+      '@types/react-dom': ^16 || ^17 || ^18 || ^19
+      react: ^16.8.0 || ^17 || ^18 || ^19
+      react-dom: ^16.8.0 || ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
 
   yjs@13.6.30:
     resolution: {integrity: sha512-vv/9h42eCMC81ZHDFswuu/MKzkl/vyq1BhaNGfHyOonwlG4CJbQF4oiBBJPvfdeCt/PlVDWh7Nov9D34YY09uQ==}
@@ -6391,8 +6401,6 @@ snapshots:
 
   libphonenumber-js@1.12.41: {}
 
-  lightgallery@2.9.0: {}
-
   lightningcss-android-arm64@1.32.0:
     optional: true
 
@@ -7373,6 +7381,14 @@ snapshots:
   yallist@4.0.0: {}
 
   yargs-parser@21.1.1: {}
+
+  yet-another-react-lightbox@3.31.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
   yjs@13.6.30:
     dependencies:

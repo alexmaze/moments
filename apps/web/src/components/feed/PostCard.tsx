@@ -1,16 +1,15 @@
-import { useState, useRef, useMemo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { PostDto } from '@/types/dto';
 import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
-import { mediaToLightGallerySlides } from '@/lib/mediaToLightGallery';
+import { mediaToLightboxSlides } from '@/lib/mediaToLightbox';
 import { User, Trash2, Heart, MessageSquare, Users } from 'lucide-react';
 import MediaGrid from './MediaGrid';
-import MediaLightbox from './MediaLightbox';
+import { useMediaLightbox } from './MediaLightboxProvider';
 import { PostContent } from './PostContent';
-import type { MediaLightboxHandle } from './MediaLightbox';
 import CommentSection from '@/components/post/CommentSection';
 import {
   AlertDialog,
@@ -28,7 +27,7 @@ interface PostCardProps {
   variant?: 'feed' | 'detail';
 }
 
-export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
+function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
   const { t } = useTranslation('feed');
   const currentUser = useAuthStore((s) => s.currentUser);
   const toggleLike = useToggleLike();
@@ -38,12 +37,12 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
   const isOwner = currentUser?.id === post.author.id;
   const navigate = useNavigate();
 
-  // Lightbox
-  const lightboxRef = useRef<MediaLightboxHandle>(null);
-  const slides = useMemo(() => mediaToLightGallerySlides(post.media), [post.media]);
+  // Lightbox (shared singleton provided by MediaLightboxProvider)
+  const lightbox = useMediaLightbox();
+  const slides = useMemo(() => mediaToLightboxSlides(post.media), [post.media]);
 
   const handleMediaClick = (index: number) => {
-    lightboxRef.current?.openGallery(index);
+    lightbox.open(slides, index);
   };
 
   const handleLike = (e: React.MouseEvent) => {
@@ -75,6 +74,8 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
             <img
               src={post.author.avatarUrl}
               alt={post.author.displayName}
+              loading="lazy"
+              decoding="async"
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
@@ -185,11 +186,16 @@ export default function PostCard({ post, variant = 'feed' }: PostCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Media lightbox */}
-      {post.media.length > 0 && (
-        <MediaLightbox ref={lightboxRef} slides={slides} />
-      )}
     </div>
   );
 }
+
+/**
+ * Memoised export. The feed's optimistic like-toggle replaces a single post
+ * reference inside the paginated cache, which means every other post keeps
+ * its referential identity — `memo` short-circuits their re-renders. Without
+ * this, a single like forces the whole list to reconcile.
+ */
+const PostCard = memo(PostCardInner);
+
+export default PostCard;

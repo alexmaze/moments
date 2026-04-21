@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Layer | Technology |
 |---|---|
 | Frontend | React 19 + Vite 8 + Tailwind CSS v4 + TanStack Query v5 |
-| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) + lightGallery (media lightbox) + Lexical (rich text editor) |
+| UI Components | Radix UI (Dialog, AlertDialog) + Sonner (toast notifications) + yet-another-react-lightbox (media lightbox) + Lexical (rich text editor) |
 | Rich Text Editor | Lexical + lexical-beautiful-mentions (atomic mention/tag nodes) |
 | Backend | NestJS 11 + Drizzle ORM + PostgreSQL 16 |
 | Auth | JWT (Passport.js — local + JWT strategies) |
@@ -376,13 +376,14 @@ The app uses **internal container scrolling**, not page-level scrolling. This ke
 - **Lightbox integration**: `onItemClick(index)` callback triggers lightbox; slides are always built from the **full** `post.media` array regardless of display truncation.
 
 ### Media Lightbox (图片/视频查看器)
-- **Library**: `lightgallery` (v2.9) — image/video lightbox with zoom, pan, and keyboard navigation.
-- **Plugins used**: `lgZoom` (scroll-wheel/pinch zoom, drag pan) + `lgVideo` (HTML5 `<video>` playback).
-- **Component**: `@/components/feed/MediaLightbox.tsx` — wraps lightGallery in `dynamic` mode, exposes `openGallery(index)` via `forwardRef` + `useImperativeHandle`.
-- **Conversion utility**: `@/lib/mediaToLightGallery.ts` — converts `PostMediaDto[]` to lightGallery's `GalleryItem[]` format.
-- **Integration**: `PostCard` holds a ref to `MediaLightbox`; `MediaGrid` accepts `onItemClick` callback. Clicking a media cell calls `e.stopPropagation()` (blocks `<Link>` navigation) then `openGallery(index)`.
-- **CSS imports**: `lightgallery/css/lightgallery.css`, `lg-zoom.css`, `lg-video.css` — imported in `index.css`.
-- **Trigger**: Both Feed page and Detail page support lightbox (via PostCard). Click media → lightbox; click text → navigate to detail page.
+- **Library**: `yet-another-react-lightbox` (v3) — React-first image/video lightbox with zoom, pan, keyboard navigation, and touch swipe.
+- **Plugins used**: `Video` (HTML5 `<video>` playback) + `Zoom` (scroll-wheel / pinch zoom, drag pan) + `Counter`.
+- **Architecture**: **Global singleton** via `MediaLightboxProvider` mounted inside `AppLayout`'s `<main>`. A single `<Lightbox>` lives near the root; all `PostCard`s share it via Context (`useMediaLightbox()`). This replaces the previous per-card instance model (50+ cards would init 50+ gallery instances up-front). YARL is declarative — switching between posts is a normal React re-render with stable DOM, so there's no imperative `refresh()` cost like the earlier lightGallery implementation had.
+- **Component**: `@/components/feed/MediaLightboxProvider.tsx` — exposes `open(slides, index)`. Internally holds `{ open, slides, index }` state and feeds it to `<Lightbox>` as props.
+- **Conversion utility**: `@/lib/mediaToLightbox.ts` — converts `PostMediaDto[]` to YARL's `Slide[]` format. Video slides need `width`/`height` (YARL uses them for aspect ratio); falls back to 1920×1080 when the DB record is missing dimensions.
+- **Integration**: `PostCard` calls `useMediaLightbox()` to get the `open` handler; `MediaGrid` accepts `onItemClick` callback. Clicking a media cell calls `e.stopPropagation()` (blocks `<Link>` navigation) then `lightbox.open(slides, index)`.
+- **CSS imports**: `yet-another-react-lightbox/styles.css` in `index.css`; `yet-another-react-lightbox/plugins/counter.css` imported inside `MediaLightboxProvider.tsx` alongside the Counter plugin.
+- **Trigger**: Feed, Detail, Profile, Tag, and Space pages all support lightbox (via PostCard). Click media → lightbox; click text → navigate to detail page.
 - **Keyboard**: ← → arrows switch slides, ESC closes. Scroll-wheel zooms when viewing images.
 
 ### Public Spaces (公共主题空间)

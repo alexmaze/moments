@@ -159,7 +159,13 @@ function MediaCell({
     return (
       <>
         {item.coverUrl ? (
-          <img src={item.coverUrl} alt="" className={mediaClass} />
+          <img
+            src={item.coverUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className={mediaClass}
+          />
         ) : (
           <video
             src={item.publicUrl}
@@ -183,5 +189,13 @@ function MediaCell({
     );
   }
 
-  return <img src={item.publicUrl} alt="" className={mediaClass} />;
+  return (
+    <img
+      src={item.publicUrl}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className={mediaClass}
+    />
+  );
 }

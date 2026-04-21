@@ -1,7 +1,5 @@
 @import "tailwindcss";
-@import "lightgallery/css/lightgallery.css";
-@import "lightgallery/css/lg-zoom.css";
-@import "lightgallery/css/lg-video.css";
+@import "yet-another-react-lightbox/styles.css";
 @import "overlayscrollbars/overlayscrollbars.css";
 
 /* ─── Design tokens ─────────────────────────────────────────── */

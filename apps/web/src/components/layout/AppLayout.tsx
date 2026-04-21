@@ -6,6 +6,7 @@ import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
 import { useBackground } from '@/hooks/useBackground';
 import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
 import { ScrollContainerContext } from './ScrollContainerContext';
+import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import { cn } from '@/lib/utils';
 import { Home, User, LogOut, Sun, Moon, Monitor, Users } from 'lucide-react';
 import {
@@ -157,9 +158,11 @@ export default function AppLayout() {
         className="flex-1 overflow-y-auto overscroll-y-contain"
       >
         <ScrollContainerContext.Provider value={mainEl}>
-          <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-20 md:pb-4">
-            <Outlet />
-          </div>
+          <MediaLightboxProvider>
+            <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-20 md:pb-4">
+              <Outlet />
+            </div>
+          </MediaLightboxProvider>
         </ScrollContainerContext.Provider>
       </main>
 
