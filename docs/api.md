@@ -154,6 +154,14 @@ GET /api/posts
           "sortOrder": 0
         }
       ],
+      "audio": {
+        "url": "/uploads/2026/04/21/audio/abc.webm",
+        "durationSec": 17,
+        "waveform": [26, 41, 59, 73, 62, 38, 21],
+        "status": "ready",
+        "mimeType": "audio/webm",
+        "sizeBytes": 128430
+      },
       "likeCount": 5,
       "commentCount": 3,
       "isLikedByMe": false,
@@ -183,6 +191,51 @@ GET /api/posts
 
 > **内嵌评论预览**: 每条帖子内嵌前 10 条评论（按时间正序），`hasMoreComments` 为 `true` 时表示还有更多评论可通过 `GET /api/posts/:postId/comments?page=2&limit=10` 加载。
 
+> **帖子录音**: 每条帖子最多可附带 `1` 段录音。录音不进入 `media[]`，而是通过独立的 `audio` 字段返回。
+
+---
+
+### 上传帖子录音
+
+```
+POST /api/posts/audio-upload
+```
+
+**认证**: Bearer token
+
+**描述**: 上传发帖前录制的单段音频，服务端会将其写入 `media_assets`（`type=audio`, 初始 `status=pending`），并校验 MIME 类型和时长（`1-120` 秒）。
+
+**请求体**: `multipart/form-data`
+
+| 字段   | 类型   | 必填 | 说明         |
+| ------ | ------ | ---- | ------------ |
+| `file` | `File` | 是   | 音频文件二进制 |
+
+**允许的 MIME 类型**:
+
+- `audio/webm`
+- `audio/mp4`
+- `audio/mpeg`
+- `audio/wav`
+- `audio/ogg`
+
+**响应** `201`:
+
+```json
+{
+  "id": "uuid",
+  "type": "audio",
+  "publicUrl": "/uploads/2026/04/21/audio/abc.webm",
+  "durationSecs": 17,
+  "mimeType": "audio/webm",
+  "sizeBytes": 128430
+}
+```
+
+**错误**:
+
+- `400 Bad Request` — 未上传文件 / 音频类型不支持 / 音频时长超出 `1-120` 秒 / 无法读取音频元数据
+
 ---
 
 ### 创建帖子
@@ -193,7 +246,7 @@ POST /api/posts
 
 **认证**: Bearer token
 
-**描述**: 创建新帖子。帖子需要包含文本内容或至少一个媒体附件（或两者兼有）。
+**描述**: 创建新帖子。帖子需要包含文本内容、录音或至少一个媒体附件中的任意一种。
 
 **请求体**:
 
@@ -201,14 +254,23 @@ POST /api/posts
 | ---------- | ---------- | ---- | ------------------------------------- |
 | `content`  | `string`   | 否   | 不超过 5000 字符                      |
 | `mediaIds` | `string[]` | 否   | UUID v4 数组，引用已上传的媒体资源 ID |
+| `spaceId`  | `string`   | 否   | UUID v4，指定发帖所属空间             |
+| `audio`    | `object`   | 否   | 单段帖子录音对象，结构见下            |
 
-> `content` 和 `mediaIds` 至少需要提供一个。`mediaIds` 引用的媒体必须属于当前用户，且不能已被其他业务实体占用。未被清理的 `orphaned` 媒体也允许重新挂载。
+`audio` 结构:
+
+| 字段          | 类型       | 必填 | 校验规则                  |
+| ------------- | ---------- | ---- | ------------------------- |
+| `mediaId`     | `string`   | 是   | UUID v4，引用已上传音频资源 |
+| `waveform`    | `number[]` | 是   | 1-64 个整数，范围 `0-100` |
+
+> `content`、`mediaIds`、`audio` 至少需要提供一个。`mediaIds` 和 `audio.mediaId` 引用的媒体必须属于当前用户，且不能已被其他业务实体占用。未被清理的 `orphaned` 媒体也允许重新挂载。
 
 **响应** `201`: 返回创建的帖子详情（结构同动态流中的单条帖子）。
 
 **错误**:
 
-- `400 Bad Request` — 既无文本也无媒体 / 媒体资源无效或不属于当前用户
+- `400 Bad Request` — 既无文本、媒体也无录音 / 媒体资源无效或不属于当前用户 / 录音结构非法
 
 ---
 
@@ -277,7 +339,7 @@ POST /api/media/upload
 
 **认证**: Bearer token
 
-**描述**: 上传图片或视频文件。上传后的媒体资源处于 `pending` 状态，创建帖子时通过 `mediaIds` 引用后变为 `attached`。
+**描述**: 上传图片或视频文件。上传后的媒体资源处于 `pending` 状态，创建帖子时通过 `mediaIds` 引用后变为 `attached`。帖子录音不走该接口，而是使用上面的 `POST /api/posts/audio-upload`，但最终也进入同一个 `media_assets` 生命周期。
 
 **请求体**: `multipart/form-data`
 

@@ -12,7 +12,10 @@
     "placeholder": "What's on your mind?",
     "postSuccess": "Post published!",
     "postError": "Failed to publish. Please try again.",
-    "uploadError": "File upload failed."
+    "uploadError": "File upload failed.",
+    "audioUploadError": "Audio upload failed.",
+    "audioPermissionError": "Microphone access was denied.",
+    "audioUnsupported": "Audio recording is not supported in this browser."
   },
   "quickComposer": {
     "placeholder": "Share what's on your mind...",
@@ -32,7 +35,13 @@
     "insertEmoji": "Insert emoji",
     "insertHashtag": "Insert hashtag",
     "insertMention": "Mention someone",
-    "insertImage": "Insert image"
+    "insertImage": "Insert image",
+    "recordAudio": "Record audio",
+    "stopRecording": "Stop recording",
+    "audioReady": "Audio ready",
+    "reRecordAudio": "Re-record",
+    "deleteAudio": "Delete audio",
+    "recordingLimit": "Up to 120 seconds"
   },
   "uploader": {
     "dropzone": "Drop photos or videos here, or tap to browse",
@@ -47,6 +56,8 @@
     "deleteConfirmTitle": "Delete this post?",
     "deleteConfirmDesc": "This action cannot be undone.",
     "deleteConfirmAction": "Delete",
-    "deleteConfirmCancel": "Cancel"
+    "deleteConfirmCancel": "Cancel",
+    "playAudio": "Play audio",
+    "pauseAudio": "Pause audio"
   }
 }

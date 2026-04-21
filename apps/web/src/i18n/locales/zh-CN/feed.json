@@ -12,7 +12,10 @@
     "placeholder": "分享你的想法...",
     "postSuccess": "动态已发布!",
     "postError": "发布失败，请重试。",
-    "uploadError": "文件上传失败。"
+    "uploadError": "文件上传失败。",
+    "audioUploadError": "语音上传失败。",
+    "audioPermissionError": "无法访问麦克风，请检查权限设置。",
+    "audioUnsupported": "当前浏览器不支持录音。"
   },
   "quickComposer": {
     "placeholder": "分享你的近况...",
@@ -32,7 +35,13 @@
     "insertEmoji": "插入表情",
     "insertHashtag": "插入话题",
     "insertMention": "提及某人",
-    "insertImage": "插入图片"
+    "insertImage": "插入图片",
+    "recordAudio": "录音",
+    "stopRecording": "停止录音",
+    "audioReady": "录音已就绪",
+    "reRecordAudio": "重录",
+    "deleteAudio": "删除录音",
+    "recordingLimit": "最长 120 秒"
   },
   "uploader": {
     "dropzone": "拖拽图片或视频到此处，或点击选择",
@@ -47,6 +56,8 @@
     "deleteConfirmTitle": "删除这条动态？",
     "deleteConfirmDesc": "此操作无法撤销。",
     "deleteConfirmAction": "删除",
-    "deleteConfirmCancel": "取消"
+    "deleteConfirmCancel": "取消",
+    "playAudio": "播放语音",
+    "pauseAudio": "暂停语音"
   }
 }

@@ -11,15 +11,20 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import { and, eq, inArray, lte, or } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, mediaAssets, postMediaRelations, spaces, users } from '@moments/db';
+import { type DrizzleClient, mediaAssets, postMediaRelations, posts, spaces, users } from '@moments/db';
 import { STORAGE_PROVIDER } from './storage/storage.module';
 import { IStorageProvider } from './storage/storage.interface';
 
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
-const ALLOWED_MIMES = [...ALLOWED_IMAGE_MIMES, ...ALLOWED_VIDEO_MIMES];
+const ALLOWED_AUDIO_MIMES = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/ogg'];
+const ALLOWED_MIMES = [...ALLOWED_IMAGE_MIMES, ...ALLOWED_VIDEO_MIMES, ...ALLOWED_AUDIO_MIMES];
 type MediaPurpose = 'post_attachment' | 'user_avatar' | 'space_cover';
 type DbExecutor = DrizzleClient | any;
+
+function normalizeMimeType(mimeType: string) {
+  return mimeType.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+}
 
 @Injectable()
 export class MediaService {
@@ -29,26 +34,29 @@ export class MediaService {
   ) {}
 
   async uploadFile(file: Express.Multer.File, uploaderId: string) {
+    const normalizedMimeType = normalizeMimeType(file.mimetype);
+
     // 1. Validate MIME type
-    if (!ALLOWED_MIMES.includes(file.mimetype)) {
+    if (!ALLOWED_MIMES.includes(normalizedMimeType)) {
       throw new BadRequestException(`Unsupported file type: ${file.mimetype}`);
     }
 
-    const isVideo = ALLOWED_VIDEO_MIMES.includes(file.mimetype);
-    const type = isVideo ? 'video' : 'image';
+    const isVideo = ALLOWED_VIDEO_MIMES.includes(normalizedMimeType);
+    const isAudio = ALLOWED_AUDIO_MIMES.includes(normalizedMimeType);
+    const type = isVideo ? 'video' : isAudio ? 'audio' : 'image';
 
     // 2. Store file
     const datePath = format(new Date(), 'yyyy/MM/dd');
-    const saved = await this.storageProvider.save(file, datePath);
+    const saved = await this.storageProvider.save(file, isAudio ? join(datePath, 'audio') : datePath);
 
     // 3. Extract metadata
     let width: number | undefined;
     let height: number | undefined;
-    let durationSecs: number | undefined;
+    let durationMs: number | undefined;
     let coverPath: string | undefined;
     let coverUrl: string | undefined;
 
-    if (!isVideo) {
+    if (!isVideo && !isAudio) {
       // Extract image dimensions
       try {
         const meta = await sharp(file.buffer).metadata();
@@ -57,18 +65,24 @@ export class MediaService {
       } catch {
         // Non-critical: proceed without dimensions
       }
-    } else {
+    } else if (isVideo) {
       // Extract video first frame as cover + metadata
       try {
         const result = await this.extractVideoMetadata(file.buffer, datePath);
         width = result.width;
         height = result.height;
-        durationSecs = result.durationSecs;
+        durationMs = result.durationMs;
         coverPath = result.coverPath;
         coverUrl = result.coverUrl;
       } catch (error) {
         // Non-critical: proceed without cover, but log for debugging
         console.error('Failed to extract video metadata:', error);
+      }
+    } else {
+      try {
+        durationMs = await this.extractAudioDuration(file.buffer, file.originalname || 'audio');
+      } catch (error) {
+        throw new BadRequestException(`Failed to read audio metadata: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -80,11 +94,11 @@ export class MediaService {
       publicUrl: saved.publicUrl,
       coverPath: coverPath || null,
       coverUrl: coverUrl || null,
-      mimeType: file.mimetype,
+      mimeType: normalizedMimeType,
       sizeBytes: saved.sizeBytes,
       width: width || null,
       height: height || null,
-      durationSecs: durationSecs || null,
+      durationMs: durationMs || null,
       status: 'pending',
     }).returning();
 
@@ -97,7 +111,7 @@ export class MediaService {
       sizeBytes: asset.sizeBytes,
       width: asset.width,
       height: asset.height,
-      durationSecs: asset.durationSecs,
+      durationMs: asset.durationMs,
     };
   }
 
@@ -110,7 +124,7 @@ export class MediaService {
     return asset || null;
   }
 
-  async requireOwnedPendingAsset(id: string, uploaderId: string, type: 'image' | 'video' | 'any' = 'any') {
+  async requireOwnedPendingAsset(id: string, uploaderId: string, type: 'image' | 'video' | 'audio' | 'any' = 'any') {
     const [asset] = await this.db
       .select()
       .from(mediaAssets)
@@ -260,6 +274,16 @@ export class MediaService {
       .limit(1);
     if (postRef) return true;
 
+    const [postAudioRef] = await executor
+      .select({ id: posts.id })
+      .from(posts)
+      .where(and(
+        eq(posts.audioMediaId, id),
+        eq(posts.isDeleted, false),
+      ))
+      .limit(1);
+    if (postAudioRef) return true;
+
     const [avatarRef] = await executor
       .select({ id: users.id })
       .from(users)
@@ -285,7 +309,7 @@ export class MediaService {
   ): Promise<{
     width?: number;
     height?: number;
-    durationSecs?: number;
+    durationMs?: number;
     coverPath?: string;
     coverUrl?: string;
   }> {
@@ -302,7 +326,7 @@ export class MediaService {
       const metadata = await new Promise<{
         width?: number;
         height?: number;
-        durationSecs?: number;
+        durationMs?: number;
       }>((resolve, reject) => {
         ffmpeg.ffprobe(tmpInput, (err: Error | null, data: FfprobeData) => {
           if (err) return reject(err);
@@ -310,7 +334,7 @@ export class MediaService {
           resolve({
             width: videoStream?.width,
             height: videoStream?.height,
-            durationSecs: data.format.duration ? Math.round(data.format.duration) : undefined,
+            durationMs: data.format.duration ? Math.round(data.format.duration * 1000) : undefined,
           });
         });
       });
@@ -342,6 +366,30 @@ export class MediaService {
       };
     } finally {
       // Cleanup temp files
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+
+  private async extractAudioDuration(buffer: Buffer, filename: string): Promise<number> {
+    const tmpDir = await fs.mkdtemp(join(os.tmpdir(), 'moments-audio-'));
+    const tmpInput = join(tmpDir, filename);
+
+    try {
+      await fs.writeFile(tmpInput, buffer);
+
+      const metadata = await new Promise<FfprobeData>((resolve, reject) => {
+        ffmpeg.ffprobe(tmpInput, (err: Error | null, data: FfprobeData) => {
+          if (err) return reject(err);
+          resolve(data);
+        });
+      });
+
+      if (!metadata.format.duration) {
+        throw new Error('missing audio duration');
+      }
+
+      return Math.max(1, Math.round(metadata.format.duration * 1000));
+    } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
   }

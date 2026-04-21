@@ -36,8 +36,18 @@ export interface PostMediaDto {
   mimeType: string;
   width: number | null;
   height: number | null;
-  durationSecs: number | null;
+  durationMs: number | null;
   sortOrder: number;
+}
+
+export interface PostAudioDto {
+  id: string;
+  url: string;
+  durationMs: number;
+  waveform: number[];
+  status: 'ready' | 'uploading' | 'failed';
+  mimeType: string | null;
+  sizeBytes: number | null;
 }
 
 export interface PostDto {
@@ -51,6 +61,7 @@ export interface PostDto {
     avatarUrl: string | null;
   };
   media: PostMediaDto[];
+  audio: PostAudioDto | null;
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;

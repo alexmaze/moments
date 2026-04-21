@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Moments (近况)** is an open-source, self-hostable private social circle platform for sharing status updates. Core features: multi-account support, text/image/video mixed posts, likes, and comments. Designed to be lightweight, easy to self-deploy, and extensible for future AI-powered features (summarization, content analysis, relationship insights).
+**Moments (近况)** is an open-source, self-hostable private social circle platform for sharing status updates. Core features: multi-account support, text/image/video mixed posts, optional single-audio post attachments, likes, and comments. Designed to be lightweight, easy to self-deploy, and extensible for future AI-powered features (summarization, content analysis, relationship insights).
 
 ## Tech Stack
 
@@ -226,8 +226,8 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 | Table | Purpose |
 |---|---|
 | `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, background (preset ID), isActive |
-| `media_assets` | Uploaded files: type (image/video), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
-| `posts` | Posts: authorId, content (nullable), spaceId (nullable FK→spaces), likeCount, commentCount, soft-delete flags |
+| `media_assets` | Uploaded files: type (image/video/audio), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
+| `posts` | Posts: authorId, content (nullable), spaceId (nullable FK→spaces), optional single audioMediaId, likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
 | `post_likes` | Unique (postId, userId) pair |
 | `post_comments` | Comments with soft-delete |
@@ -273,13 +273,19 @@ pnpm db:migrate    # applies it to the database
 ### Quick Composer (快捷发帖入口)
 - **Component**: `@/components/composer/QuickComposer.tsx` — inline expandable post composer at the top of the feed.
 - **Collapsed state**: Card with current user's avatar + placeholder text + image icon hint. Clicking anywhere expands it.
-- **Expanded state**: Avatar + `RichTextEditor` (Lexical-based rich text editor), MediaUploader below, bottom toolbar: `[Image] [Emoji] [SpaceSelector] — [Submit]`.
+- **Expanded state**: Avatar + `RichTextEditor` (Lexical-based rich text editor), MediaUploader below, optional `AudioRecorderPanel`, bottom toolbar: `[Image] [Record Audio] [Emoji] [SpaceSelector] — [Submit]`.
 - **RichTextEditor**: Lexical-based rich text editor with atomic mention/tag nodes. Uses `lexical-beautiful-mentions` plugin for @mention and #hashtag support. Mentions display as `@displayName` in edit mode, serialize to `@{displayName|userId}` for storage. Tags display and store as `#tagName`.
+- **Audio recording**: Client-side `MediaRecorder` flow. One recording per post, upload-first on submit, max `120s`, previewable before publish, fake waveform generated client-side. Uploaded audio is persisted into `media_assets` as `type='audio'`.
 - **EmojiPickerPopover**: Portal-based emoji picker using `emoji-picker-react`. Supports search, skin tones, categories, recent emojis. Respects dark/light theme.
-- **Toolbar buttons**: Image (file picker), Emoji (toggles picker popover), SpaceSelector (optional, hidden when `fixedSpaceId` prop set).
+- **Toolbar buttons**: Image (file picker), Record Audio (start/stop recorder), Emoji (toggles picker popover), SpaceSelector (optional, hidden when `fixedSpaceId` prop set).
 - **State management**: Local `expanded` state; reuses `useMediaUpload()` and `useCreatePost()` hooks. On successful post, auto-collapses and resets.
-- **Click-outside behavior**: Collapses when clicking outside **only if** no content or media has been entered (prevents accidental data loss).
+- **Click-outside behavior**: Collapses when clicking outside **only if** no content, media, or audio has been entered (prevents accidental data loss).
 - **Sole entry point**: QuickComposer is the only post creation interface (no FAB, no separate PostComposer).
+
+### Post audio playback
+- **Component**: `@/components/feed/PostAudioPlayer.tsx` — compact waveform player rendered inside `PostCard` when `post.audio` exists.
+- **Architecture**: Global singleton audio instance managed by `@/store/post-audio-player.store.ts` so only one post recording can play at a time across Feed and Detail views.
+- **Controls**: Play/pause, seek, progress bar, duration, fake waveform visualization. No queue, no speed controls, no background playback.
 
 ### Inline comments in feed
 - PostCard includes a toggle button to expand/collapse an inline comment section.

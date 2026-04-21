@@ -1,5 +1,6 @@
 import apiClient from "./client";
 import type {
+  PostAudioDto,
   PostDto,
   CommentDto,
   PaginatedResponse,
@@ -19,14 +20,48 @@ export function getPostApi(id: string): Promise<PostDto> {
   return apiClient.get(`/posts/${id}`);
 }
 
-interface CreatePostRequest {
+export interface CreatePostRequest {
   content?: string;
   mediaIds?: string[];
   spaceId?: string;
+  audio?: {
+    mediaId: string;
+    waveform: number[];
+  };
 }
 
 export function createPostApi(data: CreatePostRequest): Promise<PostDto> {
   return apiClient.post("/posts", data);
+}
+
+export interface UploadPostAudioResponse {
+  id: string;
+  type: "audio";
+  publicUrl: string;
+  durationMs: number;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export function uploadPostAudioApi(
+  file: File,
+  durationMs?: number,
+  onProgress?: (pct: number) => void,
+): Promise<UploadPostAudioResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (durationMs && Number.isFinite(durationMs)) {
+    formData.append("durationMs", String(Math.max(1, Math.round(durationMs))));
+  }
+
+  return apiClient.post("/posts/audio-upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress: (e) => {
+      if (onProgress && e.total) {
+        onProgress(Math.round((e.loaded * 100) / e.total));
+      }
+    },
+  });
 }
 
 export function deletePostApi(id: string): Promise<void> {

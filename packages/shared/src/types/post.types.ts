@@ -1,12 +1,23 @@
 import type { UserDto, PostMediaDto, MentionUserDto } from './index';
 import type { PostSpaceDto } from './space.types';
 
+export interface PostAudioDto {
+  id: string;
+  url: string;
+  durationMs: number;
+  waveform: number[];
+  status: 'ready' | 'uploading' | 'failed';
+  mimeType: string | null;
+  sizeBytes: number | null;
+}
+
 export interface PostDto {
   id: string;
   content: string | null;
   createdAt: string;
   author: UserDto;
   media: PostMediaDto[];
+  audio: PostAudioDto | null;
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;

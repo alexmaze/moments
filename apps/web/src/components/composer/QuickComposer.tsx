@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, User, Loader2, Smile } from 'lucide-react';
+import { Image, User, Loader2, Smile, Mic } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { uploadPostAudioApi } from '@/api/posts.api';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import MediaUploader from './MediaUploader';
+import AudioRecorderPanel from './AudioRecorderPanel';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';
 import { EmojiPickerPopover } from './EmojiPickerPopover';
 import { RichTextEditor, type RichTextEditorRef } from './rich-editor';
@@ -22,17 +26,21 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const editorRef = useRef<RichTextEditorRef>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const submittingRef = useRef(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   const createPost = useCreatePost();
   const { items, addFiles, removeItem, readyIds, allUploaded, reset } =
     useMediaUpload();
+  const audioRecorder = useAudioRecorder();
+  const [isAudioUploading, setIsAudioUploading] = useState(false);
 
   const hasContent = content.trim().length > 0;
   const hasMedia = items.length > 0;
   const hasMediaReady = hasMedia && allUploaded;
-  const canSubmit = (hasContent || hasMediaReady) && !createPost.isPending;
-  const isDirty = hasContent || hasMedia || !!spaceId;
+  const hasAudio = !!audioRecorder.audioFile;
+  const canSubmit = (hasContent || hasMediaReady || hasAudio) && !createPost.isPending && !isAudioUploading;
+  const isDirty = hasContent || hasMedia || hasAudio || !!spaceId;
 
   useEffect(() => {
     if (expanded && editorRef.current) {
@@ -59,26 +67,54 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
     if (!expanded) setExpanded(true);
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
+  const handleSubmit = async () => {
+    if (!canSubmit || submittingRef.current) return;
+    submittingRef.current = true;
 
     const serializedContent = editorRef.current?.getSerializedContent() || content;
+    let audioPayload: {
+      mediaId: string;
+      waveform: number[];
+    } | undefined;
 
-    createPost.mutate(
-      {
+    try {
+      if (audioRecorder.audioFile) {
+        setIsAudioUploading(true);
+        const uploaded = await uploadPostAudioApi(
+          audioRecorder.audioFile,
+          audioRecorder.previewDurationMs || audioRecorder.durationMs,
+        );
+        audioPayload = {
+          mediaId: uploaded.id,
+          waveform: audioRecorder.waveform,
+        };
+      }
+    } catch {
+      toast.error(t('composer.audioUploadError'));
+      submittingRef.current = false;
+      return;
+    } finally {
+      setIsAudioUploading(false);
+    }
+
+    try {
+      await createPost.mutateAsync({
         content: serializedContent.trim() || undefined,
         mediaIds: readyIds,
         spaceId,
-      },
-      {
-        onSuccess: () => {
-          setContent('');
-          setSpaceId(fixedSpaceId);
-          reset();
-          setExpanded(false);
-        },
-      },
-    );
+        audio: audioPayload,
+      });
+
+      setContent('');
+      setSpaceId(fixedSpaceId);
+      reset();
+      audioRecorder.clearRecording();
+      setExpanded(false);
+    } catch {
+      // Error toast handled by the mutation hook.
+    } finally {
+      submittingRef.current = false;
+    }
   };
 
   const handleFileSelect = () => {
@@ -97,6 +133,22 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   const handleEmojiSelect = useCallback((emoji: string) => {
     editorRef.current?.insertText(emoji);
   }, []);
+
+  const handleToggleAudioRecording = useCallback(async () => {
+    if (audioRecorder.status === 'recording') {
+      audioRecorder.stopRecording();
+      return;
+    }
+
+    try {
+      await audioRecorder.startRecording();
+    } catch (error) {
+      const message = error instanceof Error && error.message === 'unsupported'
+        ? t('composer.audioUnsupported')
+        : t('composer.audioPermissionError');
+      toast.error(message);
+    }
+  }, [audioRecorder, t]);
 
   return (
     <div ref={cardRef} className="surface-card rounded-xl shadow-sm border border-border mb-4">
@@ -155,6 +207,26 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
             />
           </div>
 
+          {(audioRecorder.status !== 'idle' || hasAudio) && (
+            <div className="mt-3">
+              <AudioRecorderPanel
+                durationMs={audioRecorder.durationMs}
+                previewDurationMs={audioRecorder.previewDurationMs}
+                isPreviewPlaying={audioRecorder.isPreviewPlaying}
+                isUploading={isAudioUploading || createPost.isPending}
+                onClear={audioRecorder.clearRecording}
+                onSeek={audioRecorder.seekPreview}
+                onStart={handleToggleAudioRecording}
+                onStop={audioRecorder.stopRecording}
+                onTogglePreview={() => void audioRecorder.togglePreviewPlayback()}
+                previewCurrentTimeMs={audioRecorder.previewCurrentTimeMs}
+                ready={audioRecorder.status === 'ready'}
+                recording={audioRecorder.status === 'recording'}
+                waveform={audioRecorder.waveform}
+              />
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
             <button
               onClick={handleFileSelect}
@@ -163,6 +235,15 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
               title={t('quickComposer.insertImage')}
             >
               <Image className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => void handleToggleAudioRecording()}
+              type="button"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-accent"
+              title={audioRecorder.status === 'recording' ? t('quickComposer.stopRecording') : t('quickComposer.recordAudio')}
+            >
+              <Mic className="w-5 h-5" />
             </button>
 
             <button
@@ -193,7 +274,7 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
               disabled={!canSubmit}
               className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
-              {createPost.isPending ? (
+              {createPost.isPending || isAudioUploading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 t('quickComposer.submit')

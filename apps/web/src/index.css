@@ -39,6 +39,13 @@
 
     /* Like/heart action color */
     --like: 5 85% 57%;
+    --audio-waveform-surface: hsl(var(--primary) / 0.05);
+    --audio-waveform-progress: hsl(var(--primary) / 0.16);
+    --audio-waveform-bar: hsl(var(--primary) / 0.85);
+    --audio-waveform-cursor: hsl(20 85% 32% / 0.9);
+    --audio-waveform-tag-surface: hsl(0 0% 100% / 0.65);
+    --audio-waveform-tag-foreground: hsl(var(--foreground) / 0.8);
+    --audio-waveform-tag-border: hsl(var(--border) / 0.55);
 
     /* Surface material — semi-transparent cards + light backdrop blur.
        Gives the app a lighter, airier feel and lets custom background
@@ -78,6 +85,13 @@
     --ring: 24 80% 62%;
 
     --like: 5 75% 63%;
+    --audio-waveform-surface: hsl(var(--primary) / 0.08);
+    --audio-waveform-progress: hsl(var(--primary) / 0.2);
+    --audio-waveform-bar: hsl(var(--primary) / 0.9);
+    --audio-waveform-cursor: hsl(var(--primary) / 0.98);
+    --audio-waveform-tag-surface: hsl(20 8% 18% / 0.72);
+    --audio-waveform-tag-foreground: hsl(var(--foreground) / 0.88);
+    --audio-waveform-tag-border: hsl(var(--border) / 0.72);
 
     /* Surface material — slightly lower alpha in dark mode so cards
        don't feel heavy against the dark background. */

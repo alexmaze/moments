@@ -8,6 +8,7 @@ import { formatRelativeTime } from '@/lib/utils';
 import { mediaToLightboxSlides } from '@/lib/mediaToLightbox';
 import { User, Trash2, Heart, MessageSquare, Users } from 'lucide-react';
 import MediaGrid from './MediaGrid';
+import PostAudioPlayer from './PostAudioPlayer';
 import { useMediaLightbox } from './MediaLightboxProvider';
 import { PostContent } from './PostContent';
 import CommentSection from '@/components/post/CommentSection';
@@ -133,6 +134,8 @@ function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
 
         {/* Media */}
         <MediaGrid items={post.media} variant={variant} onItemClick={handleMediaClick} />
+
+        {post.audio && <PostAudioPlayer audio={post.audio} postId={post.id} />}
       </div>
 
       {/* Footer */}

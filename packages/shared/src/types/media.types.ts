@@ -1,5 +1,5 @@
 // Media types
-export type MediaType = 'image' | 'video';
+export type MediaType = 'image' | 'video' | 'audio';
 export type MediaStatus = 'pending' | 'attached' | 'orphaned';
 
 export interface MediaAssetDto {
@@ -11,7 +11,7 @@ export interface MediaAssetDto {
   sizeBytes: number;
   width: number | null;
   height: number | null;
-  durationSecs: number | null;
+  durationMs: number | null;
 }
 
 export interface PostMediaDto extends MediaAssetDto {

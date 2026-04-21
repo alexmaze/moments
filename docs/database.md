@@ -87,13 +87,15 @@
 
 ### 3.2 posts
 
-帖子表。`like_count` 和 `comment_count` 为反范式冗余字段，避免查询 feed 时执行 COUNT 子查询。
+帖子表。`like_count` 和 `comment_count` 为反范式冗余字段，避免查询 feed 时执行 COUNT 子查询。图片/视频仍通过 `post_media_relations` 关联到 `media_assets`，单段录音也纳入 `media_assets` 管理，并通过 `audio_media_id` 指向具体资源。
 
 | 字段名          | 类型                         | 约束                      | 说明               |
 | --------------- | ---------------------------- | ------------------------- | ------------------ |
 | `id`            | `uuid`                       | PK, 默认 `gen_random_uuid()` | 帖子唯一标识       |
 | `author_id`     | `uuid`                       | NOT NULL, FK → `users.id` | 作者               |
 | `content`       | `text`                       | 可空                      | 文字内容           |
+| `space_id`      | `uuid`                       | 可空, FK → `spaces.id`    | 所属空间           |
+| `audio_media_id`| `uuid`                       | 可空, FK → `media_assets.id` | 录音资源引用    |
 | `like_count`    | `integer`                    | NOT NULL, 默认 `0`        | 点赞数 (反范式)    |
 | `comment_count` | `integer`                    | NOT NULL, 默认 `0`        | 评论数 (反范式)    |
 | `is_deleted`    | `boolean`                    | NOT NULL, 默认 `false`    | 软删除标记         |
@@ -103,13 +105,13 @@
 
 ### 3.3 media_assets
 
-媒体资源表。通过 `status` 枚举管理生命周期：上传后为 `pending`，关联到帖子/头像/空间封面后变为 `attached`，无业务引用时标记为 `orphaned`，由后台任务延迟清理。
+媒体资源表。通过 `status` 枚举管理生命周期：上传后为 `pending`，关联到帖子/头像/空间封面后变为 `attached`，无业务引用时标记为 `orphaned`，由后台任务延迟清理。该表统一承载图片、视频和帖子录音。
 
 | 字段名          | 类型                         | 约束                      | 说明               |
 | --------------- | ---------------------------- | ------------------------- | ------------------ |
 | `id`            | `uuid`                       | PK, 默认 `gen_random_uuid()` | 资源唯一标识       |
 | `uploader_id`   | `uuid`                       | NOT NULL, FK → `users.id` | 上传者             |
-| `type`          | `media_type` 枚举            | NOT NULL                  | `image` 或 `video` |
+| `type`          | `media_type` 枚举            | NOT NULL                  | `image` / `video` / `audio` |
 | `status`        | `media_status` 枚举          | NOT NULL, 默认 `pending`  | 生命周期状态       |
 | `purpose`       | `media_purpose` 枚举         | 可空                      | 最近一次正式挂载用途 |
 | `orphaned_at`   | `timestamptz`                | 可空                      | 进入 `orphaned` 的时间 |
@@ -124,6 +126,7 @@
 | `width`         | `integer`                    | 可空                      | 宽度 (像素)        |
 | `height`        | `integer`                    | 可空                      | 高度 (像素)        |
 | `duration_secs` | `integer`                    | 可空                      | 视频时长 (秒)      |
+| `waveform`      | `text`                       | 可空                      | 音频波形 JSON 字符串，仅 `type=audio` 使用 |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`    | 创建时间           |
 
 ### 3.4 post_media_relations

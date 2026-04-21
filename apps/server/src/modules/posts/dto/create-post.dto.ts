@@ -1,4 +1,26 @@
-import { IsString, IsOptional, IsArray, IsUUID, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+
+class CreatePostAudioDto {
+  @IsUUID('4')
+  mediaId!: string;
+
+  @IsArray()
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(100, { each: true })
+  waveform!: number[];
+}
 
 export class CreatePostDto {
   @IsOptional()
@@ -14,4 +36,9 @@ export class CreatePostDto {
   @IsOptional()
   @IsUUID('4')
   spaceId?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreatePostAudioDto)
+  audio?: CreatePostAudioDto;
 }

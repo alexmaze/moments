@@ -271,7 +271,7 @@ export class TagsService {
           mimeType: r.media_assets.mimeType,
           width: r.media_assets.width,
           height: r.media_assets.height,
-          durationSecs: r.media_assets.durationSecs,
+          durationMs: r.media_assets.durationMs,
           sortOrder: r.post_media_relations.sortOrder,
         })),
         likeCount: post.likeCount,

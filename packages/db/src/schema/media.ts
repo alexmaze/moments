@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, integer, pgEnum, timestamp } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
-export const mediaTypeEnum = pgEnum('media_type', ['image', 'video']);
+export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
 export const mediaStatusEnum = pgEnum('media_status', ['pending', 'attached', 'orphaned']);
 export const mediaPurposeEnum = pgEnum('media_purpose', ['post_attachment', 'user_avatar', 'space_cover']);
 
@@ -22,7 +22,8 @@ export const mediaAssets = pgTable('media_assets', {
   sizeBytes: integer('size_bytes').notNull(),
   width: integer('width'),
   height: integer('height'),
-  durationSecs: integer('duration_secs'),
+  durationMs: integer('duration_ms'),
+  waveform: text('waveform'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

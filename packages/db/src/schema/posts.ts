@@ -8,6 +8,7 @@ export const posts = pgTable('posts', {
   authorId: uuid('author_id').notNull().references(() => users.id),
   content: text('content'),
   spaceId: uuid('space_id').references(() => spaces.id),
+  audioMediaId: uuid('audio_media_id').references(() => mediaAssets.id),
   likeCount: integer('like_count').notNull().default(0),
   commentCount: integer('comment_count').notNull().default(0),
   isDeleted: boolean('is_deleted').notNull().default(false),

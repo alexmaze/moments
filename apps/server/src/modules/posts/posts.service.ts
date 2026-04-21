@@ -39,12 +39,21 @@ export class PostsService {
     private readonly usersService: UsersService,
   ) {}
 
+  private normalizeAudioDuration(durationMs?: number | null) {
+    if (!durationMs || !Number.isFinite(durationMs)) return null;
+
+    const normalized = Math.max(1, Math.round(durationMs));
+    if (normalized < 1 || normalized > 120_000) return null;
+    return normalized;
+  }
+
   async create(dto: CreatePostDto, authorId: string) {
     const hasContent = dto.content && dto.content.trim().length > 0;
     const hasMedia = dto.mediaIds && dto.mediaIds.length > 0;
+    const hasAudio = !!dto.audio;
 
-    if (!hasContent && !hasMedia) {
-      throw new BadRequestException('Post must have either text content or at least one media attachment');
+    if (!hasContent && !hasMedia && !hasAudio) {
+      throw new BadRequestException('Post must have either text content, audio, or at least one media attachment');
     }
 
     // If posting to a space, verify membership
@@ -79,6 +88,7 @@ export class PostsService {
         authorId,
         content: hasContent ? dto.content!.trim() : null,
         spaceId: dto.spaceId ?? null,
+        audioMediaId: dto.audio?.mediaId ?? null,
       }).returning();
 
       // Handle media attachments
@@ -109,6 +119,15 @@ export class PostsService {
 
         // Mark media as attached
         await this.mediaService.markAttached(dto.mediaIds!, 'post_attachment', tx);
+      }
+
+      if (hasAudio) {
+        await this.mediaService.requireOwnedPendingAsset(dto.audio!.mediaId, authorId, 'audio');
+        await tx
+          .update(mediaAssets)
+          .set({ waveform: JSON.stringify(dto.audio!.waveform) })
+          .where(eq(mediaAssets.id, dto.audio!.mediaId));
+        await this.mediaService.attachAsset(dto.audio!.mediaId, 'post_attachment', tx);
       }
 
       // Increment space post count
@@ -151,6 +170,32 @@ export class PostsService {
     }
 
     return this.getById(post.id, authorId);
+  }
+
+  async uploadAudio(file: Express.Multer.File, _uploaderId: string, clientDurationMs?: number) {
+    const asset = await this.mediaService.uploadFile(file, _uploaderId);
+    const normalizedClientDuration = this.normalizeAudioDuration(clientDurationMs);
+    const finalDurationMs = this.normalizeAudioDuration(asset.durationMs) ?? normalizedClientDuration;
+
+    if (asset.type !== 'audio' || !finalDurationMs) {
+      throw new BadRequestException('Audio duration must be between 1 and 120 seconds');
+    }
+
+    if (asset.durationMs !== finalDurationMs) {
+      await this.db
+        .update(mediaAssets)
+        .set({ durationMs: finalDurationMs })
+        .where(eq(mediaAssets.id, asset.id));
+    }
+
+    return {
+      id: asset.id,
+      type: asset.type,
+      publicUrl: asset.publicUrl,
+      mimeType: asset.mimeType,
+      sizeBytes: asset.sizeBytes,
+      durationMs: finalDurationMs,
+    };
   }
 
   async getFeed(cursor?: string, limit = 20, currentUserId?: string, tagName?: string) {
@@ -321,6 +366,10 @@ export class PostsService {
           await this.mediaService.markOrphanedIfUnreferenced(mediaId, tx);
         }
       }
+
+      if (post.audioMediaId) {
+        await this.mediaService.markOrphanedIfUnreferenced(post.audioMediaId, tx);
+      }
     });
 
     await this.mentionsService.deleteMentionsForEntity('post', id);
@@ -396,6 +445,16 @@ export class PostsService {
       const list = mediaByPost.get(row.post_media_relations.postId) || [];
       list.push(row);
       mediaByPost.set(row.post_media_relations.postId, list);
+    }
+
+    const audioMediaIds = [...new Set(postRows.map((p) => p.audioMediaId).filter(Boolean))] as string[];
+    let audioAssetMap = new Map<string, typeof mediaAssets.$inferSelect>();
+    if (audioMediaIds.length > 0) {
+      const audioAssetRows = await this.db
+        .select()
+        .from(mediaAssets)
+        .where(inArray(mediaAssets.id, audioMediaIds));
+      audioAssetMap = new Map(audioAssetRows.map((asset) => [asset.id, asset]));
     }
 
     // Batch load likes for current user
@@ -523,9 +582,18 @@ export class PostsService {
           mimeType: r.media_assets.mimeType,
           width: r.media_assets.width,
           height: r.media_assets.height,
-          durationSecs: r.media_assets.durationSecs,
+          durationMs: r.media_assets.durationMs,
           sortOrder: r.post_media_relations.sortOrder,
         })),
+        audio: post.audioMediaId && audioAssetMap.get(post.audioMediaId) ? {
+          id: audioAssetMap.get(post.audioMediaId)!.id,
+          url: audioAssetMap.get(post.audioMediaId)!.publicUrl,
+          durationMs: audioAssetMap.get(post.audioMediaId)!.durationMs ?? 0,
+          waveform: this.parseWaveform(audioAssetMap.get(post.audioMediaId)!.waveform),
+          status: 'ready' as const,
+          mimeType: audioAssetMap.get(post.audioMediaId)!.mimeType,
+          sizeBytes: audioAssetMap.get(post.audioMediaId)!.sizeBytes,
+        } : null,
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         isLikedByMe: likedPostIds.has(post.id),
@@ -539,6 +607,23 @@ export class PostsService {
         mentions: postMentions,
       };
     });
+  }
+
+  private parseWaveform(raw: string | null) {
+    if (!raw) return [];
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+          .map((value) => Math.max(0, Math.min(100, Math.round(value))));
+      }
+    } catch {
+      // Ignore invalid waveform payloads in old rows.
+    }
+
+    return [];
   }
 
   /**
