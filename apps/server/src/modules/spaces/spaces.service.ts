@@ -109,6 +109,7 @@ export class SpacesService {
       slug: space.slug,
       description: space.description,
       coverUrl: space.coverUrl,
+      coverPositionY: space.coverPositionY,
       type: space.type,
       creator,
       memberCount: space.memberCount,
@@ -159,6 +160,7 @@ export class SpacesService {
       slug: space.slug,
       description: space.description,
       coverUrl: space.coverUrl,
+      coverPositionY: space.coverPositionY,
       type: space.type,
       creator: creatorMap.get(space.creatorId)!,
       memberCount: space.memberCount,
@@ -211,6 +213,7 @@ export class SpacesService {
       slug: r.space.slug,
       description: r.space.description,
       coverUrl: r.space.coverUrl,
+      coverPositionY: r.space.coverPositionY,
       type: r.space.type,
       creator: creatorMap.get(r.space.creatorId)!,
       memberCount: r.space.memberCount,
@@ -248,6 +251,7 @@ export class SpacesService {
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.coverUrl !== undefined) updateData.coverUrl = dto.coverUrl;
+    if (dto.coverPositionY !== undefined) updateData.coverPositionY = dto.coverPositionY;
 
     await this.db
       .update(spaces)

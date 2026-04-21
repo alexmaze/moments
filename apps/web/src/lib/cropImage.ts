@@ -1,21 +1,29 @@
+interface CropOutputSize {
+  width: number;
+  height: number;
+}
+
 /**
- * Crops an image to the specified area and resizes to a square output.
+ * Crops an image to the specified area and resizes to the requested output.
  *
  * @param imageSrc - Object URL or data URL of the source image
  * @param croppedAreaPixels - Pixel coordinates from react-easy-crop's onCropComplete
- * @param outputSize - Output square size in pixels (default 512)
+ * @param outputSize - Output dimensions in pixels
  * @returns JPEG Blob (quality 0.9)
  */
 export async function cropImage(
   imageSrc: string,
   croppedAreaPixels: { x: number; y: number; width: number; height: number },
-  outputSize = 512,
+  outputSize: number | CropOutputSize = 512,
 ): Promise<Blob> {
   const image = await loadImage(imageSrc);
+  const targetSize = typeof outputSize === 'number'
+    ? { width: outputSize, height: outputSize }
+    : outputSize;
 
   const canvas = document.createElement('canvas');
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  canvas.width = targetSize.width;
+  canvas.height = targetSize.height;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
@@ -30,8 +38,8 @@ export async function cropImage(
     croppedAreaPixels.height,
     0,
     0,
-    outputSize,
-    outputSize,
+    targetSize.width,
+    targetSize.height,
   );
 
   return new Promise<Blob>((resolve, reject) => {

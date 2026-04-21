@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, FileText, Check } from 'lucide-react';
+import { Users, FileText, Check, Settings } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
 
   const isMember = space.myMembership !== null;
   const isOwner = space.myMembership?.role === 'owner';
+  const canEdit = space.myMembership?.role === 'owner' || space.myMembership?.role === 'admin';
 
   const handleJoin = () => {
     joinSpace.mutate();
@@ -45,6 +47,7 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
           src={space.coverUrl}
           alt={space.name}
           className="h-32 w-full rounded-xl object-cover"
+          style={{ objectPosition: `center ${space.coverPositionY}%` }}
         />
       ) : (
         <div className="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
@@ -86,26 +89,38 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
 
           {/* Action button */}
           <div className="shrink-0">
-            {isMember ? (
-              <button
-                onClick={() => {
-                  if (!isOwner) setLeaveConfirmOpen(true);
-                }}
-                disabled={isOwner}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Check className="h-4 w-4" />
-                {t('detail.joined')}
-              </button>
-            ) : (
-              <button
-                onClick={handleJoin}
-                disabled={joinSpace.isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-              >
-                {t('detail.join')}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {isMember ? (
+                <button
+                  onClick={() => {
+                    if (!isOwner) setLeaveConfirmOpen(true);
+                  }}
+                  disabled={isOwner}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Check className="h-4 w-4" />
+                  {t('detail.joined')}
+                </button>
+              ) : (
+                <button
+                  onClick={handleJoin}
+                  disabled={joinSpace.isPending}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {t('detail.join')}
+                </button>
+              )}
+
+              {canEdit && (
+                <Link
+                  to={`/spaces/${space.slug}/edit`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t('detail.edit')}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>

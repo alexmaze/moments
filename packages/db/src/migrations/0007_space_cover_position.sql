@@ -1,0 +1,2 @@
+ALTER TABLE "spaces"
+ADD COLUMN IF NOT EXISTS "cover_position_y" real DEFAULT 50 NOT NULL;

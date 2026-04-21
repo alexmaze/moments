@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsNumber, Min, Max } from 'class-validator';
 
 export class UpdateSpaceDto {
   @IsOptional()
@@ -15,4 +15,10 @@ export class UpdateSpaceDto {
   @IsOptional()
   @IsString()
   coverUrl?: string | null;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  coverPositionY?: number;
 }

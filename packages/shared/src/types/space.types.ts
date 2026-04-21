@@ -9,6 +9,7 @@ export interface SpaceDto {
   slug: string;
   description: string | null;
   coverUrl: string | null;
+  coverPositionY: number;
   type: SpaceType;
   creator: {
     id: string;

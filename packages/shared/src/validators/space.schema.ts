@@ -14,6 +14,7 @@ export const updateSpaceSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   coverUrl: z.string().url().nullable().optional(),
+  coverPositionY: z.number().min(0).max(100).optional(),
 });
 
 export const createGrowthRecordSchema = z.object({

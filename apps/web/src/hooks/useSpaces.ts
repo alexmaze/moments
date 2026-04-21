@@ -78,10 +78,14 @@ export function useUpdateSpace(slug: string) {
       name?: string;
       description?: string;
       coverUrl?: string | null;
+      coverPositionY?: number;
     }) => updateSpaceApi(slug, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: spaceKeys.detail(slug) });
       qc.invalidateQueries({ queryKey: spaceKeys.list() });
+      qc.invalidateQueries({ queryKey: spaceKeys.my() });
+      qc.invalidateQueries({ queryKey: postKeys.feed() });
+      qc.invalidateQueries({ queryKey: spaceKeys.posts(slug) });
     },
   });
 }

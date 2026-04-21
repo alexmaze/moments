@@ -11,6 +11,7 @@ import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import SpacesPage from '@/pages/SpacesPage';
 import SpaceDetailPage from '@/pages/SpaceDetailPage';
+import SpaceEditPage from '@/pages/SpaceEditPage';
 import TagPage from '@/pages/TagPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { Toaster } from '@/components/ui/sonner';
@@ -38,6 +39,7 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/spaces" element={<SpacesPage />} />
           <Route path="/spaces/:slug" element={<SpaceDetailPage />} />
+          <Route path="/spaces/:slug/edit" element={<SpaceEditPage />} />
           <Route path="/tags/:name" element={<TagPage />} />
         </Route>
       </Route>

@@ -21,6 +21,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
           src={space.coverUrl}
           alt={space.name}
           className="h-24 w-full object-cover"
+          style={{ objectPosition: `center ${space.coverPositionY}%` }}
         />
       ) : (
         <div className="h-24 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />

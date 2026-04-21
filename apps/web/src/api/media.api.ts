@@ -2,8 +2,8 @@ import apiClient from "./client";
 
 interface UploadMediaResponse {
   id: string;
-  url: string;
   type: "image" | "video";
+  publicUrl: string;
   coverUrl: string | null;
 }
 

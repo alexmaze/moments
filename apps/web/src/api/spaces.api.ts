@@ -36,7 +36,12 @@ export function createSpaceApi(data: {
 
 export function updateSpaceApi(
   slug: string,
-  data: { name?: string; description?: string; coverUrl?: string | null },
+  data: {
+    name?: string;
+    description?: string;
+    coverUrl?: string | null;
+    coverPositionY?: number;
+  },
 ): Promise<SpaceDetailDto> {
   return apiClient.patch(`/spaces/${slug}`, data);
 }
