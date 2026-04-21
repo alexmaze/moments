@@ -7,19 +7,6 @@
 
 ## P1 - 重要
 
-- [ ] 消息通知功能 — 被@、被评论、被回复、被点赞的通知中心 #feature
-  - [ ] 通知数据层 — 新增 notifications / notification_actors schema、relations、migration，支持未读状态、聚合键、最近触发时间 #feature #backend
-  - [ ] 通知后端模块 — 新增 notifications module / service / controller，提供列表、未读数、单条已读、全部已读接口 #feature #backend
-  - [ ] 帖子@通知接入 — 在发帖链路中为被提及用户创建 mention_in_post 通知，排除自己，保证同帖内不重复 #feature #backend
-  - [ ] 评论与回复通知接入 — 在评论链路中创建 comment_on_post / reply_to_comment / mention_in_comment 通知，并处理“回复同时@同一人”去重 #feature #backend
-  - [ ] 点赞通知接入 — 在点赞链路中为帖子作者创建 like_on_post 通知，按帖子聚合，首版按自然日聚合 #feature #backend
-  - [ ] 通知前端 API 与状态管理 — 新增 notifications.api / useNotifications，接入列表、未读数、已读 mutation 和缓存同步 #feature #frontend
-  - [ ] 通知中心页面 — 新增 NotificationsPage 与列表项组件，支持全部/未读筛选、空状态、全部已读 #feature #frontend
-  - [ ] 全局导航通知入口 — 桌面顶部导航与移动端底部导航新增通知入口和未读角标 #feature #frontend #ui
-  - [ ] 通知跳转链路 — 点击通知后标记已读并跳转帖子详情，预留 commentId 参数用于后续评论锚点 #feature #frontend
-  - [ ] 评论锚点增强 — 帖子详情页支持根据 commentId 滚动到目标评论 #feature #frontend #ui
-  - [ ] 通知文案与 i18n — 新增中英文 notifications 文案、类型模板和内容不可用提示 #feature #frontend #i18n
-  - [ ] 通知测试与验收 — 覆盖自己操作不通知自己、重复@去重、回复+@去重、点赞聚合、已读状态一致性 #feature #qa
 - [ ] BUG: 自定义背景下部分标题文字可读性差 — 帖子详情页返回、个人主页返回/动态标题、空间详情页Tab等无背景区域文字 #bug #ui
 - [ ] 支持分享 — 创建分享链接，提供外部页面供临时访问 #feature
 
@@ -41,6 +28,7 @@
 
 ## Done
 <!-- 完成的条目移到这里，格式：- [x] 条目描述 #tag (完成日期) -->
+- [x] 消息通知功能 — 被@、被评论、被回复、被点赞的通知中心，曝光即调用已读 API，前端状态保持不变方便识别新消息 #feature (2026-04-21)
 - [x] 支持语音媒体 — 发帖时支持录制/上传语音，帖子中展示语音播放器 #feature
 - [x] 输入框支持快捷选择表情 — 发帖/评论输入框增加表情选择器 #feature
 - [x] 支持帖子编辑 — 仅作者可编辑；支持正文/图片视频/音频修改、附件重排、音频删除或替换；编辑后重算 #话题 和 @提及，旧媒体正确解绑并标记 orphaned；不允许修改所属空间，不展示“已编辑”标记；入口从帖子卡片跳到详情页 `/posts/:id?edit=1`，编辑区复用快捷发表器样式并回填原始录音 #feature (2026-04-21)

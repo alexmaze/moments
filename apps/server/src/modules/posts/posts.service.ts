@@ -26,6 +26,7 @@ import { CreatePostDto, UpdatePostDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
 import { UsersService } from '../users/users.service';
 import { MediaService } from '../media/media.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class PostsService {
@@ -37,6 +38,7 @@ export class PostsService {
     private readonly mediaService: MediaService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private normalizeAudioDuration(durationMs?: number | null) {
@@ -203,6 +205,16 @@ export class PostsService {
 
     await this.replacePostMentions(post.id, authorId, normalizedContent);
 
+    const parsedMentions = parseMentions(normalizedContent || '');
+    for (const mention of parsedMentions) {
+      await this.notificationsService.createMentionInPostNotification(
+        post.id,
+        mention.userId,
+        authorId,
+        normalizedContent,
+      );
+    }
+
     return this.getById(post.id, authorId);
   }
 
@@ -315,6 +327,16 @@ export class PostsService {
     });
 
     await this.replacePostMentions(id, userId, normalizedContent);
+
+    const parsedMentions = parseMentions(normalizedContent || '');
+    for (const mention of parsedMentions) {
+      await this.notificationsService.createMentionInPostNotification(
+        id,
+        mention.userId,
+        userId,
+        normalizedContent,
+      );
+    }
 
     return this.getById(id, userId);
   }

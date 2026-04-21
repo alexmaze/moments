@@ -1,0 +1,18 @@
+{
+  "title": "通知",
+  "markAllRead": "全部已读",
+  "all": "全部",
+  "unread": "未读",
+  "empty": "还没有新的互动",
+  "emptyRead": "全部消息都看过了",
+  "contentUnavailable": "相关内容已不可用",
+  "types": {
+    "someone": "有人",
+    "mention_in_post": "{{actor}} 在帖子中提到了你",
+    "mention_in_comment": "{{actor}} 在评论中提到了你",
+    "comment_on_post": "{{actor}} 评论了你的帖子",
+    "reply_to_comment": "{{actor}} 回复了你的评论",
+    "like_on_post_one": "{{actor}} 赞了你的帖子",
+    "like_on_post_many": "{{actor}} 等 {{count}} 人赞了你的帖子"
+  }
+}

@@ -3,6 +3,7 @@
   "nav": {
     "home": "首页",
     "spaces": "空间",
+    "notifications": "通知",
     "profile": "我的",
     "logout": "退出"
   },

@@ -5,10 +5,11 @@ import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
 import { useBackground } from '@/hooks/useBackground';
 import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
+import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { ScrollContainerContext } from './ScrollContainerContext';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import { cn } from '@/lib/utils';
-import { Home, User, LogOut, Sun, Moon, Monitor, Users } from 'lucide-react';
+import { Home, User, LogOut, Sun, Moon, Monitor, Users, Bell } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -55,9 +56,13 @@ export default function AppLayout() {
 
   const isHome = location.pathname === '/';
   const isSpaces = location.pathname.startsWith('/spaces');
+  const isNotifications = location.pathname === '/notifications';
   const isProfile = currentUser
     ? location.pathname === `/users/${currentUser.username}`
     : false;
+
+  const { data: unreadData } = useUnreadNotificationCount();
+  const unreadCount = unreadData?.count ?? 0;
 
   const handleLogout = () => {
     useAuthStore.getState().clearAuth();
@@ -106,6 +111,17 @@ export default function AppLayout() {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isSpaces ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
               >
                 {t('nav.spaces')}
+              </Link>
+              <Link
+                to="/notifications"
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isNotifications ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             </nav>
           </div>
@@ -179,6 +195,23 @@ export default function AppLayout() {
             <Users className="w-5 h-5" />
             <span className="text-[10px]">{t('nav.spaces')}</span>
           </Link>
+
+          {currentUser && (
+            <Link
+              to="/notifications"
+              className={`relative flex flex-col items-center gap-0.5 transition-colors p-2 ${isNotifications ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <div className="relative">
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px]">{t('nav.notifications')}</span>
+            </Link>
+          )}
 
           {currentUser && (
             <Link

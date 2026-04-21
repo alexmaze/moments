@@ -3,6 +3,7 @@
   "nav": {
     "home": "Home",
     "spaces": "Spaces",
+    "notifications": "Notifications",
     "profile": "Profile",
     "logout": "Logout"
   },

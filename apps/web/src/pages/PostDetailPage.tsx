@@ -14,6 +14,7 @@ export default function PostDetailPage() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const { data: post, isLoading, isError } = usePost(id!);
   const isEditMode = searchParams.get('edit') === '1';
+  const highlightCommentId = searchParams.get('commentId');
 
   if (isLoading) {
     return (
@@ -69,7 +70,7 @@ export default function PostDetailPage() {
           onSuccess={() => navigate(`/posts/${post.id}`, { replace: true })}
         />
       ) : (
-        <PostDetail post={post} />
+        <PostDetail post={post} highlightCommentId={highlightCommentId ?? undefined} />
       )}
     </div>
   );

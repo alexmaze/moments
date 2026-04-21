@@ -9,6 +9,7 @@ import enPost from './locales/en/post.json';
 import enProfile from './locales/en/profile.json';
 import enSpaces from './locales/en/spaces.json';
 import enTags from './locales/en/tags.json';
+import enNotifications from './locales/en/notifications.json';
 
 // Chinese
 import zhCommon from './locales/zh-CN/common.json';
@@ -18,6 +19,7 @@ import zhPost from './locales/zh-CN/post.json';
 import zhProfile from './locales/zh-CN/profile.json';
 import zhSpaces from './locales/zh-CN/spaces.json';
 import zhTags from './locales/zh-CN/tags.json';
+import zhNotifications from './locales/zh-CN/notifications.json';
 
 export const SUPPORTED_LOCALES = ['en', 'zh-CN'] as const;
 
@@ -55,6 +57,7 @@ i18n
         profile: enProfile,
         spaces: enSpaces,
         tags: enTags,
+        notifications: enNotifications,
       },
       'zh-CN': {
         common: zhCommon,
@@ -64,6 +67,7 @@ i18n
         profile: zhProfile,
         spaces: zhSpaces,
         tags: zhTags,
+        notifications: zhNotifications,
       },
     },
 
@@ -71,7 +75,7 @@ i18n
     fallbackLng: 'en',
     supportedLngs: ['en', 'zh-CN'],
     defaultNS: 'common',
-    ns: ['common', 'auth', 'feed', 'post', 'profile', 'spaces', 'tags'],
+    ns: ['common', 'auth', 'feed', 'post', 'profile', 'spaces', 'tags', 'notifications'],
 
     interpolation: {
       escapeValue: false,

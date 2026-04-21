@@ -12,6 +12,7 @@ import { parseMentions } from '@moments/shared';
 import { CreateCommentDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
 import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
@@ -20,12 +21,16 @@ export class CommentsService {
     private readonly mentionsService: MentionsService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(postId: string, authorId: string, dto: CreateCommentDto) {
-    return this.db.transaction(async (tx) => {
+    let postAuthorId: string | null = null;
+    let replyToAuthorId: string | null = null;
+
+    const result = await this.db.transaction(async (tx) => {
       const [post] = await tx
-        .select({ id: posts.id, spaceId: posts.spaceId })
+        .select({ id: posts.id, spaceId: posts.spaceId, authorId: posts.authorId })
         .from(posts)
         .where(and(eq(posts.id, postId), eq(posts.isDeleted, false)))
         .limit(1);
@@ -33,6 +38,8 @@ export class CommentsService {
       if (!post) {
         throw new NotFoundException('Post not found');
       }
+
+      postAuthorId = post.authorId;
 
       if (post.spaceId) {
         const [membership] = await tx
@@ -115,6 +122,8 @@ export class CommentsService {
           .limit(1);
 
         if (replyTargetComment) {
+          replyToAuthorId = replyTargetComment.authorId;
+
           const [replyAuthor] = await tx
             .select({
               id: users.id,
@@ -149,6 +158,42 @@ export class CommentsService {
         mentions: mentionUsers,
       };
     });
+
+    const parsedMentions = parseMentions(dto.content);
+
+    if (dto.replyToId && replyToAuthorId && authorId !== replyToAuthorId) {
+      await this.notificationsService.createReplyToCommentNotification(
+        postId,
+        result.id,
+        dto.replyToId,
+        replyToAuthorId,
+        authorId,
+        dto.content,
+        null,
+      );
+    } else if (postAuthorId && authorId !== postAuthorId) {
+      await this.notificationsService.createCommentOnPostNotification(
+        postId,
+        result.id,
+        postAuthorId,
+        authorId,
+        dto.content,
+      );
+    }
+
+    for (const mention of parsedMentions) {
+      if (mention.userId === authorId) continue;
+      if (dto.replyToId && mention.userId === replyToAuthorId) continue;
+      await this.notificationsService.createMentionInCommentNotification(
+        postId,
+        result.id,
+        mention.userId,
+        authorId,
+        dto.content,
+      );
+    }
+
+    return result;
   }
 
   async listByPost(postId: string, page = 1, limit = 20) {

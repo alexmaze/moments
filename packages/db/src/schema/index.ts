@@ -4,5 +4,6 @@ export * from './posts';
 export * from './spaces';
 export * from './tags';
 export * from './mentions';
+export * from './notifications';
 export * from './event-log';
 export * from './relations';

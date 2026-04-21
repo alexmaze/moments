@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CommentDto } from '@/types/dto';
 import { usePostComments } from '@/hooks/useComments';
@@ -10,6 +10,7 @@ interface CommentSectionProps {
   initialComments?: CommentDto[];
   initialHasMore?: boolean;
   variant?: 'card' | 'inline';
+  highlightCommentId?: string;
 }
 
 export default function CommentSection({
@@ -17,12 +18,22 @@ export default function CommentSection({
   initialComments,
   initialHasMore,
   variant = 'card',
+  highlightCommentId,
 }: CommentSectionProps) {
   const { t } = useTranslation('post');
   const { comments, hasMore, loadMore, isLoadingMore, isInitialLoad } =
     usePostComments(postId, { initialComments, initialHasMore });
 
   const [replyTo, setReplyTo] = useState<CommentDto | null>(null);
+  const highlightedRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (highlightCommentId && highlightedRef.current && !hasScrolledRef.current) {
+      highlightedRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      hasScrolledRef.current = true;
+    }
+  }, [highlightCommentId, comments]);
 
   const isCard = variant === 'card';
 
@@ -65,6 +76,8 @@ export default function CommentSection({
               comment={comment}
               postId={postId}
               onReply={setReplyTo}
+              isHighlighted={comment.id === highlightCommentId}
+              highlightRef={comment.id === highlightCommentId ? highlightedRef : undefined}
             />
           ))
         ) : isCard ? (

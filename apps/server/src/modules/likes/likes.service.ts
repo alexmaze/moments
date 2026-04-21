@@ -2,18 +2,22 @@ import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nest
 import { eq, and, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, posts, postLikes, spaceMembers } from '@moments/db';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class LikesService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async toggle(postId: string, userId: string) {
-    return this.db.transaction(async (tx) => {
-      // Check post exists
+    let postAuthorId: string | null = null;
+    let postContent: string | null = null;
+
+    const result = await this.db.transaction(async (tx) => {
       const [post] = await tx
-        .select({ id: posts.id, spaceId: posts.spaceId })
+        .select({ id: posts.id, spaceId: posts.spaceId, authorId: posts.authorId, content: posts.content })
         .from(posts)
         .where(and(eq(posts.id, postId), eq(posts.isDeleted, false)))
         .limit(1);
@@ -22,7 +26,9 @@ export class LikesService {
         throw new NotFoundException('Post not found');
       }
 
-      // If post belongs to a space, verify user is a member
+      postAuthorId = post.authorId;
+      postContent = post.content;
+
       if (post.spaceId) {
         const [membership] = await tx
           .select({ id: spaceMembers.id })
@@ -38,7 +44,6 @@ export class LikesService {
         }
       }
 
-      // Check if like already exists
       const [existing] = await tx
         .select({ id: postLikes.id })
         .from(postLikes)
@@ -46,7 +51,6 @@ export class LikesService {
         .limit(1);
 
       if (existing) {
-        // Unlike
         await tx
           .delete(postLikes)
           .where(eq(postLikes.id, existing.id));
@@ -59,7 +63,6 @@ export class LikesService {
 
         return { liked: false, likeCount: updated.likeCount };
       } else {
-        // Like
         await tx
           .insert(postLikes)
           .values({ postId, userId });
@@ -73,5 +76,16 @@ export class LikesService {
         return { liked: true, likeCount: updated.likeCount };
       }
     });
+
+    if (result.liked && postAuthorId && userId !== postAuthorId) {
+      await this.notificationsService.createLikeOnPostNotification(
+        postId,
+        postAuthorId,
+        userId,
+        postContent,
+      );
+    }
+
+    return result;
   }
 }

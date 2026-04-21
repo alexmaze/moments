@@ -5,6 +5,7 @@ import { posts, postMediaRelations, postLikes, postComments } from './posts';
 import { spaces, spaceMembers, growthRecords } from './spaces';
 import { tags, postTags } from './tags';
 import { mentions } from './mentions';
+import { notifications, notificationActors } from './notifications';
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   posts: many(posts),
@@ -16,6 +17,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   createdSpaces: many(spaces),
   mentionsMade: many(mentions, { relationName: 'mentioner' }),
   mentionsReceived: many(mentions, { relationName: 'mentionedUser' }),
+  notificationsReceived: many(notifications, { relationName: 'notificationRecipient' }),
+  notificationLatestActor: many(notifications, { relationName: 'notificationLatestActor' }),
+  notificationActors: many(notificationActors, { relationName: 'notificationActor' }),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -92,5 +96,44 @@ export const mentionsRelations = relations(mentions, ({ one }) => ({
     fields: [mentions.mentionedUserId],
     references: [users.id],
     relationName: 'mentionedUser',
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one, many }) => ({
+  recipient: one(users, {
+    fields: [notifications.recipientId],
+    references: [users.id],
+    relationName: 'notificationRecipient',
+  }),
+  latestActor: one(users, {
+    fields: [notifications.latestActorId],
+    references: [users.id],
+    relationName: 'notificationLatestActor',
+  }),
+  post: one(posts, {
+    fields: [notifications.postId],
+    references: [posts.id],
+  }),
+  comment: one(postComments, {
+    fields: [notifications.commentId],
+    references: [postComments.id],
+  }),
+  replyToComment: one(postComments, {
+    fields: [notifications.replyToCommentId],
+    references: [postComments.id],
+    relationName: 'notificationReplyToComment',
+  }),
+  actors: many(notificationActors),
+}));
+
+export const notificationActorsRelations = relations(notificationActors, ({ one }) => ({
+  notification: one(notifications, {
+    fields: [notificationActors.notificationId],
+    references: [notifications.id],
+  }),
+  actor: one(users, {
+    fields: [notificationActors.actorId],
+    references: [users.id],
+    relationName: 'notificationActor',
   }),
 }));

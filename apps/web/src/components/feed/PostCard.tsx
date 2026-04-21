@@ -32,9 +32,10 @@ import {
 interface PostCardProps {
   post: PostDto;
   variant?: 'feed' | 'detail';
+  highlightCommentId?: string;
 }
 
-function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
+function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardProps) {
   const { t } = useTranslation('feed');
   const currentUser = useAuthStore((s) => s.currentUser);
   const toggleLike = useToggleLike();
@@ -193,6 +194,7 @@ function PostCardInner({ post, variant = 'feed' }: PostCardProps) {
           initialComments={post.comments}
           initialHasMore={post.hasMoreComments}
           variant="inline"
+          highlightCommentId={highlightCommentId}
         />
       </div>
 

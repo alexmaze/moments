@@ -2,7 +2,7 @@
 
 > 版本: 1.0
 > 日期: 2026-04-21
-> 状态: 待实现
+> 状态: 已完成
 > 关联文档: [feature-notifications.md](./feature-notifications.md)
 
 ## 一、目标
@@ -251,8 +251,8 @@ export interface NotificationItemDto {
 
 新增行为：
 
-- 若评论作者不是帖子作者，给帖子作者发 `comment_on_post`
-- 若 `replyToId` 存在且回复对象作者不是评论作者，给原评论作者发 `reply_to_comment`
+- 若 `replyToId` 存在且回复对象作者不是评论作者，给原评论作者发 `reply_to_comment`（优先于 `comment_on_post`）
+- 否则若评论作者不是帖子作者，给帖子作者发 `comment_on_post`
 - 若评论中存在 `@`：
   - 正常创建 `mention_in_comment`
   - 但若该用户正好是被回复评论作者，则跳过 `mention_in_comment`，避免与 `reply_to_comment` 重复

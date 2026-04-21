@@ -1,0 +1,18 @@
+{
+  "title": "Notifications",
+  "markAllRead": "Mark all read",
+  "all": "All",
+  "unread": "Unread",
+  "empty": "No new interactions yet",
+  "emptyRead": "All caught up!",
+  "contentUnavailable": "Content no longer available",
+  "types": {
+    "someone": "Someone",
+    "mention_in_post": "{{actor}} mentioned you in a post",
+    "mention_in_comment": "{{actor}} mentioned you in a comment",
+    "comment_on_post": "{{actor}} commented on your post",
+    "reply_to_comment": "{{actor}} replied to your comment",
+    "like_on_post_one": "{{actor}} liked your post",
+    "like_on_post_many": "{{actor}} and {{count}} others liked your post"
+  }
+}

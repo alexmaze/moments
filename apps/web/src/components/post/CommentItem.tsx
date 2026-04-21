@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Trash2, MessageSquare } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';
 import { renderContentWithTagsAndMentions } from '@moments/shared';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -22,6 +23,8 @@ interface CommentItemProps {
   comment: CommentDto;
   postId: string;
   onReply?: (comment: CommentDto) => void;
+  isHighlighted?: boolean;
+  highlightRef?: RefObject<HTMLDivElement | null>;
 }
 
 function renderContent(content: string, mentions: MentionUserDto[]) {
@@ -54,7 +57,7 @@ function renderContent(content: string, mentions: MentionUserDto[]) {
   });
 }
 
-export default function CommentItem({ comment, postId, onReply }: CommentItemProps) {
+export default function CommentItem({ comment, postId, onReply, isHighlighted, highlightRef }: CommentItemProps) {
   const { t } = useTranslation('post');
   const currentUser = useAuthStore((s) => s.currentUser);
   const deleteComment = useDeleteComment();
@@ -67,7 +70,13 @@ export default function CommentItem({ comment, postId, onReply }: CommentItemPro
   };
 
   return (
-    <div className="p-4 flex gap-3">
+    <div
+      ref={highlightRef}
+      className={cn(
+        'p-4 flex gap-3',
+        isHighlighted && 'bg-primary/10 -mx-1 px-5 rounded-lg',
+      )}
+    >
       <Link to={`/users/${comment.author.username}`} className="shrink-0">
         {comment.author.avatarUrl ? (
           <img
