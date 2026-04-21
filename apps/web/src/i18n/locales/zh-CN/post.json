@@ -19,6 +19,7 @@
     "deleteConfirmCancel": "取消",
     "replyTo": "回复",
     "reply": "回复",
-    "replyPlaceholder": "回复 {{name}}..."
+    "replyPlaceholder": "回复 {{name}}...",
+    "insertEmoji": "插入表情"
   }
 }

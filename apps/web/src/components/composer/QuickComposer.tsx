@@ -95,7 +95,7 @@ export default function QuickComposer({ fixedSpaceId }: QuickComposerProps) {
   };
 
   const handleEmojiSelect = useCallback((emoji: string) => {
-    setContent(prev => prev + emoji);
+    editorRef.current?.insertText(emoji);
   }, []);
 
   return (

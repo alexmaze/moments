@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Smile } from 'lucide-react';
 import { useCreateComment } from '@/hooks/useComments';
+import { EmojiPickerPopover } from '@/components/composer/EmojiPickerPopover';
 import { RichTextEditor, type RichTextEditorRef } from '@/components/composer/rich-editor';
 import type { CommentDto } from '@/types/dto';
 
@@ -13,8 +15,10 @@ interface CommentComposerProps {
 export default function CommentComposer({ postId, replyTo, onCancelReply }: CommentComposerProps) {
   const { t } = useTranslation('post');
   const [content, setContent] = useState('');
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const createComment = useCreateComment();
   const editorRef = useRef<RichTextEditorRef>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (replyTo && editorRef.current) {
@@ -22,6 +26,12 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
       editorRef.current.focus();
     }
   }, [replyTo]);
+
+  const resetComposer = useCallback(() => {
+    setContent('');
+    setEmojiPickerOpen(false);
+    editorRef.current?.clear();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +42,7 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
       { postId, content: trimmed, replyToId: replyTo?.id },
       {
         onSuccess: () => {
-          setContent('');
-          editorRef.current?.clear();
+          resetComposer();
         },
       },
     );
@@ -48,8 +57,7 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
           { postId, content: trimmed, replyToId: replyTo?.id },
           {
             onSuccess: () => {
-              setContent('');
-              editorRef.current?.clear();
+              resetComposer();
             },
           },
         );
@@ -58,6 +66,10 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
     }
     return false;
   };
+
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    editorRef.current?.insertText(emoji);
+  }, []);
 
   return (
     <div className="p-4">
@@ -77,7 +89,7 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-        <div className="flex-1">
+        <div className="flex-1 relative">
            <RichTextEditor
              ref={editorRef}
              value={content}
@@ -86,8 +98,25 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
              minRows={1}
              onKeyDown={handleKeyDown}
              className="border border-input rounded-lg bg-background"
+             contentClassName="pr-11"
+             placeholderClassName="pr-11"
            />
+          <button
+            ref={emojiButtonRef}
+            type="button"
+            onClick={() => setEmojiPickerOpen((open) => !open)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-accent shrink-0"
+            title={t('comments.insertEmoji')}
+          >
+            <Smile className="w-4.5 h-4.5" />
+          </button>
         </div>
+        <EmojiPickerPopover
+          open={emojiPickerOpen}
+          onOpenChange={setEmojiPickerOpen}
+          onEmojiSelect={handleEmojiSelect}
+          anchorRef={emojiButtonRef}
+        />
         <button
           type="submit"
           disabled={!content.trim() || createComment.isPending}

@@ -22,6 +22,7 @@ import { Loader2, User } from 'lucide-react';
 export interface RichTextEditorRef {
   focus: () => void;
   getSerializedContent: () => string;
+  insertText: (text: string) => void;
   insertMention: (displayName: string, userId: string) => void;
   clear: () => void;
 }
@@ -31,6 +32,8 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  contentClassName?: string;
+  placeholderClassName?: string;
   minRows?: number;
   onKeyDown?: (e: React.KeyboardEvent) => boolean | void;
 }
@@ -93,6 +96,15 @@ function InsertMentionPlugin({ ref }: { ref: React.Ref<RichTextEditorRef> }) {
         result = $convertToStorageFormat();
       });
       return result;
+    },
+    insertText: (text: string) => {
+      editor.focus();
+      editor.update(() => {
+        const selection = $getSelection();
+        if (selection) {
+          selection.insertText(text);
+        }
+      });
     },
     insertMention: (displayName: string, userId: string) => {
       editor.update(() => {
@@ -198,7 +210,15 @@ const MenuItemComponent = forwardRef<HTMLLIElement, BeautifulMentionsMenuItemPro
 
 export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
   function RichTextEditor(
-    { onChange, placeholder, className = '', minRows = 3, onKeyDown },
+    {
+      onChange,
+      placeholder,
+      className = '',
+      contentClassName = '',
+      placeholderClassName = '',
+      minRows = 3,
+      onKeyDown,
+    },
     ref,
   ) {
     // lineHeight-6 (1.5rem) + py-2 (1rem total)
@@ -223,12 +243,14 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
         <div className={`relative ${className}`} style={{ minHeight: `${minHeight}rem` }}>
           <RichTextPlugin
             contentEditable={
-               <ContentEditable
-                 className="w-full text-sm leading-6 whitespace-pre-wrap break-words bg-transparent resize-none focus:outline-none min-h-[inherit] px-3 py-2"
+              <ContentEditable
+                 className={`w-full text-sm leading-6 whitespace-pre-wrap break-words bg-transparent resize-none focus:outline-none min-h-[inherit] px-3 py-2 ${contentClassName}`}
                  style={{ caretColor: 'hsl(var(--primary))' }}
                  aria-placeholder={placeholder || ''}
                  placeholder={
-                   <div className="absolute inset-0 text-sm leading-6 text-muted-foreground pointer-events-none px-3 py-2">
+                   <div
+                     className={`absolute inset-0 text-sm leading-6 text-muted-foreground pointer-events-none px-3 py-2 ${placeholderClassName}`}
+                   >
                      {placeholder}
                    </div>
                  }
