@@ -8,6 +8,7 @@ import RegisterPage from '@/pages/RegisterPage';
 import FeedPage from '@/pages/FeedPage';
 import PostDetailPage from '@/pages/PostDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
+import SettingsPage from '@/pages/SettingsPage';
 import SpacesPage from '@/pages/SpacesPage';
 import SpaceDetailPage from '@/pages/SpaceDetailPage';
 import TagPage from '@/pages/TagPage';
@@ -34,6 +35,7 @@ function App() {
           <Route index element={<FeedPage />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
           <Route path="/users/:username" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/spaces" element={<SpacesPage />} />
           <Route path="/spaces/:slug" element={<SpaceDetailPage />} />
           <Route path="/tags/:name" element={<TagPage />} />

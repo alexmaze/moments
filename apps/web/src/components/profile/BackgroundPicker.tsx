@@ -1,4 +1,3 @@
-import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -47,20 +46,7 @@ interface BackgroundPickerProps {
 
 export default function BackgroundPicker({ value, onChange }: BackgroundPickerProps) {
   const { t } = useTranslation('profile');
-  const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useThemeStore((s) => s.theme);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    function handleWheel(e: WheelEvent) {
-      if (!el || el.scrollWidth <= el.clientWidth) return;
-      e.preventDefault();
-      el.scrollLeft += e.deltaY;
-    }
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, []);
 
   const effectiveTheme = theme ?? getEffectiveTheme();
   const isDark = effectiveTheme === 'dark';
@@ -85,30 +71,26 @@ export default function BackgroundPicker({ value, onChange }: BackgroundPickerPr
         {t('edit.backgroundLabel')}
       </label>
 
-      <div ref={scrollRef} className="overflow-x-auto rounded-md scrollbar-none">
-        <div className="flex gap-3 py-1 px-0.5 items-center min-w-min">
+      <div className="flex flex-wrap gap-3 py-1">
+        <Swatch
+          style={{
+            background:
+              'repeating-linear-gradient(45deg, #e0e0e0 0, #e0e0e0 4px, #f8f8f8 0, #f8f8f8 8px)',
+          }}
+          label={t('edit.backgroundDefault')}
+          selected={!value}
+          onClick={() => onChange(null)}
+        />
+
+        {TEXTURE_PRESETS.map((preset) => (
           <Swatch
-            style={{
-              background:
-                'repeating-linear-gradient(45deg, #e0e0e0 0, #e0e0e0 4px, #f8f8f8 0, #f8f8f8 8px)',
-            }}
-            label={t('edit.backgroundDefault')}
-            selected={!value}
-            onClick={() => onChange(null)}
+            key={preset.id}
+            style={getSwatchStyle(preset.id)}
+            label={t(`edit.bg.${preset.nameKey}` as any)}
+            selected={value === preset.id}
+            onClick={() => onChange(preset.id)}
           />
-
-          <div className="h-10 w-px bg-border shrink-0 mx-1" />
-
-          {TEXTURE_PRESETS.map((preset) => (
-            <Swatch
-              key={preset.id}
-              style={getSwatchStyle(preset.id)}
-              label={t(`edit.bg.${preset.nameKey}` as any)}
-              selected={value === preset.id}
-              onClick={() => onChange(preset.id)}
-            />
-          ))}
-        </div>
+        ))}
       </div>
 
       {value && previewStyle && (

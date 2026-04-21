@@ -10,7 +10,7 @@
     "joined": "加入于 {{date}}"
   },
   "edit": {
-    "button": "编辑资料",
+    "button": "设置",
     "title": "编辑资料",
     "displayNameLabel": "昵称",
     "bioLabel": "简介",
@@ -50,5 +50,21 @@
       "subtle": "淡灰",
       "dots": "点阵"
     }
+  },
+  "settings": {
+    "title": "设置",
+    "description": "管理你的资料与界面样式。",
+    "tabs": {
+      "profile": "资料",
+      "appearance": "样式"
+    },
+    "profileSectionTitle": "个人资料",
+    "profileSectionDescription": "更新头像、昵称、简介和语言偏好。",
+    "appearanceSectionTitle": "界面样式",
+    "appearanceSectionDescription": "调整主题和背景，保存前可即时预览。",
+    "avatarTitle": "头像",
+    "avatarDescription": "上传并裁剪新的头像图片。",
+    "profileSaved": "资料已保存！",
+    "appearanceSaved": "样式已保存！"
   }
 }

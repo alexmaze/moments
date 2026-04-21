@@ -1,21 +1,17 @@
 import { useTranslation } from 'react-i18next';
-import { User, Camera } from 'lucide-react';
+import { User } from 'lucide-react';
 import type { UserProfileDto } from '@/types/dto';
 import { formatDate } from '@/lib/utils';
 
 interface ProfileHeaderProps {
   profile: UserProfileDto;
   isOwner?: boolean;
-  onAvatarEdit?: () => void;
-  isAvatarUploading?: boolean;
   onEdit?: () => void;
 }
 
 export default function ProfileHeader({
   profile,
   isOwner,
-  onAvatarEdit,
-  isAvatarUploading,
   onEdit,
 }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
@@ -35,30 +31,9 @@ export default function ProfileHeader({
   return (
     <div className="surface-card rounded-xl shadow-sm border border-border p-6">
       <div className="flex items-start gap-4">
-        {isOwner && onAvatarEdit ? (
-          <button
-            type="button"
-            onClick={onAvatarEdit}
-            className="relative group shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            aria-label={t('edit.avatarChange')}
-          >
-            {avatarContent}
-            {/* Hover / uploading overlay */}
-            <div className={`absolute inset-0 rounded-full flex items-center justify-center bg-black/50 transition-opacity ${
-              isAvatarUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            }`}>
-              {isAvatarUploading ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Camera className="w-6 h-6" stroke="white" />
-              )}
-            </div>
-          </button>
-        ) : (
-          <div className="shrink-0">
-            {avatarContent}
-          </div>
-        )}
+        <div className="shrink-0">
+          {avatarContent}
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">

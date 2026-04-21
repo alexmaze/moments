@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -6,9 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { getUserProfileApi } from '@/api/users.api';
 import { useUserPosts } from '@/hooks/usePosts';
 import { useAuthStore } from '@/store/auth.store';
-import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import ProfileHeader from '@/components/profile/ProfileHeader';
-import EditProfileDialog from '@/components/profile/EditProfileDialog';
 import PostCard from '@/components/feed/PostCard';
 
 export default function ProfilePage() {
@@ -16,11 +13,8 @@ export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const currentUser = useAuthStore((s) => s.currentUser);
-  const [editOpen, setEditOpen] = useState(false);
 
   const isOwnProfile = currentUser?.username === username;
-
-  const avatarUpload = useAvatarUpload({ username: username! });
 
   const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ['userProfile', username],
@@ -76,13 +70,8 @@ export default function ProfilePage() {
       <ProfileHeader
         profile={profile}
         isOwner={isOwnProfile}
-        onAvatarEdit={avatarUpload.triggerFilePicker}
-        isAvatarUploading={avatarUpload.isUploading}
-        onEdit={isOwnProfile ? () => setEditOpen(true) : undefined}
+        onEdit={isOwnProfile ? () => navigate('/settings') : undefined}
       />
-
-      {/* Hidden file input + crop dialog for ProfileHeader avatar edit */}
-      {isOwnProfile && avatarUpload.fileInputElement}
 
       <div className="space-y-4">
         <h2 className="text-sm font-medium text-muted-foreground px-1">{t('postsSection')}</h2>
@@ -113,15 +102,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
-      {/* Edit profile dialog */}
-      {isOwnProfile && currentUser && (
-        <EditProfileDialog
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          profile={currentUser}
-        />
-      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@
     "joined": "Joined {{date}}"
   },
   "edit": {
-    "button": "Edit Profile",
+    "button": "Settings",
     "title": "Edit Profile",
     "displayNameLabel": "Display Name",
     "bioLabel": "Bio",
@@ -50,5 +50,21 @@
       "subtle": "Subtle",
       "dots": "Dots"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your profile and interface preferences.",
+    "tabs": {
+      "profile": "Profile",
+      "appearance": "Appearance"
+    },
+    "profileSectionTitle": "Profile",
+    "profileSectionDescription": "Update your avatar, display name, bio, and language preference.",
+    "appearanceSectionTitle": "Appearance",
+    "appearanceSectionDescription": "Preview theme and background changes before saving.",
+    "avatarTitle": "Avatar",
+    "avatarDescription": "Upload and crop a new profile picture.",
+    "profileSaved": "Profile saved!",
+    "appearanceSaved": "Appearance saved!"
   }
 }
