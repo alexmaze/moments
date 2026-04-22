@@ -75,7 +75,7 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
           {post.author.avatarUrl ? (
             <img
               src={post.author.avatarUrl}
-              alt={post.author.displayName}
+              alt={post.space ? (post.author.spaceNickname ?? post.author.displayName) : post.author.displayName}
               loading="lazy"
               decoding="async"
               className="w-10 h-10 rounded-full object-cover"
@@ -93,7 +93,7 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
             className="font-medium text-foreground hover:underline text-sm"
             onClick={(e) => e.stopPropagation()}
           >
-            {post.author.displayName}
+            {post.space ? (post.author.spaceNickname ?? post.author.displayName) : post.author.displayName}
           </Link>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span>@{post.author.username}</span>

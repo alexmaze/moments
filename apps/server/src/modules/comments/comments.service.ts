@@ -109,6 +109,19 @@ export class CommentsService {
         .where(eq(users.id, authorId))
         .limit(1);
 
+      let authorNickname: string | null = null;
+      if (post.spaceId) {
+        const [authorMembership] = await tx
+          .select({ spaceNickname: spaceMembers.spaceNickname })
+          .from(spaceMembers)
+          .where(and(
+            eq(spaceMembers.spaceId, post.spaceId),
+            eq(spaceMembers.userId, authorId),
+          ))
+          .limit(1);
+        authorNickname = authorMembership?.spaceNickname ?? null;
+      }
+
       let replyTo = null;
       if (dto.replyToId) {
         const [replyTargetComment] = await tx
@@ -136,9 +149,22 @@ export class CommentsService {
             .where(eq(users.id, replyTargetComment.authorId))
             .limit(1);
 
+          let replyAuthorNickname: string | null = null;
+          if (post.spaceId) {
+            const [replyMembership] = await tx
+              .select({ spaceNickname: spaceMembers.spaceNickname })
+              .from(spaceMembers)
+              .where(and(
+                eq(spaceMembers.spaceId, post.spaceId),
+                eq(spaceMembers.userId, replyTargetComment.authorId),
+              ))
+              .limit(1);
+            replyAuthorNickname = replyMembership?.spaceNickname ?? null;
+          }
+
           replyTo = {
             id: replyTargetComment.id,
-            author: replyAuthor,
+            author: { ...replyAuthor, spaceNickname: replyAuthorNickname },
             contentPreview: replyTargetComment.content.slice(0, 50),
           };
         }
@@ -148,14 +174,36 @@ export class CommentsService {
         ? await this.usersService.findByIds(parsedMentions.map(m => m.userId))
         : [];
 
+      let mentionNicknames = new Map<string, string | null>();
+      if (post.spaceId && parsedMentions.length > 0) {
+        const mentionMembershipRows = await tx
+          .select({
+            userId: spaceMembers.userId,
+            spaceNickname: spaceMembers.spaceNickname,
+          })
+          .from(spaceMembers)
+          .where(and(
+            eq(spaceMembers.spaceId, post.spaceId),
+            inArray(spaceMembers.userId, parsedMentions.map(m => m.userId)),
+          ));
+        for (const row of mentionMembershipRows) {
+          mentionNicknames.set(row.userId, row.spaceNickname);
+        }
+      }
+
+      const mentionUsersWithNickname = mentionUsers.map(u => ({
+        ...u,
+        spaceNickname: mentionNicknames.get(u.id) ?? null,
+      }));
+
       return {
         id: comment.id,
         content: comment.content,
         createdAt: comment.createdAt.toISOString(),
         isDeleted: comment.isDeleted,
-        author,
+        author: { ...author, spaceNickname: authorNickname },
         replyTo,
-        mentions: mentionUsers,
+        mentions: mentionUsersWithNickname,
       };
     });
 
@@ -199,6 +247,14 @@ export class CommentsService {
   async listByPost(postId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
 
+    const [post] = await this.db
+      .select({ spaceId: posts.spaceId })
+      .from(posts)
+      .where(eq(posts.id, postId))
+      .limit(1);
+
+    const spaceId = post?.spaceId;
+
     const [totalResult] = await this.db
       .select({ total: count() })
       .from(postComments)
@@ -238,9 +294,31 @@ export class CommentsService {
       .limit(limit)
       .offset(offset);
 
+    const authorIds = [...new Set(rows.map(r => r.author.id))];
+    const nicknameMap = new Map<string, string | null>();
+
+    if (spaceId && authorIds.length > 0) {
+      const nicknameRows = await this.db
+        .select({
+          userId: spaceMembers.userId,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(spaceMembers)
+        .where(
+          and(
+            eq(spaceMembers.spaceId, spaceId),
+            inArray(spaceMembers.userId, authorIds),
+          ),
+        );
+
+      for (const row of nicknameRows) {
+        nicknameMap.set(row.userId, row.spaceNickname);
+      }
+    }
+
     const replyToIds = [...new Set(rows.map(r => r.replyToId).filter(Boolean))] as string[];
 
-    let replyToMap = new Map<string, { id: string; author: { id: string; username: string; displayName: string; avatarUrl: string | null }; contentPreview: string }>();
+    let replyToMap = new Map<string, { id: string; author: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null }; contentPreview: string }>();
     if (replyToIds.length > 0) {
       const replyComments = await this.db
         .select({
@@ -264,12 +342,32 @@ export class CommentsService {
         .where(inArray(users.id, replyAuthorIds));
       const replyAuthorMap = new Map(replyAuthorRows.map(a => [a.id, a]));
 
+      const replyNicknameMap = new Map<string, string | null>();
+      if (spaceId && replyAuthorIds.length > 0) {
+        const replyNicknameRows = await this.db
+          .select({
+            userId: spaceMembers.userId,
+            spaceNickname: spaceMembers.spaceNickname,
+          })
+          .from(spaceMembers)
+          .where(
+            and(
+              eq(spaceMembers.spaceId, spaceId),
+              inArray(spaceMembers.userId, replyAuthorIds),
+            ),
+          );
+
+        for (const row of replyNicknameRows) {
+          replyNicknameMap.set(row.userId, row.spaceNickname);
+        }
+      }
+
       for (const rc of replyComments) {
         const author = replyAuthorMap.get(rc.authorId);
         if (author) {
           replyToMap.set(rc.id, {
             id: rc.id,
-            author,
+            author: { ...author, spaceNickname: replyNicknameMap.get(rc.authorId) ?? null },
             contentPreview: rc.content.slice(0, 50),
           });
         }
@@ -284,7 +382,27 @@ export class CommentsService {
       }
     }
 
-    let mentionsMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null }[]>();
+    const mentionNicknameMap = new Map<string, string | null>();
+    if (spaceId && allMentionedUserIds.size > 0) {
+      const mentionNicknameRows = await this.db
+        .select({
+          userId: spaceMembers.userId,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(spaceMembers)
+        .where(
+          and(
+            eq(spaceMembers.spaceId, spaceId),
+            inArray(spaceMembers.userId, [...allMentionedUserIds]),
+          ),
+        );
+
+      for (const row of mentionNicknameRows) {
+        mentionNicknameMap.set(row.userId, row.spaceNickname);
+      }
+    }
+
+    let mentionsMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null }[]>();
     if (allMentionedUserIds.size > 0) {
       const mentionUsers = await this.usersService.findByIds([...allMentionedUserIds]);
       const userMap = new Map(mentionUsers.map(u => [u.id, u]));
@@ -295,7 +413,7 @@ export class CommentsService {
           .map(m => userMap.get(m.userId))
           .filter(Boolean) as { id: string; username: string; displayName: string; avatarUrl: string | null }[];
         const unique = [...new Map(users.map(u => [u.id, u])).values()];
-        mentionsMap.set(row.id, unique);
+        mentionsMap.set(row.id, unique.map(u => ({ ...u, spaceNickname: mentionNicknameMap.get(u.id) ?? null })));
       }
     }
 
@@ -304,7 +422,7 @@ export class CommentsService {
       content: row.content,
       createdAt: row.createdAt.toISOString(),
       isDeleted: row.isDeleted,
-      author: row.author,
+      author: { ...row.author, spaceNickname: nicknameMap.get(row.author.id) ?? null },
       replyTo: row.replyToId ? replyToMap.get(row.replyToId) ?? null : null,
       mentions: mentionsMap.get(row.id) ?? [],
     }));

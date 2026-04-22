@@ -52,12 +52,19 @@ export function deleteSpaceApi(slug: string): Promise<void> {
 
 // Membership
 
-export function joinSpaceApi(slug: string): Promise<SpaceMemberDto> {
-  return apiClient.post(`/spaces/${slug}/join`);
+export function joinSpaceApi(slug: string, nickname?: string): Promise<SpaceMemberDto> {
+  return apiClient.post(`/spaces/${slug}/join`, nickname !== undefined ? { nickname } : undefined);
 }
 
 export function leaveSpaceApi(slug: string): Promise<void> {
   return apiClient.delete(`/spaces/${slug}/leave`);
+}
+
+export function updateSpaceNicknameApi(
+  slug: string,
+  nickname: string | null,
+): Promise<SpaceMemberDto> {
+  return apiClient.patch(`/spaces/${slug}/members/me`, { nickname });
 }
 
 export function getSpaceMembersApi(

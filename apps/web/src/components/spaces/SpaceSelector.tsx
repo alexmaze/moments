@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, X, Globe, Baby } from 'lucide-react';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
@@ -13,27 +14,53 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
   const { t } = useTranslation('spaces');
   const { data: spaces, isLoading } = useMySpaces();
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isOpen) return;
+
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
     }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isOpen]);
 
   const selectedSpace = spaces?.find((s) => s.id === selectedSpaceId);
 
+  const triggerRect = triggerRef.current?.getBoundingClientRect();
+  const dropdownStyle: React.CSSProperties = triggerRect
+    ? {
+        position: 'fixed',
+        top: triggerRect.bottom + 4,
+        left: triggerRect.left,
+        minWidth: triggerRect.width,
+      }
+    : {};
+
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
@@ -65,9 +92,16 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
         )}
       </button>
 
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-border surface-overlay shadow-md">
+      {/* Dropdown via portal */}
+      {isOpen && triggerRect && createPortal(
+        <div
+          ref={dropdownRef}
+          className="z-[9999] w-64 rounded-lg border border-border surface-overlay shadow-md"
+          style={dropdownStyle}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           {isLoading && (
             <div className="px-3 py-4 text-center text-sm text-muted-foreground">
               ...
@@ -139,7 +173,8 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
               ))}
             </OverlayScrollbarsComponent>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

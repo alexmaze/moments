@@ -245,6 +245,7 @@ Migrations live in `packages/db/src/migrations/`. Schema source of truth is `pac
 pnpm db:generate   # creates new SQL file in packages/db/src/migrations/
 pnpm db:migrate    # applies it to the database
 ```
+**CRITICAL: All migration SQL scripts MUST be idempotent** — use `IF NOT EXISTS` / `IF EXISTS` guards on every DDL statement (e.g. `ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`). The app applies migrations on every startup, so non-idempotent SQL will crash the server on restart.
 
 ## Shared Package (`packages/shared/src/`)
 

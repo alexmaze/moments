@@ -38,7 +38,7 @@ export const PostContent = memo(function PostContent({ content, mentions, classN
               className="text-primary hover:underline font-medium"
               onClick={(e) => e.stopPropagation()}
             >
-              @{part.displayName}
+              @{mentions?.find(m => m.id === part.userId)?.spaceNickname ?? part.displayName}
             </Link>
           );
         }

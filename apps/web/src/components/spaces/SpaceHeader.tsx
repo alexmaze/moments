@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, FileText, Check, Settings } from 'lucide-react';
+import { Users, FileText, Check, Settings, ChevronDown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,13 +24,23 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
   const joinSpace = useJoinSpace(space.slug);
   const leaveSpace = useLeaveSpace(space.slug);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [joinDropdownOpen, setJoinDropdownOpen] = useState(false);
+  const [nickname, setNickname] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isMember = space.myMembership !== null;
   const isOwner = space.myMembership?.role === 'owner';
   const canEdit = space.myMembership?.role === 'owner' || space.myMembership?.role === 'admin';
 
   const handleJoin = () => {
-    joinSpace.mutate();
+    const trimmed = nickname.trim();
+    if (trimmed.includes(' ')) return;
+    joinSpace.mutate(trimmed || undefined, {
+      onSuccess: () => {
+        setJoinDropdownOpen(false);
+        setNickname('');
+      },
+    });
   };
 
   const handleLeave = () => {
@@ -41,7 +51,6 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
 
   return (
     <div>
-      {/* Cover image */}
       {space.coverUrl ? (
         <img
           src={space.coverUrl}
@@ -53,7 +62,6 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
         <div className="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
       )}
 
-      {/* Info */}
       <div className="mt-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -74,7 +82,6 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
               </p>
             )}
 
-            {/* Stats */}
             <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-4 w-4" />
@@ -87,7 +94,6 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
             </div>
           </div>
 
-          {/* Action button */}
           <div className="shrink-0">
             <div className="flex items-center gap-2">
               {isMember ? (
@@ -102,13 +108,59 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
                   {t('detail.joined')}
                 </button>
               ) : (
-                <button
-                  onClick={handleJoin}
-                  disabled={joinSpace.isPending}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {t('detail.join')}
-                </button>
+                <div ref={dropdownRef} className="relative">
+                  <div className="flex">
+                    <button
+                      onClick={() => joinSpace.mutate(undefined, { onSuccess: () => setJoinDropdownOpen(false) })}
+                      disabled={joinSpace.isPending}
+                      className="rounded-l-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {t('detail.join')}
+                    </button>
+                    <button
+                      onClick={() => setJoinDropdownOpen((v) => !v)}
+                      disabled={joinSpace.isPending}
+                      className="rounded-r-lg border-l border-primary-foreground/20 bg-primary px-2 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {joinDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setJoinDropdownOpen(false)}
+                      />
+                      <div className="absolute right-0 z-50 mt-2 w-56 rounded-lg border border-border bg-surface-overlay p-3 shadow-lg backdrop-blur-xl">
+                        <label className="mb-1 block text-xs font-medium text-foreground">
+                          {t('nickname')}
+                        </label>
+                        <input
+                          type="text"
+                          value={nickname}
+                          onChange={(e) => setNickname(e.target.value)}
+                          placeholder={t('nicknamePlaceholder')}
+                          maxLength={10}
+                          className="mb-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleJoin();
+                          }}
+                        />
+                        <p className="mb-3 text-xs text-muted-foreground">
+                          {t('nicknameHint')}
+                        </p>
+                        <button
+                          onClick={handleJoin}
+                          disabled={joinSpace.isPending || nickname.includes(' ')}
+                          className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {t('detail.join')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
 
               {canEdit && (
@@ -125,7 +177,6 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
         </div>
       </div>
 
-      {/* Leave confirmation */}
       <AlertDialog open={leaveConfirmOpen} onOpenChange={setLeaveConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

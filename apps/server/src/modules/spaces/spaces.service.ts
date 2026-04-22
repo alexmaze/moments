@@ -90,10 +90,10 @@ export class SpacesService {
     const coverUrl = await this.resolveCoverUrl(space.coverMediaId);
 
     // Check membership
-    let myMembership: { role: 'owner' | 'admin' | 'member'; joinedAt: string } | null = null;
+    let myMembership: { role: 'owner' | 'admin' | 'member'; spaceNickname: string | null; joinedAt: string } | null = null;
     if (currentUserId) {
       const [membership] = await this.db
-        .select({ role: spaceMembers.role, joinedAt: spaceMembers.joinedAt })
+        .select({ role: spaceMembers.role, spaceNickname: spaceMembers.spaceNickname, joinedAt: spaceMembers.joinedAt })
         .from(spaceMembers)
         .where(and(
           eq(spaceMembers.spaceId, space.id),
@@ -104,6 +104,7 @@ export class SpacesService {
       if (membership) {
         myMembership = {
           role: membership.role,
+          spaceNickname: membership.spaceNickname,
           joinedAt: membership.joinedAt.toISOString(),
         };
       }
@@ -334,7 +335,7 @@ export class SpacesService {
 
   // ── Membership ──
 
-  async join(slug: string, userId: string) {
+  async join(slug: string, userId: string, nickname?: string) {
     const [space] = await this.db
       .select()
       .from(spaces)
@@ -345,7 +346,6 @@ export class SpacesService {
       throw new NotFoundException('Space not found');
     }
 
-    // Check if already a member
     const [existing] = await this.db
       .select({ id: spaceMembers.id })
       .from(spaceMembers)
@@ -359,11 +359,27 @@ export class SpacesService {
       throw new ConflictException('You are already a member of this space');
     }
 
+    if (nickname) {
+      const [duplicate] = await this.db
+        .select({ id: spaceMembers.id })
+        .from(spaceMembers)
+        .where(and(
+          eq(spaceMembers.spaceId, space.id),
+          eq(spaceMembers.spaceNickname, nickname),
+        ))
+        .limit(1);
+
+      if (duplicate) {
+        throw new ConflictException('This nickname is already taken in this space');
+      }
+    }
+
     await this.db.transaction(async (tx) => {
       await tx.insert(spaceMembers).values({
         spaceId: space.id,
         userId,
         role: 'member',
+        spaceNickname: nickname ?? null,
       });
 
       await tx
@@ -372,7 +388,6 @@ export class SpacesService {
         .where(eq(spaces.id, space.id));
     });
 
-    // Load user info for response
     const [user] = await this.db
       .select({
         id: users.id,
@@ -398,6 +413,7 @@ export class SpacesService {
       id: member.id,
       user,
       role: member.role,
+      spaceNickname: member.spaceNickname,
       joinedAt: member.joinedAt.toISOString(),
     };
   }
@@ -444,6 +460,78 @@ export class SpacesService {
     return { success: true };
   }
 
+  async updateNickname(slug: string, userId: string, nickname: string | null | undefined) {
+    const [space] = await this.db
+      .select()
+      .from(spaces)
+      .where(and(eq(spaces.slug, slug), eq(spaces.isDeleted, false)))
+      .limit(1);
+
+    if (!space) {
+      throw new NotFoundException('Space not found');
+    }
+
+    const [membership] = await this.db
+      .select({ id: spaceMembers.id })
+      .from(spaceMembers)
+      .where(and(
+        eq(spaceMembers.spaceId, space.id),
+        eq(spaceMembers.userId, userId),
+      ))
+      .limit(1);
+
+    if (!membership) {
+      throw new ForbiddenException('You are not a member of this space');
+    }
+
+    if (nickname) {
+      const [duplicate] = await this.db
+        .select({ id: spaceMembers.id })
+        .from(spaceMembers)
+        .where(and(
+          eq(spaceMembers.spaceId, space.id),
+          eq(spaceMembers.spaceNickname, nickname),
+          sql`${spaceMembers.id} != ${membership.id}`,
+        ))
+        .limit(1);
+
+      if (duplicate) {
+        throw new ConflictException('This nickname is already taken in this space');
+      }
+    }
+
+    await this.db
+      .update(spaceMembers)
+      .set({ spaceNickname: nickname ?? null })
+      .where(eq(spaceMembers.id, membership.id));
+
+    const [user] = await this.db
+      .select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: mediaAssets.publicUrl,
+      })
+      .from(users)
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const [updatedMember] = await this.db
+      .select()
+      .from(spaceMembers)
+      .where(eq(spaceMembers.id, membership.id))
+      .limit(1);
+
+    return {
+      id: updatedMember.id,
+      user,
+      role: updatedMember.role,
+      spaceNickname: updatedMember.spaceNickname,
+      joinedAt: updatedMember.joinedAt.toISOString(),
+    };
+  }
+
   async getMembers(slug: string, cursor?: string, limit = 20) {
     const safeLimit = Math.min(limit, 50);
 
@@ -466,6 +554,7 @@ export class SpacesService {
       .select({
         id: spaceMembers.id,
         role: spaceMembers.role,
+        spaceNickname: spaceMembers.spaceNickname,
         joinedAt: spaceMembers.joinedAt,
         user: {
           id: users.id,
@@ -488,6 +577,7 @@ export class SpacesService {
       id: r.id,
       user: r.user,
       role: r.role,
+      spaceNickname: r.spaceNickname,
       joinedAt: r.joinedAt.toISOString(),
     }));
 

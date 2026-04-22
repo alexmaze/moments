@@ -12,7 +12,7 @@ import {
 import { SpacesService } from './spaces.service';
 import { GrowthRecordsService } from './growth-records.service';
 import { PostsService } from '../posts/posts.service';
-import { CreateSpaceDto, UpdateSpaceDto, CreateGrowthRecordDto } from './dto';
+import { CreateSpaceDto, UpdateSpaceDto, CreateGrowthRecordDto, UpdateNicknameDto, JoinSpaceDto } from './dto';
 import { CurrentUser } from '../../common/decorators';
 
 @Controller('spaces')
@@ -77,9 +77,19 @@ export class SpacesController {
   @Post(':slug/join')
   async join(
     @Param('slug') slug: string,
+    @Body() dto: JoinSpaceDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.spacesService.join(slug, user.id);
+    return this.spacesService.join(slug, user.id, dto.nickname);
+  }
+
+  @Patch(':slug/members/me')
+  async updateMyNickname(
+    @Param('slug') slug: string,
+    @Body() dto: UpdateNicknameDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.spacesService.updateNickname(slug, user.id, dto.nickname);
   }
 
   @Delete(':slug/leave')

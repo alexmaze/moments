@@ -95,5 +95,12 @@
     "selectSpace": "发布到...",
     "mainFeed": "主信息流",
     "inSpace": "在 {{spaceName}}"
-  }
+  },
+  "nickname": "空间昵称",
+  "nicknamePlaceholder": "可选空间内昵称",
+  "nicknameHint": "最多10个字符，不含空格",
+  "nicknameTaken": "该昵称已被占用",
+  "nicknameUpdated": "昵称已更新",
+  "editNickname": "修改昵称",
+  "setNickname": "设置昵称"
 }

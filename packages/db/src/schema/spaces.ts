@@ -33,6 +33,7 @@ export const spaceMembers = pgTable('space_members', {
   spaceId: uuid('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id),
   role: spaceMemberRoleEnum('role').notNull().default('member'),
+  spaceNickname: varchar('space_nickname', { length: 10 }),
   joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   unique('uniq_space_member').on(table.spaceId, table.userId),

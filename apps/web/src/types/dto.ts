@@ -26,6 +26,7 @@ export interface MentionUserDto {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  spaceNickname: string | null;
 }
 
 export interface PostMediaDto {
@@ -60,6 +61,7 @@ export interface PostDto {
     username: string;
     displayName: string;
     avatarUrl: string | null;
+    spaceNickname: string | null;
   };
   media: PostMediaDto[];
   audio: PostAudioDto | null;
@@ -90,6 +92,7 @@ export interface ReplyToCommentDto {
     username: string;
     displayName: string;
     avatarUrl: string | null;
+    spaceNickname: string | null;
   };
   contentPreview: string;
 }
@@ -104,6 +107,7 @@ export interface CommentDto {
     username: string;
     displayName: string;
     avatarUrl: string | null;
+    spaceNickname: string | null;
   };
   /** The comment this is replying to, null for top-level comments */
   replyTo: ReplyToCommentDto | null;
@@ -155,6 +159,7 @@ export interface SpaceDetailDto extends SpaceDto {
   /** Current user's membership info, null if not a member */
   myMembership: {
     role: SpaceMemberRole;
+    spaceNickname: string | null;
     joinedAt: string;
   } | null;
 }
@@ -168,6 +173,7 @@ export interface SpaceMemberDto {
     avatarUrl: string | null;
   };
   role: SpaceMemberRole;
+  spaceNickname: string | null;
   joinedAt: string;
 }
 

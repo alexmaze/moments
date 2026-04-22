@@ -642,7 +642,10 @@ export class PostsService {
     }
 
     // Batch load comment previews (first N comments per post)
-    const commentPreviewMap = await this.batchFetchCommentPreviews(postIds);
+    const commentPreviewMap = await this.batchFetchCommentPreviews(
+      postIds,
+      new Map(postRows.filter(p => p.spaceId).map(p => [p.id, p.spaceId!])),
+    );
 
     // Batch load space info for posts that belong to a space
     const spaceIds = [...new Set(postRows.map((p) => p.spaceId).filter(Boolean))] as string[];
@@ -667,7 +670,6 @@ export class PostsService {
           .map((s) => [s.id, { id: s.id, name: s.name, slug: s.slug, type: s.type }]),
       );
 
-      // Check current user's membership for these spaces
       if (currentUserId) {
         const membershipRows = await this.db
           .select({ spaceId: spaceMembers.spaceId })
@@ -677,6 +679,35 @@ export class PostsService {
             eq(spaceMembers.userId, currentUserId),
           ));
         memberSpaceIds = new Set(membershipRows.map((r) => r.spaceId));
+      }
+    }
+
+    const authorSpaceNicknames = new Map<string, string | null>();
+    if (spaceIds.length > 0) {
+      const spaceAuthorPairs = postRows
+        .filter((p) => p.spaceId)
+        .map((p) => ({ spaceId: p.spaceId!, authorId: p.authorId }));
+      
+      const uniquePairs = [...new Map(spaceAuthorPairs.map(p => [`${p.spaceId}:${p.authorId}`, p])).values()];
+      
+      if (uniquePairs.length > 0) {
+        const nicknameRows = await this.db
+          .select({
+            spaceId: spaceMembers.spaceId,
+            userId: spaceMembers.userId,
+            spaceNickname: spaceMembers.spaceNickname,
+          })
+          .from(spaceMembers)
+          .where(
+            and(
+              inArray(spaceMembers.spaceId, uniquePairs.map(p => p.spaceId)),
+              inArray(spaceMembers.userId, uniquePairs.map(p => p.authorId)),
+            ),
+          );
+
+        for (const row of nicknameRows) {
+          authorSpaceNicknames.set(`${row.spaceId}:${row.userId}`, row.spaceNickname);
+        }
       }
     }
 
@@ -703,11 +734,32 @@ export class PostsService {
       }
     }
 
-    let mentionsUserMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null }>();
+    let mentionsUserMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname?: string | null }>();
     if (allMentionedUserIds.size > 0) {
       const mentionUsers = await this.usersService.findByIds([...allMentionedUserIds]);
       for (const u of mentionUsers) {
         mentionsUserMap.set(u.id, u);
+      }
+    }
+
+    const mentionSpaceNicknames = new Map<string, string | null>();
+    if (spaceIds.length > 0 && allMentionedUserIds.size > 0) {
+      const mentionNicknameRows = await this.db
+        .select({
+          spaceId: spaceMembers.spaceId,
+          userId: spaceMembers.userId,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(spaceMembers)
+        .where(
+          and(
+            inArray(spaceMembers.spaceId, spaceIds),
+            inArray(spaceMembers.userId, [...allMentionedUserIds]),
+          ),
+        );
+
+      for (const row of mentionNicknameRows) {
+        mentionSpaceNicknames.set(`${row.spaceId}:${row.userId}`, row.spaceNickname);
       }
     }
 
@@ -717,8 +769,9 @@ export class PostsService {
       const previewComments = commentPreviewMap.get(post.id) || [];
       const spaceInfo = post.spaceId ? spaceMap.get(post.spaceId) ?? null : null;
       const postTagsList = tagsByPost.get(post.id) || [];
+      const authorNickname = post.spaceId ? authorSpaceNicknames.get(`${post.spaceId}:${post.authorId}`) ?? null : null;
 
-      const postMentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[] = [];
+      const postMentions: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null }[] = [];
       if (post.content) {
         const parsed = parseMentions(post.content);
         const seen = new Set<string>();
@@ -727,7 +780,8 @@ export class PostsService {
             seen.add(m.userId);
             const user = mentionsUserMap.get(m.userId);
             if (user) {
-              postMentions.push(user);
+              const mentionNickname = post.spaceId ? mentionSpaceNicknames.get(`${post.spaceId}:${m.userId}`) ?? null : null;
+              postMentions.push({ ...user, spaceNickname: mentionNickname });
             }
           }
         }
@@ -743,6 +797,7 @@ export class PostsService {
           username: author.username,
           displayName: author.displayName,
           avatarUrl: author.avatarUrl,
+          spaceNickname: authorNickname,
         },
         media: mediaRels.map((r) => ({
           id: r.media_assets.id,
@@ -802,25 +857,26 @@ export class PostsService {
    * then groups and truncates in JS (avoids ROW_NUMBER which Drizzle ORM
    * doesn't natively support).
    */
-  private async batchFetchCommentPreviews(postIds: string[]) {
+  private async batchFetchCommentPreviews(
+    postIds: string[],
+    postSpaceIdMap: Map<string, string> = new Map(),
+  ) {
     const result = new Map<string, Array<{
       id: string;
       content: string;
       createdAt: string;
       isDeleted: boolean;
-      author: { id: string; username: string; displayName: string; avatarUrl: string | null };
+      author: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null };
       replyTo: null;
-      mentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[];
+      mentions: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null }[];
     }>>();
 
     if (postIds.length === 0) return result;
 
-    // Initialize empty arrays for all postIds
     for (const id of postIds) {
       result.set(id, []);
     }
 
-    // Fetch all non-deleted comments for these posts, ordered oldest-first
     const rows = await this.db
       .select({
         id: postComments.id,
@@ -846,41 +902,93 @@ export class PostsService {
       )
       .orderBy(asc(postComments.createdAt));
 
-    // Collect all unique mentioned user IDs across all preview comments
     const allMentionedUserIds = new Set<string>();
     for (const row of rows) {
       for (const m of parseMentions(row.content)) allMentionedUserIds.add(m.userId);
     }
 
-    // Batch-fetch mention user data in one query
     const mentionUserMap = new Map<string, { id: string; username: string; displayName: string; avatarUrl: string | null }>();
     if (allMentionedUserIds.size > 0) {
       const mentionUsers = await this.usersService.findByIds([...allMentionedUserIds]);
       for (const u of mentionUsers) mentionUserMap.set(u.id, u);
     }
 
-    // Group by postId and take first COMMENT_PREVIEW_LIMIT per post
+    const commentAuthorIds = [...new Set(rows.map(r => r.author.id))];
+    const commentNicknameMap = new Map<string, string | null>();
+    const relevantSpaceIds = [...new Set([...postSpaceIdMap.values()])];
+
+    if (relevantSpaceIds.length > 0 && commentAuthorIds.length > 0) {
+      const nicknameRows = await this.db
+        .select({
+          spaceId: spaceMembers.spaceId,
+          userId: spaceMembers.userId,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(spaceMembers)
+        .where(
+          and(
+            inArray(spaceMembers.spaceId, relevantSpaceIds),
+            inArray(spaceMembers.userId, commentAuthorIds),
+          ),
+        );
+
+      for (const row of nicknameRows) {
+        commentNicknameMap.set(`${row.spaceId}:${row.userId}`, row.spaceNickname);
+      }
+    }
+
+    const mentionNicknameMap = new Map<string, string | null>();
+    if (relevantSpaceIds.length > 0 && allMentionedUserIds.size > 0) {
+      const mentionNicknameRows = await this.db
+        .select({
+          spaceId: spaceMembers.spaceId,
+          userId: spaceMembers.userId,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(spaceMembers)
+        .where(
+          and(
+            inArray(spaceMembers.spaceId, relevantSpaceIds),
+            inArray(spaceMembers.userId, [...allMentionedUserIds]),
+          ),
+        );
+
+      for (const row of mentionNicknameRows) {
+        mentionNicknameMap.set(`${row.spaceId}:${row.userId}`, row.spaceNickname);
+      }
+    }
+
     for (const row of rows) {
       const list = result.get(row.postId)!;
       if (list.length < this.COMMENT_PREVIEW_LIMIT) {
-        // Resolve mentions for this comment
         const parsed = parseMentions(row.content);
         const seen = new Set<string>();
-        const mentions: { id: string; username: string; displayName: string; avatarUrl: string | null }[] = [];
+        const mentions: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null }[] = [];
+        const postSpaceId = postSpaceIdMap.get(row.postId);
+
         for (const m of parsed) {
           if (!seen.has(m.userId)) {
             seen.add(m.userId);
             const user = mentionUserMap.get(m.userId);
-            if (user) mentions.push(user);
+            if (user) {
+              const mentionNickname = postSpaceId
+                ? mentionNicknameMap.get(`${postSpaceId}:${m.userId}`) ?? null
+                : null;
+              mentions.push({ ...user, spaceNickname: mentionNickname });
+            }
           }
         }
+
+        const authorNickname = postSpaceId
+          ? commentNicknameMap.get(`${postSpaceId}:${row.author.id}`) ?? null
+          : null;
 
         list.push({
           id: row.id,
           content: row.content,
           createdAt: row.createdAt.toISOString(),
           isDeleted: row.isDeleted,
-          author: row.author,
+          author: { ...row.author, spaceNickname: authorNickname },
           replyTo: null,
           mentions,
         });

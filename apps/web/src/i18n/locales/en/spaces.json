@@ -95,5 +95,12 @@
     "selectSpace": "Post to...",
     "mainFeed": "Main Feed",
     "inSpace": "in {{spaceName}}"
-  }
+  },
+  "nickname": "Nickname",
+  "nicknamePlaceholder": "Optional space nickname",
+  "nicknameHint": "Max 10 characters, no spaces",
+  "nicknameTaken": "This nickname is already taken",
+  "nicknameUpdated": "Nickname updated",
+  "editNickname": "Edit nickname",
+  "setNickname": "Set nickname"
 }

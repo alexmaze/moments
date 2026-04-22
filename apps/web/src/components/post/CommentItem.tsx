@@ -81,7 +81,7 @@ export default function CommentItem({ comment, postId, onReply, isHighlighted, h
         {comment.author.avatarUrl ? (
           <img
             src={comment.author.avatarUrl}
-            alt={comment.author.displayName}
+            alt={comment.author.spaceNickname ?? comment.author.displayName}
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
@@ -97,7 +97,7 @@ export default function CommentItem({ comment, postId, onReply, isHighlighted, h
             to={`/users/${comment.author.username}`}
             className="text-sm font-medium text-foreground hover:underline"
           >
-            {comment.author.displayName}
+            {comment.author.spaceNickname ?? comment.author.displayName}
           </Link>
           <span className="text-xs text-muted-foreground">
             {formatRelativeTime(comment.createdAt)}
@@ -121,7 +121,7 @@ export default function CommentItem({ comment, postId, onReply, isHighlighted, h
               to={`/users/${comment.replyTo.author.username}`}
               className="text-primary hover:underline"
             >
-              @{comment.replyTo.author.displayName}
+              @{comment.replyTo.author.spaceNickname ?? comment.replyTo.author.displayName}
             </Link>
           </div>
         )}

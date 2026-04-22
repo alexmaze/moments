@@ -14,6 +14,7 @@ import {
   updateSpaceApi,
   joinSpaceApi,
   leaveSpaceApi,
+  updateSpaceNicknameApi,
   getSpacePostsApi,
   getSpaceMembersApi,
 } from "@/api/spaces.api";
@@ -94,7 +95,7 @@ export function useJoinSpace(slug: string) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => joinSpaceApi(slug),
+    mutationFn: (nickname?: string) => joinSpaceApi(slug, nickname),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: spaceKeys.detail(slug) });
       qc.invalidateQueries({ queryKey: spaceKeys.members(slug) });
@@ -114,6 +115,27 @@ export function useLeaveSpace(slug: string) {
       qc.invalidateQueries({ queryKey: spaceKeys.members(slug) });
       qc.invalidateQueries({ queryKey: spaceKeys.my() });
       toast.success(i18n.t("spaces:leave.success"));
+    },
+  });
+}
+
+export function useUpdateSpaceNickname(slug: string) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (nickname: string | null) => updateSpaceNicknameApi(slug, nickname),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: spaceKeys.detail(slug) });
+      qc.invalidateQueries({ queryKey: spaceKeys.members(slug) });
+      toast.success(i18n.t("spaces:nicknameUpdated"));
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message;
+      if (message?.includes?.("already taken") || message?.includes?.("duplicate")) {
+        toast.error(i18n.t("spaces:nicknameTaken"));
+      } else {
+        toast.error(i18n.t("common:toast.error"));
+      }
     },
   });
 }
