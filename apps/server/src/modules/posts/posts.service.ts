@@ -429,7 +429,39 @@ export class PostsService {
     }
 
     const [enriched] = await this.enrichPosts([post], [post.id], currentUserId);
-    return enriched;
+
+    let likePreview: string[] = [];
+    if (post.spaceId) {
+      const rows = await this.db
+        .select({
+          displayName: users.displayName,
+          spaceNickname: spaceMembers.spaceNickname,
+        })
+        .from(postLikes)
+        .innerJoin(users, eq(postLikes.userId, users.id))
+        .leftJoin(
+          spaceMembers,
+          and(eq(spaceMembers.spaceId, post.spaceId), eq(spaceMembers.userId, users.id)),
+        )
+        .where(eq(postLikes.postId, post.id))
+        .orderBy(desc(postLikes.createdAt))
+        .limit(3);
+      likePreview = rows.map((r) => r.spaceNickname ?? r.displayName);
+    } else {
+      const rows = await this.db
+        .select({ displayName: users.displayName })
+        .from(postLikes)
+        .innerJoin(users, eq(postLikes.userId, users.id))
+        .where(eq(postLikes.postId, post.id))
+        .orderBy(desc(postLikes.createdAt))
+        .limit(3);
+      likePreview = rows.map((r) => r.displayName);
+    }
+
+    return {
+      ...enriched,
+      likePreview,
+    };
   }
 
   async getUserPosts(username: string, cursor?: string, limit = 20, currentUserId?: string) {
