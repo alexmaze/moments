@@ -1,6 +1,15 @@
 import type { UserDto, PostMediaDto, MentionUserDto } from './index';
 import type { PostSpaceDto } from './space.types';
 
+export interface LikedUserDto {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  spaceNickname: string | null;
+  likedAt: string;
+}
+
 export interface PostAudioDto {
   id: string;
   url: string;
@@ -32,6 +41,8 @@ export interface PostDto {
   tags: string[];
   /** Users mentioned in the post content via @{displayName|userId} */
   mentions: MentionUserDto[];
+  /** First 3 likers' displayNames, only populated for detail view */
+  likePreview?: string[];
 }
 
 export interface PostDetailDto extends PostDto {}
