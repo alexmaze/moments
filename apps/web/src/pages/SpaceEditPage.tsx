@@ -66,7 +66,7 @@ export default function SpaceEditPage() {
 
   if (!canEdit) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <div className="space-y-4">
         <Link
           to={`/spaces/${space.slug}`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -162,7 +162,7 @@ export default function SpaceEditPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+    <div className="space-y-4">
       <button
         type="button"
         onClick={() => navigate(`/spaces/${space.slug}`)}

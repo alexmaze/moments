@@ -172,11 +172,11 @@ export default function AppLayout() {
           target this element instead of the viewport. */}
       <main
         ref={setMainEl}
-        className="flex-1 overflow-y-auto overscroll-y-contain pt-14"
+        className="flex-1 overflow-y-auto overscroll-y-contain pt-14 pb-14 md:pb-0"
       >
         <ScrollContainerContext.Provider value={mainEl}>
           <MediaLightboxProvider>
-            <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-20 md:pb-4">
+            <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-6">
               <Outlet />
             </div>
           </MediaLightboxProvider>

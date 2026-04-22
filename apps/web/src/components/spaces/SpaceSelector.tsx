@@ -65,7 +65,6 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
       >
-        <span className="text-muted-foreground">{t('composer.selectSpace')}</span>
         <span className="font-medium">
           {selectedSpace ? selectedSpace.name : t('composer.mainFeed')}
         </span>

@@ -98,8 +98,7 @@
     "babyAgeInfo": "宝宝 {{age}}，{{birthday}} 出生"
   },
   "composer": {
-    "selectSpace": "发布到...",
-    "mainFeed": "主信息流",
+    "mainFeed": "近况",
     "inSpace": "在 {{spaceName}}"
   },
   "nickname": "空间昵称",

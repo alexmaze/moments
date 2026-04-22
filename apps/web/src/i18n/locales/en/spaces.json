@@ -98,8 +98,7 @@
     "babyAgeInfo": "Baby {{age}}, born {{birthday}}"
   },
   "composer": {
-    "selectSpace": "Post to...",
-    "mainFeed": "Main Feed",
+    "mainFeed": "Moments",
     "inSpace": "in {{spaceName}}"
   },
   "nickname": "Nickname",
