@@ -51,6 +51,15 @@ export interface PostAudioDto {
   sizeBytes: number | null;
 }
 
+export interface LikedUserDto {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  spaceNickname: string | null;
+  likedAt: string;
+}
+
 export interface PostDto {
   id: string;
   content: string | null;
@@ -84,6 +93,8 @@ export interface PostDto {
   tags: string[];
   /** Users mentioned in the post content */
   mentions: MentionUserDto[];
+  /** Preview of display names who liked this post (first 3) */
+  likePreview?: string[];
 }
 
 export interface ReplyToCommentDto {

@@ -14,6 +14,7 @@ import {
   deletePostApi,
   toggleLikeApi,
   getUserPostsApi,
+  getLikedUsersApi,
 } from "@/api/posts.api";
 import type { PostDto, PaginatedResponse } from "@/types/dto";
 
@@ -23,6 +24,8 @@ export const postKeys = {
   detail: (id: string) => [...postKeys.all, "detail", id] as const,
   userPosts: (username: string) =>
     [...postKeys.all, "user", username] as const,
+  likedUsers: (postId: string) =>
+    [...postKeys.all, "likedUsers", postId] as const,
 };
 
 export function useInfiniteFeed() {
@@ -231,13 +234,15 @@ export function useToggleLike() {
       }
       toast.error(i18n.t("feed:postCard.likeError"), { duration: 2000 });
     },
-    onSettled: () => {
+    onSettled: (_data, _error, postId) => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
       queryClient.invalidateQueries({
         queryKey: ["spaces"],
         predicate: (query) => query.queryKey[1] === "posts",
       });
       queryClient.invalidateQueries({ queryKey: ["tags", "posts"] });
+      queryClient.invalidateQueries({ queryKey: postKeys.likedUsers(postId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.detail(postId) });
     },
   });
 }
@@ -249,5 +254,15 @@ export function useUserPosts(username: string) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor ?? undefined,
     enabled: !!username,
+  });
+}
+
+export function useLikedUsers(postId: string) {
+  return useInfiniteQuery({
+    queryKey: postKeys.likedUsers(postId),
+    queryFn: ({ pageParam }) => getLikedUsersApi(postId, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor ?? undefined,
+    enabled: !!postId,
   });
 }

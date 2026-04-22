@@ -1,8 +1,8 @@
 import apiClient from "./client";
 import type {
-  PostAudioDto,
   PostDto,
   CommentDto,
+  LikedUserDto,
   PaginatedResponse,
   PagePaginatedResponse,
 } from "@/types/dto";
@@ -115,5 +115,15 @@ export function getUserPostsApi(
 ): Promise<PaginatedResponse<PostDto>> {
   return apiClient.get(`/users/${username}/posts`, {
     params: { cursor },
+  });
+}
+
+export function getLikedUsersApi(
+  postId: string,
+  cursor?: string,
+  limit?: number,
+): Promise<PaginatedResponse<LikedUserDto>> {
+  return apiClient.get(`/posts/${postId}/likes`, {
+    params: { cursor, limit },
   });
 }
