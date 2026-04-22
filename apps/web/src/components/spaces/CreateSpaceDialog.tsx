@@ -36,6 +36,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [description, setDescription] = useState('');
   const [type, setType] = useState<SpaceType>('general');
+  const [babyBirthday, setBabyBirthday] = useState('');
 
   useEffect(() => {
     if (!slugManuallyEdited) {
@@ -50,6 +51,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
       setSlugManuallyEdited(false);
       setDescription('');
       setType('general');
+      setBabyBirthday('');
     }
   }, [open]);
 
@@ -63,7 +65,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
     if (!name.trim() || !slug.trim()) return;
 
     createSpace.mutate(
-      { name: name.trim(), slug: slug.trim(), description: description.trim() || undefined, type },
+      { name: name.trim(), slug: slug.trim(), description: description.trim() || undefined, type, babyBirthday: type === 'baby' && babyBirthday ? babyBirthday : undefined },
       {
         onSuccess: (data) => {
           onOpenChange(false);
@@ -165,6 +167,25 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
               </button>
             </div>
           </div>
+
+          {type === 'baby' && (
+            <div>
+              <label htmlFor="space-birthday" className="mb-1.5 block text-sm font-medium text-foreground">
+                {t('create.babyBirthdayLabel')}
+              </label>
+              <input
+                id="space-birthday"
+                type="date"
+                value={babyBirthday}
+                onChange={(e) => setBabyBirthday(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('create.babyBirthdayHint')}
+              </p>
+            </div>
+          )}
 
           </div>
 

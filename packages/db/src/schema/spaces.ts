@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, varchar, text, timestamp, boolean, integer, real, index, unique } from 'drizzle-orm/pg-core';
+import { pgTable, pgEnum, uuid, varchar, text, timestamp, date, boolean, integer, real, index, unique } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 // --- Enums ---
@@ -14,6 +14,7 @@ export const spaces = pgTable('spaces', {
   coverMediaId: uuid('cover_media_id'),
   coverPositionY: real('cover_position_y').notNull().default(50),
   type: spaceTypeEnum('type').notNull().default('general'),
+  babyBirthday: date('baby_birthday'),
   creatorId: uuid('creator_id').notNull().references(() => users.id),
   memberCount: integer('member_count').notNull().default(0),
   postCount: integer('post_count').notNull().default(0),

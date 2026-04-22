@@ -46,6 +46,7 @@ export class SpacesService {
         slug: dto.slug,
         description: dto.description ?? null,
         type: dto.type ?? 'general',
+        babyBirthday: dto.babyBirthday ?? null,
         creatorId: userId,
         memberCount: 1,
       }).returning();
@@ -119,6 +120,7 @@ export class SpacesService {
       coverUrl,
       coverPositionY: space.coverPositionY,
       type: space.type,
+      babyBirthday: space.babyBirthday,
       creator,
       memberCount: space.memberCount,
       postCount: space.postCount,
@@ -173,6 +175,7 @@ export class SpacesService {
       coverUrl: coverUrlMap.get(space.coverMediaId ?? '') ?? null,
       coverPositionY: space.coverPositionY,
       type: space.type,
+      babyBirthday: space.babyBirthday,
       creator: creatorMap.get(space.creatorId)!,
       memberCount: space.memberCount,
       postCount: space.postCount,
@@ -229,6 +232,7 @@ export class SpacesService {
       coverUrl: coverUrlMap.get(r.space.coverMediaId ?? '') ?? null,
       coverPositionY: r.space.coverPositionY,
       type: r.space.type,
+      babyBirthday: r.space.babyBirthday,
       creator: creatorMap.get(r.space.creatorId)!,
       memberCount: r.space.memberCount,
       postCount: r.space.postCount,
@@ -266,6 +270,7 @@ export class SpacesService {
       if (dto.name !== undefined) updateData.name = dto.name;
       if (dto.description !== undefined) updateData.description = dto.description;
       if (dto.coverPositionY !== undefined) updateData.coverPositionY = dto.coverPositionY;
+      if (dto.babyBirthday !== undefined) updateData.babyBirthday = dto.babyBirthday;
 
       if (dto.coverMediaId !== undefined) {
         if (dto.coverMediaId === null) {

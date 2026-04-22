@@ -12,6 +12,7 @@ export interface SpaceDto {
   coverUrl: string | null;
   coverPositionY: number;
   type: SpaceType;
+  babyBirthday: string | null;
   creator: {
     id: string;
     username: string;
@@ -62,5 +63,6 @@ export interface PostSpaceDto {
   name: string;
   slug: string;
   type: SpaceType;
+  babyBirthday: string | null;
   isMember: boolean;
 }

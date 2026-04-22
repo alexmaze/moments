@@ -30,6 +30,7 @@ export function createSpaceApi(data: {
   slug: string;
   description?: string;
   type?: "general" | "baby";
+  babyBirthday?: string;
 }): Promise<SpaceDetailDto> {
   return apiClient.post("/spaces", data);
 }
@@ -41,6 +42,7 @@ export function updateSpaceApi(
     description?: string;
     coverMediaId?: string | null;
     coverPositionY?: number;
+    babyBirthday?: string | null;
   },
 ): Promise<SpaceDetailDto> {
   return apiClient.patch(`/spaces/${slug}`, data);

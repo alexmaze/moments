@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, FileText, Check, Settings, ChevronDown } from 'lucide-react';
+import { Users, FileText, Check, Settings, ChevronDown, Cake } from 'lucide-react';
+import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
+import i18n from '@/i18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,15 +84,21 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
               </p>
             )}
 
-            <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Users className="h-4 w-4" />
                 {t('detail.members', { count: space.memberCount })}
               </span>
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <FileText className="h-4 w-4" />
                 {t('detail.posts', { count: space.postCount })}
               </span>
+              {space.type === 'baby' && space.babyBirthday && (
+                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                  <Cake className="h-4 w-4" />
+                  {t('detail.babyAge', { age: i18n.language === 'zh-CN' ? formatBabyAge(space.babyBirthday, new Date().toISOString()) : formatBabyAgeEn(space.babyBirthday, new Date().toISOString()) })}
+                </span>
+              )}
             </div>
           </div>
 

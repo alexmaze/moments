@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, MinLength, Matches, IsIn } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, Matches, IsIn, IsDateString } from 'class-validator';
 
 export class CreateSpaceDto {
   @IsString()
@@ -22,4 +22,8 @@ export class CreateSpaceDto {
   @IsOptional()
   @IsIn(['general', 'baby'])
   type?: 'general' | 'baby';
+
+  @IsOptional()
+  @IsDateString()
+  babyBirthday?: string;
 }

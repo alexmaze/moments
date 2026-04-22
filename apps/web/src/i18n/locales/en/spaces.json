@@ -12,6 +12,8 @@
     "type": "Space Type",
     "typeGeneral": "General",
     "typeBaby": "Baby Growth",
+    "babyBirthdayLabel": "Baby's Birthday",
+    "babyBirthdayHint": "Used to show the baby's age at the time of posting.",
     "submit": "Create",
     "success": "Space created!",
     "error": "Failed to create space."
@@ -29,6 +31,7 @@
     "postsTab": "Posts",
     "membersTab": "Members",
     "growthTab": "Growth",
+    "babyAge": "{{age}}",
     "noPosts": "No posts in this space yet.",
     "noPostsJoined": "Be the first to share something!",
     "noMembers": "No members yet."
@@ -58,6 +61,8 @@
     "infoSectionTitle": "Basic Info",
     "infoSectionDescription": "Update the space name and description.",
     "slugLabel": "Space URL",
+    "babyBirthdayLabel": "Baby's Birthday",
+    "babyBirthdayHint": "Used to show the baby's age at the time of posting.",
     "save": "Save Changes",
     "saving": "Saving...",
     "saveSuccess": "Space updated.",
@@ -89,7 +94,8 @@
     "noRecords": "No growth records yet.",
     "atLeastOne": "At least one measurement is required",
     "submit": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "babyAgeInfo": "Baby {{age}}, born {{birthday}}"
   },
   "composer": {
     "selectSpace": "Post to...",

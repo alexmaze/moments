@@ -59,7 +59,13 @@ export function useCreateSpace() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: createSpaceApi,
+    mutationFn: (data: {
+      name: string;
+      slug: string;
+      description?: string;
+      type?: 'general' | 'baby';
+      babyBirthday?: string;
+    }) => createSpaceApi(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: spaceKeys.list() });
       qc.invalidateQueries({ queryKey: spaceKeys.my() });
@@ -80,6 +86,7 @@ export function useUpdateSpace(slug: string) {
       description?: string;
       coverMediaId?: string | null;
       coverPositionY?: number;
+      babyBirthday?: string | null;
     }) => updateSpaceApi(slug, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: spaceKeys.detail(slug) });

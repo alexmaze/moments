@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, MinLength, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, IsNumber, Min, Max, IsDateString } from 'class-validator';
 
 export class UpdateSpaceDto {
   @IsOptional()
@@ -21,4 +21,8 @@ export class UpdateSpaceDto {
   @Min(0)
   @Max(100)
   coverPositionY?: number;
+
+  @IsOptional()
+  @IsDateString()
+  babyBirthday?: string | null;
 }

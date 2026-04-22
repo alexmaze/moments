@@ -7,6 +7,8 @@ import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import { mediaToLightboxSlides } from '@/lib/mediaToLightbox';
 import { User, Trash2, Heart, MessageSquare, Users, Ellipsis, Pencil } from 'lucide-react';
+import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
+import i18n from '@/i18n';
 import MediaGrid from './MediaGrid';
 import PostAudioPlayer from './PostAudioPlayer';
 import { useMediaLightbox } from './MediaLightboxProvider';
@@ -99,6 +101,16 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
             <span>@{post.author.username}</span>
             <span>&middot;</span>
             <span>{formatRelativeTime(post.createdAt)}</span>
+            {post.space?.type === 'baby' && post.space.babyBirthday && (
+              <>
+                <span>&middot;</span>
+                <span className="text-primary/80">
+                  {i18n.language === 'zh-CN'
+                    ? formatBabyAge(post.space.babyBirthday, post.createdAt)
+                    : formatBabyAgeEn(post.space.babyBirthday, post.createdAt)}
+                </span>
+              </>
+            )}
           </div>
           {post.space && (
             <Link

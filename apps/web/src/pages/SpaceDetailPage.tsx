@@ -76,7 +76,7 @@ export default function SpaceDetailPage() {
         )}
         {activeTab === 'members' && <SpaceMembersTab slug={slug!} />}
         {activeTab === 'growth' && isBaby && (
-          <GrowthTab slug={slug!} isMember={isMember} />
+          <GrowthTab slug={slug!} isMember={isMember} babyBirthday={space.babyBirthday} />
         )}
       </div>
     </div>

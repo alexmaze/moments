@@ -74,6 +74,7 @@ export interface PostDto {
     name: string;
     slug: string;
     type: SpaceType;
+    babyBirthday: string | null;
     isMember: boolean;
   } | null;
   /** First ≤10 non-deleted comments, oldest-first. */
@@ -144,6 +145,7 @@ export interface SpaceDto {
   coverUrl: string | null;
   coverPositionY: number;
   type: SpaceType;
+  babyBirthday: string | null;
   creator: {
     id: string;
     username: string;

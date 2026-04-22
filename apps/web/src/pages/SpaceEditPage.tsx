@@ -25,6 +25,7 @@ export default function SpaceEditPage() {
   const [cropOpen, setCropOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [babyBirthday, setBabyBirthday] = useState('');
 
   useEffect(() => {
     if (!space) return;
@@ -33,6 +34,7 @@ export default function SpaceEditPage() {
     setCoverMediaId(space.coverMediaId ?? null);
     setCoverUrl(space.coverUrl);
     setCoverPositionY(space.coverPositionY);
+    setBabyBirthday(space.babyBirthday ?? '');
   }, [space]);
 
   useEffect(() => {
@@ -84,7 +86,8 @@ export default function SpaceEditPage() {
     name.trim() !== space.name ||
     description !== (space.description ?? '') ||
     coverMediaId !== (space.coverMediaId ?? null) ||
-    coverPositionY !== space.coverPositionY;
+    coverPositionY !== space.coverPositionY ||
+    (babyBirthday || null) !== space.babyBirthday;
 
   const handleSelectCover = () => {
     fileInputRef.current?.click();
@@ -132,23 +135,30 @@ export default function SpaceEditPage() {
   };
 
   const handleSave = () => {
-    updateSpace.mutate(
-      {
-        name: name.trim(),
-        description: description.trim(),
-        coverMediaId,
-        coverPositionY,
+    const payload: {
+      name: string;
+      description: string;
+      coverMediaId?: string | null;
+      coverPositionY: number;
+      babyBirthday: string | null;
+    } = {
+      name: name.trim(),
+      description: description.trim(),
+      coverPositionY,
+      babyBirthday: babyBirthday || null,
+    };
+    if (coverMediaId !== (space.coverMediaId ?? null)) {
+      payload.coverMediaId = coverMediaId;
+    }
+    updateSpace.mutate(payload, {
+      onSuccess: (updated) => {
+        toast.success(t('edit.saveSuccess'));
+        navigate(`/spaces/${updated.slug}`);
       },
-      {
-        onSuccess: (updated) => {
-          toast.success(t('edit.saveSuccess'));
-          navigate(`/spaces/${updated.slug}`);
-        },
-        onError: () => {
-          toast.error(t('edit.saveError'));
-        },
+      onError: () => {
+        toast.error(t('edit.saveError'));
       },
-    );
+    });
   };
 
   return (
@@ -284,6 +294,24 @@ export default function SpaceEditPage() {
                   /spaces/{space.slug}
                 </div>
               </div>
+
+              {space.type === 'baby' && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    {t('edit.babyBirthdayLabel')}
+                  </label>
+                  <input
+                    type="date"
+                    value={babyBirthday}
+                    onChange={(event) => setBabyBirthday(event.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('edit.babyBirthdayHint')}
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 

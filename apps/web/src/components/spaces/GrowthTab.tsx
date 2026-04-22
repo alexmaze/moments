@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, Cake } from 'lucide-react';
+import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
+import i18n from '@/i18n';
 import { useGrowthRecords } from '@/hooks/useGrowthRecords';
 import { GrowthChart } from '@/components/spaces/GrowthChart';
 import { GrowthRecordsList } from '@/components/spaces/GrowthRecordsList';
@@ -9,9 +11,10 @@ import { GrowthRecordForm } from '@/components/spaces/GrowthRecordForm';
 interface GrowthTabProps {
   slug: string;
   isMember: boolean;
+  babyBirthday: string | null;
 }
 
-export function GrowthTab({ slug, isMember }: GrowthTabProps) {
+export function GrowthTab({ slug, isMember, babyBirthday }: GrowthTabProps) {
   const { t } = useTranslation('spaces');
   const { data: records, isLoading } = useGrowthRecords(slug);
   const [formOpen, setFormOpen] = useState(false);
@@ -29,8 +32,28 @@ export function GrowthTab({ slug, isMember }: GrowthTabProps) {
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
+  const currentAge = babyBirthday
+    ? i18n.language === 'zh-CN'
+      ? formatBabyAge(babyBirthday, new Date().toISOString())
+      : formatBabyAgeEn(babyBirthday, new Date().toISOString())
+    : null;
+
   return (
     <div className="space-y-6">
+      {babyBirthday && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Cake className="h-4 w-4" />
+          <span>
+            {t('growth.babyAgeInfo', {
+              age: currentAge,
+              birthday: new Date(babyBirthday).toLocaleDateString(
+                i18n.language === 'zh-CN' ? 'zh-CN' : 'en-US',
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              ),
+            })}
+          </span>
+        </div>
+      )}
       {/* Header with add button */}
       {isMember && (
         <div className="flex justify-end">

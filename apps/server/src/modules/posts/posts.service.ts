@@ -649,7 +649,7 @@ export class PostsService {
 
     // Batch load space info for posts that belong to a space
     const spaceIds = [...new Set(postRows.map((p) => p.spaceId).filter(Boolean))] as string[];
-    let spaceMap = new Map<string, { id: string; name: string; slug: string; type: string }>();
+    let spaceMap = new Map<string, { id: string; name: string; slug: string; type: string; babyBirthday: string | null }>();
     let memberSpaceIds = new Set<string>();
 
     if (spaceIds.length > 0) {
@@ -659,6 +659,7 @@ export class PostsService {
           name: spaces.name,
           slug: spaces.slug,
           type: spaces.type,
+          babyBirthday: spaces.babyBirthday,
           isDeleted: spaces.isDeleted,
         })
         .from(spaces)
@@ -667,7 +668,7 @@ export class PostsService {
       spaceMap = new Map(
         spaceRows
           .filter((s) => !s.isDeleted)
-          .map((s) => [s.id, { id: s.id, name: s.name, slug: s.slug, type: s.type }]),
+          .map((s) => [s.id, { id: s.id, name: s.name, slug: s.slug, type: s.type, babyBirthday: s.babyBirthday }]),
       );
 
       if (currentUserId) {
@@ -824,6 +825,7 @@ export class PostsService {
         isLikedByMe: likedPostIds.has(post.id),
         space: spaceInfo ? {
           ...spaceInfo,
+          babyBirthday: spaceInfo.babyBirthday,
           isMember: memberSpaceIds.has(spaceInfo.id),
         } : null,
         comments: previewComments,
