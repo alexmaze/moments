@@ -68,5 +68,12 @@
     "deleteConfirmCancel": "取消",
     "playAudio": "播放语音",
     "pauseAudio": "暂停语音"
-  }
+  },
+  "likedUsersTitle": "点赞的人",
+  "likedUsersCount": "{{count}} 人点赞",
+"likedByOne": "<bold>{{name}}</bold> 点了赞",
+"likedByTwo": "<bold>{{name1}}</bold> 和 <bold>{{name2}}</bold> 点了赞",
+"likedByThree": "<bold>{{name1}}</bold>、<bold>{{name2}}</bold> 和 <bold>{{name3}}</bold> 点了赞",
+"likedByNameSeparator": "、",
+"likedByMore": "<bold>{{names}}</bold> 等{{count}}人点了赞"
 }

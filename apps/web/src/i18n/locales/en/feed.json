@@ -68,5 +68,12 @@
     "deleteConfirmCancel": "Cancel",
     "playAudio": "Play audio",
     "pauseAudio": "Pause audio"
-  }
+  },
+  "likedUsersTitle": "People who liked this",
+  "likedUsersCount": "{{count}} people liked this",
+"likedByOne": "<bold>{{name}}</bold> liked this",
+"likedByTwo": "<bold>{{name1}}</bold> and <bold>{{name2}}</bold> liked this",
+"likedByThree": "<bold>{{name1}}</bold>, <bold>{{name2}}</bold> and <bold>{{name3}}</bold> liked this",
+"likedByNameSeparator": ", ",
+"likedByMore": "<bold>{{names}}</bold> and {{count}} others liked this"
 }

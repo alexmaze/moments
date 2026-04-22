@@ -14,6 +14,8 @@ import PostAudioPlayer from './PostAudioPlayer';
 import { useMediaLightbox } from './MediaLightboxProvider';
 import { PostContent } from './PostContent';
 import CommentSection from '@/components/post/CommentSection';
+import LikedUsersPreview from '@/components/post/LikedUsersPreview';
+import LikedUsersList from '@/components/post/LikedUsersList';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -43,6 +45,7 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
   const toggleLike = useToggleLike();
   const deletePost = useDeletePost();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [likedUsersOpen, setLikedUsersOpen] = useState(false);
 
   const isOwner = currentUser?.id === post.author.id;
   const navigate = useNavigate();
@@ -190,11 +193,23 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
           {post.likeCount > 0 && <span>{post.likeCount}</span>}
         </button>
 
-        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <MessageSquare className="w-5 h-5" />
-          {post.commentCount > 0 && <span>{post.commentCount}</span>}
-        </span>
+        {variant !== 'detail' && (
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <MessageSquare className="w-5 h-5" />
+            {post.commentCount > 0 && <span>{post.commentCount}</span>}
+          </span>
+        )}
       </div>
+
+      {variant === 'detail' && post.likeCount > 0 && (
+        <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+          <LikedUsersPreview
+            likeCount={post.likeCount}
+            likePreview={post.likePreview}
+            onOpenList={() => setLikedUsersOpen(true)}
+          />
+        </div>
+      )}
 
       {/* Inline comment section — always visible */}
       <div
@@ -225,6 +240,12 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LikedUsersList
+        postId={post.id}
+        open={likedUsersOpen}
+        onOpenChange={setLikedUsersOpen}
+      />
     </div>
   );
 }
