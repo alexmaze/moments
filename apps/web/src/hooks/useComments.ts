@@ -136,6 +136,7 @@ export function useCreateComment() {
           username: currentUser?.username ?? "",
           displayName: currentUser?.displayName ?? "",
           avatarUrl: currentUser?.avatarUrl ?? null,
+          spaceNickname: null,
         },
         replyTo: null,
         mentions: [],

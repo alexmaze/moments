@@ -120,7 +120,7 @@ export function useMediaUpload() {
 
       // Generate video thumbnails client-side (async, non-blocking)
       for (const item of newItems) {
-        if (item.type === "video") {
+        if (item.type === "video" && item.file) {
           generateVideoThumbnail(item.file).then((dataUrl) => {
             if (dataUrl) {
               setItems((prev) =>
@@ -137,13 +137,14 @@ export function useMediaUpload() {
 
       // Start parallel uploads
       for (const item of newItems) {
+        if (!item.file) continue;
         uploadMediaApi(item.file, (pct) => {
-          setItems((prev) =>
-            prev.map((i) =>
-              i.localId === item.localId ? { ...i, progress: pct } : i,
-            ),
-          );
-        })
+            setItems((prev) =>
+              prev.map((i) =>
+                i.localId === item.localId ? { ...i, progress: pct } : i,
+              ),
+            );
+          })
           .then((res) => {
             setItems((prev) =>
               prev.map((i) =>

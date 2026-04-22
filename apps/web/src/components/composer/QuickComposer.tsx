@@ -22,7 +22,7 @@ interface QuickComposerProps {
   onSuccess?: (post: PostDto) => void;
 }
 
-type ExistingAudioState = Pick<PostDto['audio'], 'id' | 'durationMs' | 'waveform' | 'url'> & {
+type ExistingAudioState = {
   id: string;
   durationMs: number;
   waveform: number[];
