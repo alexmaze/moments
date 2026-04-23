@@ -9,7 +9,7 @@ import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { ScrollContainerContext } from './ScrollContainerContext';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import { cn } from '@/lib/utils';
-import { Home, User, LogOut, Sun, Moon, Monitor, Users, Bell } from 'lucide-react';
+import { Home, User, LogOut, Sun, Moon, Monitor, Users, Bell, Shield } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -148,6 +148,12 @@ export default function AppLayout() {
                   <User className="w-4 h-4" />
                   {t('nav.profile')}
                 </DropdownMenuItem>
+                {currentUser.isAdmin && (
+                  <DropdownMenuItem onSelect={() => window.location.href = '/admin'}>
+                    <Shield className="w-4 h-4" />
+                    {t('nav.admin')}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={cycleTheme}>
                   <ThemeIcon className="w-4 h-4" />
                   {themeLabel}

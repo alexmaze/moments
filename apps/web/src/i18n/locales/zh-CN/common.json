@@ -5,6 +5,7 @@
     "spaces": "空间",
     "notifications": "通知",
     "profile": "我的",
+    "admin": "管理后台",
     "logout": "退出"
   },
   "theme": {

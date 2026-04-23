@@ -14,6 +14,7 @@ export interface UserDto {
   locale: SupportedLocale | null;
   theme: SupportedTheme | null;
   background: string | null;
+  isAdmin: boolean;
   createdAt: string;
 }
 

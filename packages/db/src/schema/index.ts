@@ -6,4 +6,5 @@ export * from './tags';
 export * from './mentions';
 export * from './notifications';
 export * from './event-log';
+export * from './system-settings';
 export * from './relations';

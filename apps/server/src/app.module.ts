@@ -12,6 +12,7 @@ import { SpacesModule } from './modules/spaces/spaces.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -31,6 +32,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     TagsModule,
     MentionsModule,
     NotificationsModule,
+    AdminModule,
   ],
   providers: [
     {

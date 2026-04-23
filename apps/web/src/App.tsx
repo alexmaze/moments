@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import GuestLayout from '@/components/layout/GuestLayout';
 import AuthGuard from '@/components/layout/AuthGuard';
+import AdminGuard from '@/components/admin/AdminGuard';
+import AdminLayout from '@/components/admin/AdminLayout';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import FeedPage from '@/pages/FeedPage';
@@ -15,6 +17,10 @@ import SpaceEditPage from '@/pages/SpaceEditPage';
 import TagPage from '@/pages/TagPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import AdminDashboardPage from '@/pages/admin/DashboardPage';
+import AdminUsersPage from '@/pages/admin/UsersPage';
+import AdminPostsPage from '@/pages/admin/PostsPage';
+import AdminSettingsPage from '@/pages/admin/SettingsPage';
 import { Toaster } from '@/components/ui/sonner';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -43,6 +49,14 @@ function App() {
           <Route path="/spaces/:slug/edit" element={<SpaceEditPage />} />
           <Route path="/tags/:name" element={<TagPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+        </Route>
+      </Route>
+      <Route path="/admin" element={<AdminGuard />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="posts" element={<AdminPostsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />

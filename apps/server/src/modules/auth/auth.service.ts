@@ -1,20 +1,46 @@
-import { Injectable, Inject, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
-import { type DrizzleClient, mediaAssets, users } from '@moments/db';
+import { type DrizzleClient, mediaAssets, users, systemSettings } from '@moments/db';
 import { RegisterDto, LoginDto } from './dto';
 
 @Injectable()
 export class AuthService {
+  private readonly adminUsernames: Set<string>;
+
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // Parse ADMIN_USERNAMES from env (comma-separated, case-insensitive)
+    const adminUsernamesStr = this.configService.get<string>('ADMIN_USERNAMES', '');
+    this.adminUsernames = new Set(
+      adminUsernamesStr
+        .split(',')
+        .map((u) => u.trim().toLowerCase())
+        .filter((u) => u.length > 0),
+    );
+  }
+
+  isAdmin(username: string): boolean {
+    return this.adminUsernames.has(username.toLowerCase());
+  }
 
   async register(dto: RegisterDto) {
-    // Check if username already exists
+    const [setting] = await this.db
+      .select({ value: systemSettings.value })
+      .from(systemSettings)
+      .where(eq(systemSettings.key, 'registration_open'))
+      .limit(1);
+
+    if (setting?.value === 'false') {
+      throw new ForbiddenException('Registration is currently disabled');
+    }
+
     const existing = await this.db
       .select()
       .from(users)
@@ -48,6 +74,10 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account has been disabled');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -97,6 +127,7 @@ export class AuthService {
       locale: user.locale,
       theme: user.theme,
       background: user.background,
+      isAdmin: this.isAdmin(user.username),
       createdAt: user.createdAt.toISOString(),
     };
   }

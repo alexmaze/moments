@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 moments/
 ├── apps/
-│   ├── web/          # @moments/web   — React SPA (Vite, port 5173 in dev)
+│   ├── web/          # @moments/web   — React SPA (Vite, port 5173 in dev) — includes admin pages at /admin/*
 │   └── server/       # @moments/server — NestJS API (port 3000)
 ├── packages/
 │   ├── shared/       # @moments/shared — Zod schemas + shared TS types (no runtime deps except zod)
@@ -70,6 +70,7 @@ pnpm db:studio         # Open Drizzle Studio (web-based DB browser)
 ```bash
 pnpm --filter @moments/server dev    # Backend only
 pnpm --filter @moments/web dev       # Frontend only
+pnpm --filter @moments/admin dev     # Admin frontend only
 pnpm --filter @moments/server lint   # Type-check server only
 ```
 
@@ -100,6 +101,7 @@ Copy `.env.example` to `.env` at repo root. The server reads from `.env` and `..
 | `UPLOAD_DIR` | no | `./uploads` | Local media storage directory |
 | `PORT` | no | `3000` | NestJS port |
 | `NODE_ENV` | no | `development` | Set to `production` to enable SPA fallback serving |
+| `ADMIN_USERNAMES` | no | — | Comma-separated admin usernames (case-insensitive) |
 
 ## Architecture: Backend (`apps/server`)
 
@@ -126,13 +128,20 @@ src/
     ├── comments/              # Comments on posts; page-based pagination
     ├── media/                 # File upload (images + videos); storage abstraction
     ├── users/                 # User profile, update profile, user posts
-    └── spaces/                # Public spaces: CRUD, membership, growth records (baby spaces)
+    ├── spaces/                # Public spaces: CRUD, membership, growth records (baby spaces)
+    ├── tags/                  # Hashtags: CRUD, prefix search, tag detail page
+    ├── mentions/              # @mentions: creates mention records for notifications
+    ├── notifications/         # Notifications: mention, comment, reply, like events
+    └── admin/                 # Admin panel: user management, post management, stats, settings
 ```
 
 ### Auth pattern
 - **Global JWT guard** applied to all routes via `APP_GUARD`. Use `@Public()` decorator to opt out.
 - `@CurrentUser()` decorator injects the JWT payload (`{ id, username }`) into handlers.
 - Passwords hashed with bcrypt (12 rounds). JWT tokens are stateless (no refresh tokens in MVP).
+- **Admin guard**: `AdminGuard` checks if the authenticated user's username is in the `ADMIN_USERNAMES` env var (case-insensitive). Use `@AdminOnly()` decorator on controller/class. Admin routes are under `/api/admin`.
+- **User ban**: Setting `isActive = false` on a user prevents login (returns "Account has been disabled").
+- **Registration toggle**: `system_settings` table stores `registration_open` key. Checked during registration; when `'false'`, new signups are blocked.
 
 ### Database access pattern
 - Drizzle client injected via `@Inject(DRIZZLE)` using the `DRIZZLE` Symbol token.
@@ -237,6 +246,7 @@ Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config
 | `tags` | Hashtags: name (original case), nameLower (unique, for case-insensitive lookup), postCount (denormalized) |
 | `post_tags` | Many-to-many posts ↔ tags, composite PK (postId, tagId) |
 | `event_log` | Audit log: eventType, entityType, entityId, payload, ipAddress, userAgent |
+| `system_settings` | System configuration: key-value pairs (e.g., `registration_open`) |
 
 Migrations live in `packages/db/src/migrations/`. Schema source of truth is `packages/db/src/schema/`.
 
@@ -249,7 +259,7 @@ pnpm db:migrate    # applies it to the database
 
 ## Shared Package (`packages/shared/src/`)
 
-- **`types/`**: `UserDto`, `PostDto`, `MediaDto` etc. — used by both server responses and frontend.
+- **`types/`**: `UserDto` (includes `isAdmin: boolean`), `PostDto`, `MediaDto` etc. — used by both server responses and frontend.
 - **`validators/`**: Zod schemas (`loginSchema`, `registerSchema`, `createPostSchema`, `createCommentSchema`) — used by both the NestJS DTOs (via class-validator) and frontend form validation.
 
 ## Key Patterns & Conventions
@@ -461,6 +471,41 @@ The app uses **internal container scrolling**, not page-level scrolling. This ke
 - `CLAUDE.md`（如涉及架构、命令、模式等变化）
 - `README.md`（如涉及用户可见的功能或使用方式变化）
 - `.env.example`（如新增或变更环境变量）
+
+## Admin Frontend (integrated in `apps/web`)
+
+Admin pages are integrated into the main web SPA at `/admin/*` routes.
+
+### Directory layout
+
+```
+apps/web/src/
+├── api/
+│   └── admin.api.ts       # Admin API: users, posts (returns PostDto), stats, settings
+├── components/admin/
+│   ├── AdminLayout.tsx    # Sidebar layout with nav (Dashboard/Users/Posts/Settings) + MediaLightboxProvider
+│   └── AdminGuard.tsx     # Route guard checking isAdmin
+└── pages/admin/
+    ├── DashboardPage.tsx  # Stats cards (users, posts, comments, likes, storage, database size)
+    ├── UsersPage.tsx      # User list + search + ban/unban
+    ├── PostsPage.tsx      # Post table with media thumbnails, audio playback, author info + force delete
+    └── SettingsPage.tsx   # Registration toggle
+```
+
+### Admin access pattern
+- Admin usernames specified via `ADMIN_USERNAMES` env var (comma-separated, case-insensitive).
+- `UserDto.isAdmin` field returned on login and `/auth/me`.
+- Backend: `@AdminOnly()` decorator guards all `/api/admin` routes.
+- Frontend: `AdminGuard` component checks `isAdmin`, redirects non-admins to home.
+- Entry point: Avatar dropdown menu shows "Admin" link only for admins.
+
+### Admin posts page
+- **Backend**: `AdminService.listPosts()` returns full `PostDto` format (author info, media, audio, comments preview, space info, mentions) — same shape as feed posts.
+- **Frontend**: Table layout with columns for content, author (avatar + name + username), media thumbnails (image/video cover, max 4 shown with +N overflow), audio playback (via `PostAudioPlayer`), likes, comments, created date, and delete action.
+- **MediaLightboxProvider**: Mounted inside `AdminLayout` so admin post media can be viewed in lightbox.
+
+### Admin stats
+- `GET /api/admin/stats` returns: users (total + today), posts (total + today), comments total, likes total, storage (media file bytes from `media_assets.size_bytes`), database (PostgreSQL database size via `pg_database_size()`).
 
 ## Docker / Production
 
