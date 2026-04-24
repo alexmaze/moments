@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { UserDto, UserProfileDto, SupportedLocale, SupportedTheme, MentionUserDto } from "@/types/dto";
+import type { UserDto, UserProfileDto, SupportedLocale, SupportedTheme, MentionUserDto } from "@moments/shared";
 
 export function getUserProfileApi(username: string): Promise<UserProfileDto> {
   return apiClient.get(`/users/${username}`);

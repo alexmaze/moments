@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
-import type { UserProfileDto } from '@/types/dto';
+import type { UserProfileDto } from '@moments/shared';
 import { formatDate } from '@/lib/utils';
 
 interface ProfileHeaderProps {

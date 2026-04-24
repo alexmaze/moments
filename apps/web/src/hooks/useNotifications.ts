@@ -10,7 +10,7 @@ import {
   markNotificationReadApi,
   markAllNotificationsReadApi,
 } from "@/api/notifications.api";
-import type { NotificationItemDto } from "@/types/dto";
+import type { NotificationItemDto } from "@moments/shared";
 
 export const notificationKeys = {
   all: ["notifications"] as const,

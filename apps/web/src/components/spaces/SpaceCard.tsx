@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, FileText } from 'lucide-react';
-import type { SpaceDto } from '@/types/dto';
+import type { SpaceDto } from '@moments/shared';
 
 interface SpaceCardProps {
   space: SpaceDto;

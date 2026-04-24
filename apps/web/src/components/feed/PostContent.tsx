@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { renderContentWithTagsAndMentions } from '@moments/shared';
-import type { MentionUserDto } from '@/types/dto';
+import type { MentionUserDto } from '@moments/shared';
 
 interface PostContentProps {
   content: string;

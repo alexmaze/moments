@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import type { GrowthRecordDto } from '@/types/dto';
+import type { GrowthRecordDto } from '@moments/shared';
 
 interface GrowthChartProps {
   records: GrowthRecordDto[];

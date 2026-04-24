@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { PostDto } from '@/types/dto';
+import type { PostDto } from '@moments/shared';
 
 export default function PostsPage() {
   const queryClient = useQueryClient();

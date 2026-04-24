@@ -838,6 +838,7 @@ export class PostsService {
           publicUrl: r.media_assets.publicUrl,
           coverUrl: r.media_assets.coverUrl,
           mimeType: r.media_assets.mimeType,
+          sizeBytes: r.media_assets.sizeBytes,
           width: r.media_assets.width,
           height: r.media_assets.height,
           durationMs: r.media_assets.durationMs,

@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { PostDto } from '@/types/dto';
+import type { PostDto } from '@moments/shared';
 
 export interface AdminUser {
   id: string;

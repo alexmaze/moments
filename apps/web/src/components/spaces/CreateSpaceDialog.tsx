@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useCreateSpace } from '@/hooks/useSpaces';
-import type { SpaceType } from '@/types/dto';
+import type { SpaceType } from '@moments/shared';
 
 interface CreateSpaceDialogProps {
   open: boolean;

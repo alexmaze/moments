@@ -16,7 +16,7 @@ import {
   getUserPostsApi,
   getLikedUsersApi,
 } from "@/api/posts.api";
-import type { PostDto, PaginatedResponse } from "@/types/dto";
+import type { PostDto, PaginatedResponse } from "@moments/shared";
 
 export const postKeys = {
   all: ["posts"] as const,

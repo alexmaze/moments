@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { SupportedTheme } from '@/types/dto';
+import type { SupportedTheme } from '@moments/shared';
 
 /** Detect theme from OS preference */
 export function detectSystemTheme(): SupportedTheme {

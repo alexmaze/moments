@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { PostAudioDto } from "@/types/dto";
+import type { PostAudioDto } from "@moments/shared";
 import { usePostAudioPlayerStore } from "@/store/post-audio-player.store";
 import AudioWaveformPlayer from "@/components/audio/AudioWaveformPlayer";
 

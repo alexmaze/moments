@@ -14,12 +14,10 @@ import {
 } from "@/api/posts.api";
 import { postKeys } from "./usePosts";
 import { useAuthStore } from "@/store/auth.store";
-import type {
-  CommentDto,
-  PostDto,
-  PaginatedResponse,
-  PagePaginatedResponse,
-} from "@/types/dto";
+import type { CommentDto,
+PostDto,
+PaginatedResponse,
+PagePaginatedResponse, } from "@moments/shared";
 
 const COMMENTS_PAGE_SIZE = 10;
 

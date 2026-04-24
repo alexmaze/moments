@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CommentDto } from '@/types/dto';
+import type { CommentDto } from '@moments/shared';
 import { usePostComments } from '@/hooks/useComments';
 import CommentItem from './CommentItem';
 import CommentComposer from './CommentComposer';

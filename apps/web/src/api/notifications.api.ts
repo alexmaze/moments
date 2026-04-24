@@ -1,8 +1,6 @@
 import apiClient from "./client";
-import type {
-  NotificationListResponseDto,
-  UnreadNotificationCountDto,
-} from "@/types/dto";
+import type { NotificationListResponseDto,
+UnreadNotificationCountDto, } from "@moments/shared";
 
 export function getNotificationsApi(
   cursor?: string,

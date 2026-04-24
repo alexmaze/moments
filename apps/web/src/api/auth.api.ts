@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { UserDto } from "@/types/dto";
+import type { UserDto } from "@moments/shared";
 
 interface LoginRequest {
   username: string;

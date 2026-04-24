@@ -2,7 +2,7 @@ import { useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Trash2, MessageSquare } from 'lucide-react';
-import type { CommentDto, MentionUserDto } from '@/types/dto';
+import type { CommentDto, MentionUserDto } from '@moments/shared';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';

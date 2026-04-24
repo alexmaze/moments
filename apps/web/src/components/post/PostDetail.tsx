@@ -1,4 +1,4 @@
-import type { PostDto } from '@/types/dto';
+import type { PostDto } from '@moments/shared';
 import PostCard from '@/components/feed/PostCard';
 
 interface PostDetailProps {

@@ -6,7 +6,7 @@ import { useSpaceMembers, useUpdateSpaceNickname } from '@/hooks/useSpaces';
 import { useAuthStore } from '@/store/auth.store';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { formatRelativeTime } from '@/lib/utils';
-import type { SpaceMemberRole } from '@/types/dto';
+import type { SpaceMemberRole } from '@moments/shared';
 
 interface SpaceMembersTabProps {
   slug: string;

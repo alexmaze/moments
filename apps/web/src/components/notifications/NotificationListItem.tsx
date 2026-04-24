@@ -6,7 +6,7 @@ import { User, Music } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { markNotificationReadApi } from '@/api/notifications.api';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
-import type { NotificationItemDto } from '@/types/dto';
+import type { NotificationItemDto } from '@moments/shared';
 import { cn } from '@/lib/utils';
 
 interface NotificationListItemProps {

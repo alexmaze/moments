@@ -1,5 +1,5 @@
 import type { Slide } from 'yet-another-react-lightbox';
-import type { PostMediaDto } from '@/types/dto';
+import type { PostMediaDto } from '@moments/shared';
 
 // YARL's video slide is a custom slide type keyed on `type: 'video'`.
 // Width/height are required (used to preserve aspect ratio). Our

@@ -1,12 +1,10 @@
 import apiClient from "./client";
-import type {
-  SpaceDto,
-  SpaceDetailDto,
-  SpaceMemberDto,
-  GrowthRecordDto,
-  PostDto,
-  PaginatedResponse,
-} from "@/types/dto";
+import type { SpaceDto,
+SpaceDetailDto,
+SpaceMemberDto,
+GrowthRecordDto,
+PostDto,
+PaginatedResponse, } from "@moments/shared";
 
 // Space CRUD
 

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteGrowthRecord } from '@/hooks/useGrowthRecords';
-import type { GrowthRecordDto } from '@/types/dto';
+import type { GrowthRecordDto } from '@moments/shared';
 
 interface GrowthRecordsListProps {
   records: GrowthRecordDto[];

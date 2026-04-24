@@ -13,7 +13,7 @@ import { detectBrowserLocale } from '@/store/locale.store';
 import { useThemeStore } from '@/store/theme.store';
 import { useBackgroundStore } from '@/store/background.store';
 import { cn } from '@/lib/utils';
-import type { SupportedLocale, SupportedTheme } from '@/types/dto';
+import type { SupportedLocale, SupportedTheme } from '@moments/shared';
 
 type Tab = 'profile' | 'appearance';
 

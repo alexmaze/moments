@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { PostDto, PaginatedResponse } from '@/types/dto';
+import type { PostDto, PaginatedResponse } from '@moments/shared';
 
 export interface TagDto {
   id: string;

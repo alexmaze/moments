@@ -25,9 +25,9 @@ export interface SpaceDto {
 }
 
 export interface SpaceDetailDto extends SpaceDto {
-  /** Current user's membership info, null if not a member */
   myMembership: {
     role: SpaceMemberRole;
+    spaceNickname: string | null;
     joinedAt: string;
   } | null;
 }
@@ -41,6 +41,7 @@ export interface SpaceMemberDto {
     avatarUrl: string | null;
   };
   role: SpaceMemberRole;
+  spaceNickname: string | null;
   joinedAt: string;
 }
 

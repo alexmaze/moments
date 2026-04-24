@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { SupportedLocale } from '@/types/dto';
+import type { SupportedLocale } from '@moments/shared';
 
 /** Detect locale from browser language */
 export function detectBrowserLocale(): SupportedLocale {

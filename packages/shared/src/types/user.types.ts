@@ -24,9 +24,18 @@ export interface UserProfileDto extends UserDto {
   postCount: number;
 }
 
+export interface PostAuthorDto {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  spaceNickname: string | null;
+}
+
 export interface MentionUserDto {
   id: string;
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  spaceNickname: string | null;
 }

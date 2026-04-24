@@ -4,7 +4,7 @@ import { Smile } from 'lucide-react';
 import { useCreateComment } from '@/hooks/useComments';
 import { EmojiPickerPopover } from '@/components/composer/EmojiPickerPopover';
 import { RichTextEditor, type RichTextEditorRef } from '@/components/composer/rich-editor';
-import type { CommentDto } from '@/types/dto';
+import type { CommentDto } from '@moments/shared';
 
 interface CommentComposerProps {
   postId: string;

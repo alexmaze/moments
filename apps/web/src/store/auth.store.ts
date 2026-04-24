@@ -4,7 +4,7 @@ import i18n from "@/i18n";
 import { useLocaleStore } from "./locale.store";
 import { useThemeStore } from "./theme.store";
 import { useBackgroundStore } from "./background.store";
-import type { UserDto } from "@/types/dto";
+import type { UserDto } from "@moments/shared";
 
 interface AuthState {
   token: string | null;

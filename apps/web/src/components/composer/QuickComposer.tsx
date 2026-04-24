@@ -7,7 +7,7 @@ import { useCreatePost, useUpdatePost } from '@/hooks/usePosts';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { uploadPostAudioApi } from '@/api/posts.api';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import type { PostDto } from '@/types/dto';
+import type { PostDto } from '@moments/shared';
 import MediaUploader from './MediaUploader';
 import AudioRecorderPanel from './AudioRecorderPanel';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';

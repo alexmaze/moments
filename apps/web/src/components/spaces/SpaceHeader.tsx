@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useJoinSpace, useLeaveSpace } from '@/hooks/useSpaces';
-import type { SpaceDetailDto } from '@/types/dto';
+import type { SpaceDetailDto } from '@moments/shared';
 
 interface SpaceHeaderProps {
   space: SpaceDetailDto;

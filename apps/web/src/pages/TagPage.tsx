@@ -5,7 +5,7 @@ import { useTagPosts } from '@/hooks/useTags';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import PostCard from '@/components/feed/PostCard';
 import { ArrowLeft, Hash } from 'lucide-react';
-import type { PostDto } from '@/types/dto';
+import type { PostDto } from '@moments/shared';
 
 export default function TagPage() {
   const { name } = useParams<{ name: string }>();

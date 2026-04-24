@@ -1,11 +1,9 @@
 import apiClient from "./client";
-import type {
-  PostDto,
-  CommentDto,
-  LikedUserDto,
-  PaginatedResponse,
-  PagePaginatedResponse,
-} from "@/types/dto";
+import type { PostDto,
+CommentDto,
+LikedUserDto,
+PaginatedResponse,
+PagePaginatedResponse, } from "@moments/shared";
 
 export function getFeedApi(
   cursor?: string,

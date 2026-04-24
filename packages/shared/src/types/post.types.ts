@@ -1,4 +1,4 @@
-import type { UserDto, PostMediaDto, MentionUserDto } from './index';
+import type { PostAuthorDto, PostMediaDto, MentionUserDto } from './index';
 import type { PostSpaceDto } from './space.types';
 
 export interface LikedUserDto {
@@ -25,7 +25,7 @@ export interface PostDto {
   content: string | null;
   createdAt: string;
   updatedAt: string;
-  author: UserDto;
+  author: PostAuthorDto;
   media: PostMediaDto[];
   audio: PostAudioDto | null;
   likeCount: number;
@@ -49,7 +49,7 @@ export interface PostDetailDto extends PostDto {}
 
 export interface ReplyToCommentDto {
   id: string;
-  author: UserDto;
+  author: PostAuthorDto;
   contentPreview: string;
 }
 
@@ -58,7 +58,7 @@ export interface CommentDto {
   content: string;
   createdAt: string;
   isDeleted: boolean;
-  author: UserDto;
+  author: PostAuthorDto;
   /** The comment this is replying to, null for top-level comments */
   replyTo: ReplyToCommentDto | null;
   /** Users mentioned in the comment content via @{displayName|userId} */

@@ -1,4 +1,4 @@
-import type { PostMediaDto } from '@/types/dto';
+import type { PostMediaDto } from '@moments/shared';
 import { Play } from 'lucide-react';
 
 interface MediaGridProps {
