@@ -111,7 +111,7 @@ Client                        MediaService                  COS            Datab
 ```text
 pending/orphaned ──(挂载到帖子/头像/空间封面)──▶ attached
         │
-        └──(删除帖子 / 替换头像 / 替换空间封面 / 删除空间后失去引用)──▶ orphaned
+        └──(删除帖子 / 替换头像 / 替换空间封面 / 删除空间封面失去引用)──▶ orphaned
                                                                       │
                                                                       └──(清理 worker 删除 COS 对象并删库)──▶ 移除
 ```

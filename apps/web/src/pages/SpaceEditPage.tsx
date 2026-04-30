@@ -6,7 +6,18 @@ import { toast } from 'sonner';
 import FallbackImage from '@/components/ui/FallbackImage';
 import ImageCropDialog from '@/components/media/ImageCropDialog';
 import { uploadMediaApi } from '@/api/media.api';
-import { useSpace, useUpdateSpace } from '@/hooks/useSpaces';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useDeleteSpace, useSpace, useUpdateSpace } from '@/hooks/useSpaces';
 
 export default function SpaceEditPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -14,6 +25,7 @@ export default function SpaceEditPage() {
   const navigate = useNavigate();
   const { data: space, isLoading } = useSpace(slug!);
   const updateSpace = useUpdateSpace(slug!);
+  const deleteSpace = useDeleteSpace(slug!);
   const backButtonClass =
     'inline-flex items-center gap-1.5 rounded-full border border-border surface-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md';
 
@@ -66,6 +78,7 @@ export default function SpaceEditPage() {
   }
 
   const canEdit = space.myMembership?.role === 'owner' || space.myMembership?.role === 'admin';
+  const isOwner = space.myMembership?.role === 'owner';
 
   if (!canEdit) {
     return (
@@ -160,6 +173,14 @@ export default function SpaceEditPage() {
       },
       onError: () => {
         toast.error(t('edit.saveError'));
+      },
+    });
+  };
+
+  const handleDeleteSpace = () => {
+    deleteSpace.mutate(undefined, {
+      onSuccess: () => {
+        navigate('/spaces', { replace: true });
       },
     });
   };
@@ -331,6 +352,53 @@ export default function SpaceEditPage() {
           </div>
         </div>
       </section>
+
+      {isOwner && (
+        <section className="overflow-hidden rounded-2xl border border-destructive/20 surface-card shadow-sm">
+          <div className="border-b border-destructive/10 px-5 py-5 sm:px-6">
+            <h2 className="text-base font-semibold text-destructive">{t('delete.dangerTitle')}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('delete.dangerDescription')}</p>
+          </div>
+
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <p className="text-sm font-medium text-foreground">{t('delete.actionTitle')}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('delete.actionDescription')}</p>
+            </div>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={deleteSpace.isPending}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteSpace.isPending ? t('delete.deleting') : t('delete.trigger')}
+                </button>
+              </AlertDialogTrigger>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('delete.confirmTitle', { name: space.name })}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('delete.confirmDescription')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('delete.confirmCancel')}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteSpace}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {t('delete.confirmAction')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </section>
+      )}
 
       <input
         ref={fileInputRef}

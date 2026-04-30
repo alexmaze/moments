@@ -187,6 +187,7 @@ pnpm db:migrate    # applies it to the database
 
 ### Spaces
 - Types: `general`, `baby` (growth records). Public browse, members-only post/comment/like. Owner cannot leave.
+- Deletion: only owner can delete. Deleting a space soft-deletes the space, removes members/growth records, clears cover media for orphan cleanup, and keeps existing posts as regular feed posts by setting `posts.spaceId = null`.
 - API: `GET /spaces/my` defined before `:slug` (route collision avoidance).
 - LikesService/CommentsService verify membership for space posts.
 

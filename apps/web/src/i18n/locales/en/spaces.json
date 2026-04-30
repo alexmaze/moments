@@ -75,6 +75,20 @@
     "confirmAction": "Leave",
     "confirmCancel": "Cancel"
   },
+  "delete": {
+    "dangerTitle": "Danger Zone",
+    "dangerDescription": "Deleting a space cannot be undone. Review what will be cleaned up first.",
+    "actionTitle": "Delete this space",
+    "actionDescription": "Posts will remain as regular moments. Memberships, growth records, and the cover image will be cleaned up.",
+    "trigger": "Delete Space",
+    "deleting": "Deleting...",
+    "confirmTitle": "Delete \"{{name}}\"?",
+    "confirmDescription": "The space will be removed from the list permanently. Existing posts will remain, but they will no longer belong to this space. Memberships, growth records, and the cover resource will enter cleanup.",
+    "confirmAction": "Delete",
+    "confirmCancel": "Cancel",
+    "success": "Space deleted.",
+    "error": "Failed to delete space."
+  },
   "badge": "in {{spaceName}}",
   "list": {
     "empty": "No spaces yet",

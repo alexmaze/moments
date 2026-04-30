@@ -6,7 +6,7 @@
 > - `media_assets` 新增 `orphaned_at`、`last_cleanup_attempt_at`、`cleanup_error`
 > - Phase 1 已切到腾讯云 COS 私有桶，清理对象为 COS object key
 > - 统一通过 `MediaService` 做 attached/orphaned 状态流转
-> - 替换头像、替换空间封面、删除帖子、删除空间后会触发无引用检查
+> - 替换头像、替换空间封面、删除帖子、删除空间后会对旧空间封面触发无引用检查
 > - 服务端内置后台清理 worker，默认每小时执行一次
 > - 支持 `MEDIA_CLEANUP_ENABLED` / `RETENTION_DAYS` / `BATCH_SIZE` / `DRY_RUN`
 

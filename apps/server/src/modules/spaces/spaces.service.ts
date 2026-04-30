@@ -11,8 +11,10 @@ import { DRIZZLE } from '../../database/database.module';
 import {
   type DrizzleClient,
   mediaAssets,
+  posts,
   spaces,
   spaceMembers,
+  growthRecords,
   users,
 } from '@moments/db';
 import { CreateSpaceDto, UpdateSpaceDto } from './dto';
@@ -328,13 +330,33 @@ export class SpacesService {
       throw new ForbiddenException('Only space owner can delete the space');
     }
 
+    const deletedAt = new Date();
+
     await this.db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({
+          spaceId: null,
+          updatedAt: deletedAt,
+        })
+        .where(eq(posts.spaceId, space.id));
+
+      await tx
+        .delete(growthRecords)
+        .where(eq(growthRecords.spaceId, space.id));
+
+      await tx
+        .delete(spaceMembers)
+        .where(eq(spaceMembers.spaceId, space.id));
+
       await tx
         .update(spaces)
         .set({
           isDeleted: true,
-          deletedAt: new Date(),
+          deletedAt,
           coverMediaId: null,
+          memberCount: 0,
+          postCount: 0,
         })
         .where(eq(spaces.id, space.id));
 

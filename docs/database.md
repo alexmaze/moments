@@ -94,7 +94,7 @@
 | `id`            | `uuid`                       | PK, 默认 `gen_random_uuid()` | 帖子唯一标识       |
 | `author_id`     | `uuid`                       | NOT NULL, FK → `users.id` | 作者               |
 | `content`       | `text`                       | 可空                      | 文字内容           |
-| `space_id`      | `uuid`                       | 可空, FK → `spaces.id`    | 所属空间           |
+| `space_id`      | `uuid`                       | 可空, FK → `spaces.id`    | 所属空间；空间删除后置空并保留动态 |
 | `audio_media_id`| `uuid`                       | 可空, FK → `media_assets.id` | 录音资源引用    |
 | `like_count`    | `integer`                    | NOT NULL, 默认 `0`        | 点赞数 (反范式)    |
 | `comment_count` | `integer`                    | NOT NULL, 默认 `0`        | 评论数 (反范式)    |
@@ -228,6 +228,10 @@
 | `mentioned_user_id` | `uuid`                  | NOT NULL, FK → `users.id` (CASCADE) | 被提及的用户   |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`             | 提及时间         |
 
+### 空间删除语义
+
+空间使用软删除 (`is_deleted` + `deleted_at`)。创建者删除空间时，应用层会将该空间下所有 `posts.space_id` 置空，使动态保留为普通动态；同时删除 `space_members` 和 `growth_records` 中的空间专属数据，并清空 `spaces.cover_media_id`。若旧空间封面不再被其他业务引用，媒体资源会被标记为 `orphaned`，等待后台清理任务回收。
+
 ## 4. 索引列表
 
 | 索引名                        | 表                     | 字段                         | 说明                     |
@@ -274,7 +278,7 @@
   ▼
 pending/orphaned ──(挂载到帖子/头像/封面)──▶ attached
   │
-  └──(帖子删除 / 替换头像 / 替换封面 / 删除空间后失去引用)──▶ orphaned
+  └──(帖子删除 / 替换头像 / 替换封面 / 删除空间封面失去引用)──▶ orphaned
                                                              │
                                                              └──(超过保留期 + 清理任务)──▶ 删除文件 + 数据库记录
 ```

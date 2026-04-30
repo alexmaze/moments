@@ -12,6 +12,7 @@ import {
   getSpaceApi,
   createSpaceApi,
   updateSpaceApi,
+  deleteSpaceApi,
   joinSpaceApi,
   leaveSpaceApi,
   updateSpaceNicknameApi,
@@ -94,6 +95,27 @@ export function useUpdateSpace(slug: string) {
       qc.invalidateQueries({ queryKey: spaceKeys.my() });
       qc.invalidateQueries({ queryKey: postKeys.feed() });
       qc.invalidateQueries({ queryKey: spaceKeys.posts(slug) });
+    },
+  });
+}
+
+export function useDeleteSpace(slug: string) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => deleteSpaceApi(slug),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: spaceKeys.detail(slug) });
+      qc.removeQueries({ queryKey: spaceKeys.members(slug) });
+      qc.removeQueries({ queryKey: spaceKeys.posts(slug) });
+      qc.removeQueries({ queryKey: spaceKeys.growthRecords(slug) });
+      qc.invalidateQueries({ queryKey: spaceKeys.list() });
+      qc.invalidateQueries({ queryKey: spaceKeys.my() });
+      qc.invalidateQueries({ queryKey: postKeys.feed() });
+      toast.success(i18n.t("spaces:delete.success"));
+    },
+    onError: () => {
+      toast.error(i18n.t("spaces:delete.error"));
     },
   });
 }
