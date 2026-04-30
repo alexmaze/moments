@@ -33,6 +33,21 @@ export default function LoginPage() {
     });
   };
 
+  const getLoginErrorMessage = () => {
+    const error = login.error as { message?: unknown; statusCode?: number } | null;
+    const message = Array.isArray(error?.message) ? error.message[0] : error?.message;
+
+    if (message === 'Account has been disabled') {
+      return t('login.accountDisabled');
+    }
+
+    if (message === 'Invalid credentials' || error?.statusCode === 401) {
+      return t('login.invalidCredentials');
+    }
+
+    return t('login.error');
+  };
+
   return (
     <div className="surface-card rounded-xl shadow-sm border border-border p-6">
       <h2 className="text-lg font-semibold text-foreground text-center mb-6">
@@ -76,7 +91,7 @@ export default function LoginPage() {
 
         {login.isError && (
           <p className="text-sm text-destructive text-center">
-            {(login.error as Error)?.message || t('login.error')}
+            {getLoginErrorMessage()}
           </p>
         )}
 

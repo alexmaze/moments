@@ -11,11 +11,17 @@ export default function RegisterPage() {
   const registerMutation = useRegister();
   const login = useLogin();
 
-  const registerSchema = z.object({
-    username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, t('validation.usernamePattern')),
-    displayName: z.string().min(1).max(100),
-    password: z.string().min(6).max(128),
-  });
+  const registerSchema = z
+    .object({
+      username: z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, t('validation.usernamePattern')),
+      displayName: z.string().min(1).max(100),
+      password: z.string().min(6).max(128),
+      confirmPassword: z.string().min(6).max(128),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwordMismatch'),
+      path: ['confirmPassword'],
+    });
 
   type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -28,7 +34,11 @@ export default function RegisterPage() {
   });
 
   const onSubmit = (data: RegisterInput) => {
-    registerMutation.mutate(data, {
+    registerMutation.mutate({
+      username: data.username,
+      displayName: data.displayName,
+      password: data.password,
+    }, {
       onSuccess: () => {
         login.mutate(
           { username: data.username, password: data.password },
@@ -98,6 +108,23 @@ export default function RegisterPage() {
           />
           {errors.password && (
             <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
+            {t('register.confirmPasswordLabel')}
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            {...register('confirmPassword')}
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
+            placeholder={t('register.confirmPasswordPlaceholder')}
+          />
+          {errors.confirmPassword && (
+            <p className="mt-1 text-xs text-destructive">{errors.confirmPassword.message}</p>
           )}
         </div>
 
