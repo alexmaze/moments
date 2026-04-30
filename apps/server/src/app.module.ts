@@ -14,6 +14,7 @@ import { TagsModule } from './modules/tags/tags.module';
 import { MentionsModule } from './modules/mentions/mentions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -45,6 +46,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     MentionsModule,
     NotificationsModule,
     AdminModule,
+    HealthModule,
   ],
   providers: [
     {

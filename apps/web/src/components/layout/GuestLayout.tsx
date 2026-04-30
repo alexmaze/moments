@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Logo from '@/components/ui/Logo';
+import { AppVersion } from '@/components/ui/AppVersion';
 import PageTransition from './PageTransition';
 
 export default function GuestLayout() {
@@ -29,6 +30,10 @@ export default function GuestLayout() {
           <Outlet />
         </PageTransition>
       </main>
+
+      <footer className="mt-6 pb-4">
+        <AppVersion />
+      </footer>
     </div>
   );
 }

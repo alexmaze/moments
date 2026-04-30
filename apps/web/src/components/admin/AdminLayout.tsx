@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from '@/store/auth.store';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import Logo from '@/components/ui/Logo';
+import { AppVersion } from '@/components/ui/AppVersion';
 import PageTransition from '@/components/layout/PageTransition';
 
 const navItems = [
@@ -95,6 +96,7 @@ export default function AdminLayout() {
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
             </button>
+            <AppVersion className="block text-xs text-muted-foreground/40 text-center select-none pt-2" />
           </div>
         </div>
       </aside>

@@ -17,7 +17,11 @@ RUN echo "shamefully-hoist=true" > .npmrc && pnpm install --frozen-lockfile
 
 # ─── Stage 2: Build all packages ─────────────────────────────────────────────
 FROM deps AS builder
+
+ARG APP_VERSION=dev
 ENV CI=true
+ENV APP_VERSION=${APP_VERSION}
+
 COPY . .
 # Preserve the .npmrc we created (source COPY would overwrite it)
 RUN echo "shamefully-hoist=true" > .npmrc
@@ -25,6 +29,9 @@ RUN pnpm install --frozen-lockfile && pnpm turbo run build
 
 # ─── Stage 3: Production runtime ─────────────────────────────────────────────
 FROM node:22-alpine AS runner
+
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
 
 # Install ffmpeg for video thumbnail extraction
 RUN apk add --no-cache ffmpeg
