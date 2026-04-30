@@ -302,7 +302,7 @@ interface MediaProcessor {
 ```yaml
 storage:
   driver: tencent-cos
-  signedUrlTtlSeconds: 28800
+  signedUrlTtlSeconds: 604800
   keyPrefix: moments
 
   tencentCos:
@@ -348,7 +348,7 @@ Phase 1 必要配置建议：
 - `region`
 - `secretId`
 - `secretKey`
-- `signedUrlTtlSeconds=28800`
+- `signedUrlTtlSeconds=604800`
 - `keyPrefix`
 
 ## 三、COS 上的对象 key 规划

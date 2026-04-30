@@ -64,7 +64,7 @@ docker compose -f docker-compose.prod.yml up -d
 {
   "storage": {
     "driver": "tencent-cos",
-    "signedUrlTtlSeconds": 28800,
+    "signedUrlTtlSeconds": 604800,
     "keyPrefix": "moments",
     "tencentCos": {
       "secretId": "${TENCENT_COS_SECRET_ID}",

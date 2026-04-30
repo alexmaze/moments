@@ -1,7 +1,7 @@
 {
   "storage": {
     "driver": "tencent-cos",
-    "signedUrlTtlSeconds": 28800,
+    "signedUrlTtlSeconds": 604800,
     "keyPrefix": "moments",
     "ci": {
       "enabled": false,

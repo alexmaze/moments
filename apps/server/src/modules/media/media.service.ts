@@ -67,6 +67,7 @@ export class MediaService {
       body: file.buffer,
       contentType: normalizedMimeType,
       contentLength: file.size,
+      cacheControl: `private, max-age=${this.signedUrlTtlSeconds}`,
     });
 
     // 3. Extract metadata
@@ -514,6 +515,7 @@ export class MediaService {
         body: coverBuffer,
         contentType: 'image/jpeg',
         contentLength: coverBuffer.length,
+        cacheControl: `private, max-age=${this.signedUrlTtlSeconds}`,
       });
 
       return {

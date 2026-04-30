@@ -122,7 +122,7 @@ export class StorageConfigService {
 
     return {
       driver: 'tencent-cos',
-      signedUrlTtlSeconds: ensurePositiveInt(storage.signedUrlTtlSeconds, 'storage.signedUrlTtlSeconds', 28_800),
+      signedUrlTtlSeconds: ensurePositiveInt(storage.signedUrlTtlSeconds, 'storage.signedUrlTtlSeconds', 604_800),
       keyPrefix: (storage.keyPrefix ?? 'moments').trim().replace(/^\/+|\/+$/g, ''),
       ci: this.parseCiConfig(storage.ci),
       tencentCos: {
