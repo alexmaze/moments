@@ -147,12 +147,16 @@ export default function QuickComposer({
     setContent(serializedContent);
     editorRef.current?.setSerializedContent(serializedContent);
     setExistingItems(
-      initialPost.media.map((media) => ({
-        assetId: media.id,
-        type: media.type,
-        preview: media.publicUrl,
-        coverUrl: media.coverUrl,
-      })),
+      initialPost.media
+        .filter((media): media is typeof media & { type: 'image' | 'video' } =>
+          media.type === 'image' || media.type === 'video',
+        )
+        .map((media) => ({
+          assetId: media.id,
+          type: media.type,
+          preview: media.publicUrl,
+          coverUrl: media.coverUrl,
+        })),
     );
 
     const nextExistingAudio = toExistingAudio(initialPost.audio);
