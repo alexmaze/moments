@@ -41,8 +41,8 @@ COPY --from=builder /app/node_modules             ./node_modules
 # Copy frontend build as public directory (served by NestJS)
 COPY --from=builder /app/apps/web/dist            ./public
 
-# Uploads volume mount point
-RUN mkdir -p /app/uploads
+# Storage config mount point
+RUN mkdir -p /app/config
 
 EXPOSE 3000
 ENV NODE_ENV=production

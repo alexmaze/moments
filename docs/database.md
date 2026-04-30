@@ -117,17 +117,26 @@
 | `orphaned_at`   | `timestamptz`                | 可空                      | 进入 `orphaned` 的时间 |
 | `last_cleanup_attempt_at` | `timestamptz`       | 可空                      | 最近一次清理尝试时间 |
 | `cleanup_error` | `text`                       | 可空                      | 最近一次清理失败原因 |
+| `storage_provider` | `text`                    | NOT NULL, 默认 `tencent-cos` | 存储驱动标识     |
+| `bucket`        | `text`                       | 可空                      | 对象存储桶名       |
+| `object_key`    | `text`                       | NOT NULL                  | 对象存储 key       |
+| `etag`          | `text`                       | 可空                      | 对象 ETag          |
 | `storage_path`  | `text`                       | NOT NULL                  | 存储相对路径       |
-| `public_url`    | `text`                       | NOT NULL                  | 公开访问 URL       |
+| `public_url`    | `text`                       | NOT NULL                  | 兼容字段，当前保存对象基础 URL，不应作为长期可访问链接 |
 | `cover_path`    | `text`                       | 可空                      | 视频封面存储路径   |
-| `cover_url`     | `text`                       | 可空                      | 视频封面公开 URL   |
+| `cover_url`     | `text`                       | 可空                      | 兼容字段，当前保存封面基础 URL |
 | `mime_type`     | `text`                       | NOT NULL                  | MIME 类型          |
 | `size_bytes`    | `integer`                    | NOT NULL                  | 文件大小 (字节)    |
 | `width`         | `integer`                    | 可空                      | 宽度 (像素)        |
 | `height`        | `integer`                    | 可空                      | 高度 (像素)        |
-| `duration_secs` | `integer`                    | 可空                      | 视频时长 (秒)      |
+| `duration_ms`   | `integer`                    | 可空                      | 媒体时长 (毫秒)    |
 | `waveform`      | `text`                       | 可空                      | 音频波形 JSON 字符串，仅 `type=audio` 使用 |
 | `created_at`    | `timestamptz`                | NOT NULL, 默认 `now()`    | 创建时间           |
+
+说明：
+
+- 当前媒体访问使用腾讯云 COS 私有桶，接口返回的是动态签名 URL
+- `object_key` 才是稳定存储标识，客户端不应依赖数据库中的 `public_url`/`cover_url` 直接访问
 
 ### 3.4 post_media_relations
 

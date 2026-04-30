@@ -85,7 +85,8 @@ pnpm db:migrate            # Run migrations after starting DB
 
 ```bash
 cd docker
-export JWT_SECRET="..." DB_PASSWORD="..." BASE_URL="https://your-domain.com"
+export JWT_SECRET="..." DB_PASSWORD="..."
+export TENCENT_COS_SECRET_ID="..." TENCENT_COS_SECRET_KEY="..."
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
@@ -97,8 +98,9 @@ Copy `.env.example` to `.env` at repo root. The server reads from `.env` and `..
 |---|---|---|---|
 | `DATABASE_URL` | yes | `postgresql://moments:moments_dev@localhost:5432/moments` | Postgres connection string |
 | `JWT_SECRET` | yes | — | Min 32 chars |
-| `BASE_URL` | no | `http://localhost:3000` | Used to build media public URLs |
-| `UPLOAD_DIR` | no | `./uploads` | Local media storage directory |
+| `STORAGE_CONFIG_FILE` | no | `config/storage.json` | Storage config file path |
+| `TENCENT_COS_SECRET_ID` | yes (prod) | — | COS credential, used in config interpolation |
+| `TENCENT_COS_SECRET_KEY` | yes (prod) | — | COS credential, used in config interpolation |
 | `PORT` | no | `3000` | NestJS port |
 | `NODE_ENV` | no | `development` | Set to `production` to enable SPA fallback serving |
 | `ADMIN_USERNAMES` | no | — | Comma-separated admin usernames (case-insensitive) |
@@ -109,7 +111,7 @@ Copy `.env.example` to `.env` at repo root. The server reads from `.env` and `..
 
 ```
 src/
-├── main.ts                    # Bootstrap: global prefix /api, ValidationPipe, static file serving
+├── main.ts                    # Bootstrap: global prefix /api, ValidationPipe, SPA static serving
 ├── app.module.ts              # Root module; registers global JwtAuthGuard as APP_GUARD
 ├── database/
 │   └── database.module.ts     # Global module; provides DRIZZLE token (DrizzleClient)
@@ -126,7 +128,7 @@ src/
     ├── posts/                 # CRUD feed posts; cursor-based pagination
     ├── likes/                 # Toggle like on a post
     ├── comments/              # Comments on posts; page-based pagination
-    ├── media/                 # File upload (images + videos); storage abstraction
+    ├── media/                 # File upload; COS storage abstraction; signed URL generation
     ├── users/                 # User profile, update profile, user posts
     ├── spaces/                # Public spaces: CRUD, membership, growth records (baby spaces)
     ├── tags/                  # Hashtags: CRUD, prefix search, tag detail page
@@ -152,16 +154,29 @@ src/
 ### Media upload flow
 1. Multer accepts file in memory buffer.
 2. MIME type validated against allowlist (jpeg/png/webp/gif, mp4/mov/webm).
-3. File saved via `IStorageProvider` (currently `LocalStorageProvider`).
+3. File uploaded to Tencent COS private bucket via `IStorageProvider`.
 4. For images: sharp extracts dimensions.
 5. For videos: ffmpeg extracts dimensions, duration, and first-frame cover image.
 6. `mediaAssets` DB record created with `status: 'pending'`.
 7. When post is created, media IDs are verified (owned by author + pending status), then marked `status: 'attached'`.
-8. Storage is abstracted via `IStorageProvider` interface — inject `STORAGE_PROVIDER` token to swap backends.
+8. API responses return signed COS URLs; stable storage identifiers are persisted as object keys.
+
+### CI image thumbnails (数据万象)
+- **Optional feature**: Enabled via `ci` section in `config/storage.json`. When `ci.enabled: true`, the backend generates signed URLs with Tencent Cloud CI (数据万象) image-processing query params co-signed into the HMAC.
+- **How it works**: `IStorageProvider.getSignedCiUrl()` passes CI params (e.g. `imageMogr2/thumbnail/800x/format/webp/quality/80`) as a `Query` key to `cos.getObjectUrl()`, which signs them into `q-url-param-list`. COS returns the processed image on-the-fly.
+- **DTO field**: `MediaAssetDto.thumbnailUrl: string | null` — CI-processed thumbnail URL. `null` when CI is disabled. Frontend falls back to `publicUrl`.
+- **Scenarios and params** (configurable in `storage.json`):
+  - `feedImage` / `feedCover`: Feed grid images + video covers (default: 800px wide, WebP, quality 80)
+  - `smallThumb`: Notification + admin thumbnails (default: 200×200, WebP, quality 80)
+  - `avatar`: User avatars (default: 200×200, WebP, quality 85) — transparently replaces `avatarUrl`
+  - `spaceCover`: Space cover images (default: same as feedImage)
+- **Frontend usage**: `MediaGrid` uses `item.thumbnailUrl ?? item.publicUrl` for `<img src>`. Lightbox always uses `publicUrl` (full-res original).
+- **Config location**: `config/storage.json` → `storage.ci` section. Set `enabled: false` to disable (all `thumbnailUrl` fields return `null`).
 
 ### API routing
 - All API routes prefixed `/api` (set in `main.ts`).
 - In production (`NODE_ENV=production`), NestJS also serves the frontend SPA from `dist/../public` with a catch-all fallback for client-side routing.
+- Media files are no longer served from `/uploads`; frontend consumes signed COS URLs returned by API.
 
 ## Architecture: Frontend (`apps/web`)
 
@@ -228,19 +243,19 @@ src/
 - Path alias `@/` maps to `src/` (configured in both Vite and tsconfig).
 
 ### Dev proxy
-Vite proxies `/api` and `/uploads` to `http://localhost:3000` — no CORS config needed during development.
+Vite proxies `/api` to `http://localhost:3000` — no CORS config needed during development.
 
 ## Database Schema (`packages/db/src/schema/`)
 
 | Table | Purpose |
 |---|---|
 | `users` | Accounts: username (unique), displayName, passwordHash, avatarUrl, bio, locale, theme, background (preset ID), isActive |
-| `media_assets` | Uploaded files: type (image/video/audio), status (pending/attached/orphaned), storagePath, publicUrl, dimensions, duration, coverPath/URL |
+| `media_assets` | Uploaded files: type (image/video/audio), status (pending/attached/orphaned), storageProvider, bucket, objectKey, storagePath, dimensions, duration, coverPath |
 | `posts` | Posts: authorId, content (nullable), spaceId (nullable FK→spaces), optional single audioMediaId, likeCount, commentCount, soft-delete flags |
 | `post_media_relations` | Many-to-many posts ↔ media_assets with sortOrder |
 | `post_likes` | Unique (postId, userId) pair |
 | `post_comments` | Comments with soft-delete |
-| `spaces` | Public spaces: name, slug (unique), description, coverUrl, type (general/baby), creatorId, memberCount, postCount, soft-delete |
+| `spaces` | Public spaces: name, slug (unique), description, coverMediaId, type (general/baby), creatorId, memberCount, postCount, soft-delete |
 | `space_members` | Space membership: spaceId + userId (unique pair), role (owner/admin/member), joinedAt |
 | `growth_records` | Baby space growth data: spaceId, recordedBy, date, heightCm, weightKg, headCircumferenceCm |
 | `tags` | Hashtags: name (original case), nameLower (unique, for case-insensitive lookup), postCount (denormalized) |
@@ -511,8 +526,8 @@ apps/web/src/
 
 - **Single container** architecture: one NestJS process serves API + static frontend + media files.
 - Multi-stage Dockerfile: `deps` → `builder` → `runner` (node:22-alpine + ffmpeg).
-- Two volumes: `postgres_data` (database) and `uploads_data` (media files).
-- `BASE_URL` env var controls the hostname embedded in media `publicUrl` fields — must match the public-facing URL.
+- Production compose persists `postgres_data` and mounts `config/storage.json` read-only into the app container.
+- Media `publicUrl` / `coverUrl` fields are signed COS URLs returned dynamically by the API.
 
 ## TODO 工作流
 

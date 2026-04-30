@@ -22,17 +22,15 @@ function formatDuration(ms: number): string {
 
 function PostPreview({ post }: { post: NonNullable<NotificationItemDto['post']> }) {
   if (post.firstMedia) {
+    const thumbSrc = post.firstMedia.thumbnailUrl
+      ?? (post.firstMedia.type === 'video' ? post.firstMedia.coverUrl : null)
+      ?? post.firstMedia.publicUrl;
+
     return (
       <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-        {post.firstMedia.type === 'video' && post.firstMedia.coverUrl ? (
+        {thumbSrc ? (
           <img
-            src={post.firstMedia.coverUrl}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        ) : post.firstMedia.type === 'image' ? (
-          <img
-            src={post.firstMedia.publicUrl}
+            src={thumbSrc}
             alt=""
             className="w-full h-full object-cover"
           />

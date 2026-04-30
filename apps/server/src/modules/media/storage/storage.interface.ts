@@ -1,12 +1,26 @@
-export interface SavedFile {
-  storagePath: string;
-  publicUrl: string;
+export interface StoredObject {
+  key: string;
   sizeBytes: number;
+  etag: string | null;
+  provider: 'tencent-cos';
+}
+
+export interface PutObjectInput {
+  key: string;
+  body: Buffer;
+  contentType: string;
+  contentLength?: number;
+  cacheControl?: string;
 }
 
 export interface IStorageProvider {
-  save(file: Express.Multer.File, subpath: string): Promise<SavedFile>;
-  saveBuffer(buffer: Buffer, subpath: string, filename: string): Promise<SavedFile>;
-  delete(storagePath: string): Promise<void>;
-  getPublicUrl(storagePath: string): string;
+  readonly kind: 'tencent-cos';
+
+  putObject(input: PutObjectInput): Promise<StoredObject>;
+  deleteObject(key: string): Promise<void>;
+  getObjectUrl(key: string): string;
+  getSignedUrl(key: string, expiresInSeconds: number): Promise<string>;
+
+  /** Generate a signed URL with CI image-processing params co-signed into the HMAC. */
+  getSignedCiUrl?(key: string, expiresInSeconds: number, ciParams: string): Promise<string>;
 }

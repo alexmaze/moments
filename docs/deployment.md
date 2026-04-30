@@ -6,6 +6,8 @@
 
 - Docker 或 Podman
 - Docker Compose
+- 腾讯云 COS 私有桶
+- 一份存储配置文件，参考 [`config/storage.example.json`](/Users/alex/Dev/workspace/alex/moments/config/storage.example.json)
 
 ### 快速部署
 
@@ -15,6 +17,12 @@ cd docker
 # 设置必需的环境变量
 export JWT_SECRET="your-secret-key-at-least-32-chars"
 export DB_PASSWORD="your-secure-db-password"
+export TENCENT_COS_SECRET_ID="your-secret-id"
+export TENCENT_COS_SECRET_KEY="your-secret-key"
+
+# 准备存储配置文件
+mkdir -p ../config
+cp ../config/storage.example.json ../config/storage.json
 
 # 启动
 docker compose -f docker-compose.prod.yml up -d
@@ -30,13 +38,45 @@ docker compose -f docker-compose.prod.yml up -d
 | `DB_USER` | 否 | `moments` | PostgreSQL 用户名 |
 | `DB_PASSWORD` | 否 | `moments_prod` | PostgreSQL 密码，生产环境务必修改 |
 | `DATABASE_URL` | 否 | 自动拼接 | 数据库连接字符串（Docker 内部自动生成） |
-| `UPLOAD_DIR` | 否 | `/app/uploads` | 媒体存储目录（Docker 内挂载为 volume） |
+| `STORAGE_CONFIG_FILE` | 否 | `config/storage.json` | 存储配置文件路径 |
+| `TENCENT_COS_SECRET_ID` | **是** | 无 | COS SecretId，用于配置文件插值 |
+| `TENCENT_COS_SECRET_KEY` | **是** | 无 | COS SecretKey，用于配置文件插值 |
 | `MEDIA_CLEANUP_ENABLED` | 否 | `true` | 是否启用废弃媒体后台清理任务 |
 | `MEDIA_CLEANUP_RETENTION_DAYS` | 否 | `7` | `orphaned` 媒体保留天数 |
 | `MEDIA_CLEANUP_BATCH_SIZE` | 否 | `100` | 每轮清理的最大条数 |
 | `MEDIA_CLEANUP_DRY_RUN` | 否 | `false` | 只输出命中日志，不实际删除文件和数据库记录 |
 | `PORT` | 否 | `3000` | 服务端口 |
 | `NODE_ENV` | 否 | `production` | 环境标识 |
+
+### 存储配置文件
+
+当前生产环境只支持腾讯云 COS 私有桶。服务端在返回媒体数据时会动态签发临时 URL，默认有效期 8 小时。
+
+部署前需要在宿主机准备：
+
+- `config/storage.json`
+- `TENCENT_COS_SECRET_ID`
+- `TENCENT_COS_SECRET_KEY`
+
+示例：
+
+```json
+{
+  "storage": {
+    "driver": "tencent-cos",
+    "signedUrlTtlSeconds": 28800,
+    "keyPrefix": "moments",
+    "tencentCos": {
+      "secretId": "${TENCENT_COS_SECRET_ID}",
+      "secretKey": "${TENCENT_COS_SECRET_KEY}",
+      "region": "ap-shanghai",
+      "bucket": "your-bucket-1250000000",
+      "useHttps": true,
+      "timeoutMs": 30000
+    }
+  }
+}
+```
 
 ### Dockerfile 多阶段构建
 
@@ -58,13 +98,15 @@ Stage 3 (runner)  → node:22-alpine + ffmpeg, 仅复制:
 | 服务 | 镜像 | 端口 | 说明 |
 |---|---|---|---|
 | `db` | postgres:16-alpine | 不暴露 | PostgreSQL，数据持久化到 `postgres_data` volume |
-| `app` | 自建（Dockerfile） | 3000 | NestJS 应用，serve 前端 SPA + API + 媒体文件 |
+| `app` | 自建（Dockerfile） | 3000 | NestJS 应用，serve 前端 SPA + API |
 
 ### 数据持久化
 
-两个 Docker volume：
+当前应用内只持久化数据库：
+
 - `postgres_data` — 数据库文件
-- `uploads_data` — 用户上传的媒体文件
+
+媒体文件保存在腾讯云 COS，不再挂载本地上传目录 volume。
 
 ### 备份
 
@@ -74,10 +116,9 @@ docker compose -f docker-compose.prod.yml exec db pg_dump -U moments moments > b
 
 # 数据库恢复
 cat backup.sql | docker compose -f docker-compose.prod.yml exec -T db psql -U moments moments
-
-# 媒体文件备份
-docker cp $(docker compose -f docker-compose.prod.yml ps -q app):/app/uploads ./uploads-backup
 ```
+
+媒体文件备份、版本策略、生命周期规则请通过 COS 控制台或对象存储备份体系处理。
 
 ### 更新部署
 
@@ -120,4 +161,4 @@ server {
 }
 ```
 
-本地存储返回相对路径 `/uploads/...`，由当前站点域名承载；如需 CDN 或独立媒体域名，应新增对应存储 provider，而不是依赖环境变量拼接绝对地址。
+媒体访问不再由应用通过 `/uploads/*` 静态托管，而是由后端 API 返回 COS 私有桶签名 URL。

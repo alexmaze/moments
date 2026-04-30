@@ -11,6 +11,7 @@ import Video from 'yet-another-react-lightbox/plugins/video';
 import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 import Counter from 'yet-another-react-lightbox/plugins/counter';
 import 'yet-another-react-lightbox/plugins/counter.css';
+import { ProgressiveSlide } from './ProgressiveSlide';
 
 interface MediaLightboxContextValue {
   open: (slides: Slide[], index?: number) => void;
@@ -69,6 +70,11 @@ export function MediaLightboxProvider({ children }: { children: ReactNode }) {
         controller={{ closeOnBackdropClick: true, closeOnPullDown: true }}
         zoom={{ scrollToZoom: true, maxZoomPixelRatio: 1 }}
         video={{ autoPlay: false, controls: true, playsInline: true }}
+        render={{
+          slide: ({ slide, rect, offset }) => (
+            <ProgressiveSlide slide={slide} rect={rect} offset={offset} />
+          ),
+        }}
         className="moments-lightbox"
       />
     </MediaLightboxContext.Provider>

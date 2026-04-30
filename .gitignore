@@ -40,3 +40,7 @@ packages/db/src/migrations/meta/
 *.tsbuildinfo
 
 .playwright-mcp/
+
+config/storage.json
+# Debug scripts
+apps/server/scripts/cos-debug-*

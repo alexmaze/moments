@@ -6,7 +6,7 @@ const sharp = require('sharp');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ffmpeg = require('fluent-ffmpeg');
 import { randomUUID } from 'crypto';
-import { join } from 'path';
+import { join, posix } from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 import { and, eq, inArray, lte, or } from 'drizzle-orm';
@@ -14,6 +14,7 @@ import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets, postMediaRelations, posts, spaces, users } from '@moments/db';
 import { STORAGE_PROVIDER } from './storage/storage.module';
 import { IStorageProvider } from './storage/storage.interface';
+import { StorageConfigService, type StorageConfig, type CiConfig } from './storage/storage.config';
 
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
@@ -28,10 +29,22 @@ function normalizeMimeType(mimeType: string) {
 
 @Injectable()
 export class MediaService {
+  private readonly keyPrefix: string;
+  private readonly signedUrlTtlSeconds: number;
+  private readonly storageConfig: StorageConfig;
+  private readonly ciConfig: StorageConfig['ci'];
+
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
     @Inject(STORAGE_PROVIDER) private readonly storageProvider: IStorageProvider,
-  ) {}
+    storageConfigService: StorageConfigService,
+  ) {
+    const config = storageConfigService.getConfig();
+    this.storageConfig = config;
+    this.keyPrefix = config.keyPrefix;
+    this.signedUrlTtlSeconds = config.signedUrlTtlSeconds;
+    this.ciConfig = config.ci;
+  }
 
   async uploadFile(file: Express.Multer.File, uploaderId: string) {
     const normalizedMimeType = normalizeMimeType(file.mimetype);
@@ -44,10 +57,17 @@ export class MediaService {
     const isVideo = ALLOWED_VIDEO_MIMES.includes(normalizedMimeType);
     const isAudio = ALLOWED_AUDIO_MIMES.includes(normalizedMimeType);
     const type = isVideo ? 'video' : isAudio ? 'audio' : 'image';
+    const assetId = randomUUID();
+    const originalKey = this.buildOriginalObjectKey(assetId, file.originalname, normalizedMimeType, isAudio ? 'audio' : undefined);
 
     // 2. Store file
     const datePath = format(new Date(), 'yyyy/MM/dd');
-    const saved = await this.storageProvider.save(file, isAudio ? join(datePath, 'audio') : datePath);
+    const saved = await this.storageProvider.putObject({
+      key: originalKey,
+      body: file.buffer,
+      contentType: normalizedMimeType,
+      contentLength: file.size,
+    });
 
     // 3. Extract metadata
     let width: number | undefined;
@@ -68,7 +88,7 @@ export class MediaService {
     } else if (isVideo) {
       // Extract video first frame as cover + metadata
       try {
-        const result = await this.extractVideoMetadata(file.buffer, datePath);
+        const result = await this.extractVideoMetadata(file.buffer, assetId);
         width = result.width;
         height = result.height;
         durationMs = result.durationMs;
@@ -88,10 +108,15 @@ export class MediaService {
 
     // 4. Insert DB record
     const [asset] = await this.db.insert(mediaAssets).values({
+      id: assetId,
       uploaderId,
       type,
-      storagePath: saved.storagePath,
-      publicUrl: saved.publicUrl,
+      storageProvider: this.storageProvider.kind,
+      bucket: this.storageConfig.tencentCos.bucket,
+      objectKey: saved.key,
+      etag: saved.etag,
+      storagePath: saved.key,
+      publicUrl: this.storageProvider.getObjectUrl(saved.key),
       coverPath: coverPath || null,
       coverUrl: coverUrl || null,
       mimeType: normalizedMimeType,
@@ -102,17 +127,7 @@ export class MediaService {
       status: 'pending',
     }).returning();
 
-    return {
-      id: asset.id,
-      type: asset.type,
-      publicUrl: asset.publicUrl,
-      coverUrl: asset.coverUrl,
-      mimeType: asset.mimeType,
-      sizeBytes: asset.sizeBytes,
-      width: asset.width,
-      height: asset.height,
-      durationMs: asset.durationMs,
-    };
+    return this.toAssetDto(asset);
   }
 
   async getById(id: string) {
@@ -121,7 +136,7 @@ export class MediaService {
       .from(mediaAssets)
       .where(eq(mediaAssets.id, id))
       .limit(1);
-    return asset || null;
+    return asset ? this.toAssetDto(asset) : null;
   }
 
   async requireOwnedPendingAsset(id: string, uploaderId: string, type: 'image' | 'video' | 'audio' | 'any' = 'any') {
@@ -237,11 +252,147 @@ export class MediaService {
   }
 
   async deleteStoredFiles(asset: typeof mediaAssets.$inferSelect) {
-    await this.storageProvider.delete(asset.storagePath);
+    await this.storageProvider.deleteObject(asset.storagePath);
 
     if (asset.coverPath) {
-      await this.storageProvider.delete(asset.coverPath);
+      await this.storageProvider.deleteObject(asset.coverPath);
     }
+  }
+
+  async getSignedUrl(storagePath: string | null | undefined) {
+    if (!storagePath) return null;
+    return this.storageProvider.getSignedUrl(storagePath, this.signedUrlTtlSeconds);
+  }
+
+  /** CI config accessors — return null when CI is disabled */
+  get feedImageCiParams(): string | null { return this.ciConfig?.feedImage ?? null; }
+  get feedCoverCiParams(): string | null { return this.ciConfig?.feedCover ?? null; }
+  get smallThumbCiParams(): string | null { return this.ciConfig?.smallThumb ?? null; }
+  get avatarCiParams(): string | null { return this.ciConfig?.avatar ?? null; }
+  get spaceCoverCiParams(): string | null { return this.ciConfig?.spaceCover ?? null; }
+
+  /** Get a signed URL with CI processing params. Falls back to regular signed URL if CI unavailable. */
+  async getSignedUrlWithCi(storagePath: string | null | undefined, ciParams: string | null): Promise<string | null> {
+    if (!storagePath) return null;
+    if (ciParams && this.storageProvider.getSignedCiUrl) {
+      return this.storageProvider.getSignedCiUrl(storagePath, this.signedUrlTtlSeconds, ciParams);
+    }
+    return this.storageProvider.getSignedUrl(storagePath, this.signedUrlTtlSeconds);
+  }
+
+  private async getSignedCiUrl(key: string, ciParams: string | null): Promise<string | null> {
+    if (!ciParams || !this.storageProvider.getSignedCiUrl) {
+      return null;
+    }
+    return this.storageProvider.getSignedCiUrl(key, this.signedUrlTtlSeconds, ciParams);
+  }
+
+  async signMediaAssetUrl(avatarMediaId: string | null | undefined, ciParams?: string | null) {
+    if (!avatarMediaId) return null;
+
+    const [asset] = await this.db
+      .select({ storagePath: mediaAssets.storagePath })
+      .from(mediaAssets)
+      .where(eq(mediaAssets.id, avatarMediaId))
+      .limit(1);
+
+    const path = asset?.storagePath ?? null;
+    if (!path) return null;
+
+    if (ciParams && this.storageProvider.getSignedCiUrl) {
+      return this.storageProvider.getSignedCiUrl(path, this.signedUrlTtlSeconds, ciParams);
+    }
+    return this.getSignedUrl(path);
+  }
+
+  async signUserAvatarRows<T extends { avatarPath: string | null }>(rows: T[], avatarCiParams?: string | null) {
+    const urlCache = new Map<string, string>();
+
+    for (const row of rows) {
+      if (!row.avatarPath || urlCache.has(row.avatarPath)) continue;
+      // When CI is configured, sign avatar with CI params for smaller delivery
+      if (avatarCiParams && this.storageProvider.getSignedCiUrl) {
+        urlCache.set(row.avatarPath, await this.storageProvider.getSignedCiUrl(row.avatarPath, this.signedUrlTtlSeconds, avatarCiParams));
+      } else {
+        urlCache.set(row.avatarPath, await this.storageProvider.getSignedUrl(row.avatarPath, this.signedUrlTtlSeconds));
+      }
+    }
+
+    return rows.map(({ avatarPath, ...rest }) => ({
+      ...rest,
+      avatarUrl: avatarPath ? (urlCache.get(avatarPath) ?? null) : null,
+    }));
+  }
+
+  async signMediaRows<T extends { storagePath: string; coverPath?: string | null; type?: string }>(
+    rows: T[],
+    options?: {
+      imageCiParams?: string | null;
+      coverCiParams?: string | null;
+    },
+  ) {
+    const urlCache = new Map<string, string>();
+    const ciUrlCache = new Map<string, string>();
+    const imageCi = options?.imageCiParams ?? null;
+    const coverCi = options?.coverCiParams ?? null;
+
+    for (const row of rows) {
+      if (!urlCache.has(row.storagePath)) {
+        urlCache.set(row.storagePath, await this.storageProvider.getSignedUrl(row.storagePath, this.signedUrlTtlSeconds));
+      }
+
+      if (row.coverPath && !urlCache.has(row.coverPath)) {
+        urlCache.set(row.coverPath, await this.storageProvider.getSignedUrl(row.coverPath, this.signedUrlTtlSeconds));
+      }
+
+      // Generate CI thumbnail URLs
+      const isImage = row.type === 'image';
+      const isVideo = row.type === 'video';
+
+      if (isImage && imageCi && !ciUrlCache.has(row.storagePath)) {
+        const ciUrl = await this.getSignedCiUrl(row.storagePath, imageCi);
+        if (ciUrl) ciUrlCache.set(row.storagePath, ciUrl);
+      }
+
+      if (isVideo && coverCi && row.coverPath && !ciUrlCache.has(row.coverPath)) {
+        const ciUrl = await this.getSignedCiUrl(row.coverPath, coverCi);
+        if (ciUrl) ciUrlCache.set(row.coverPath, ciUrl);
+      }
+    }
+
+    return rows.map((row) => {
+      const isImage = row.type === 'image';
+      const isVideo = row.type === 'video';
+      let thumbnailUrl: string | null = null;
+
+      if (isImage) {
+        thumbnailUrl = ciUrlCache.get(row.storagePath) ?? null;
+      } else if (isVideo && row.coverPath) {
+        thumbnailUrl = ciUrlCache.get(row.coverPath) ?? null;
+      }
+
+      return {
+        ...row,
+        publicUrl: urlCache.get(row.storagePath)!,
+        coverUrl: row.coverPath ? (urlCache.get(row.coverPath) ?? null) : null,
+        thumbnailUrl,
+      };
+    });
+  }
+
+  async toAssetDto(asset: typeof mediaAssets.$inferSelect) {
+    return {
+      id: asset.id,
+      type: asset.type,
+      publicUrl: await this.getSignedUrl(asset.storagePath),
+      coverUrl: await this.getSignedUrl(asset.coverPath),
+      thumbnailUrl: null as string | null,
+      mimeType: asset.mimeType,
+      sizeBytes: asset.sizeBytes,
+      width: asset.width,
+      height: asset.height,
+      durationMs: asset.durationMs,
+    };
   }
 
   async deleteAssetRecord(id: string, tx?: any) {
@@ -305,7 +456,7 @@ export class MediaService {
 
   private async extractVideoMetadata(
     buffer: Buffer,
-    datePath: string,
+    assetId: string,
   ): Promise<{
     width?: number;
     height?: number;
@@ -316,7 +467,7 @@ export class MediaService {
     // Write buffer to temp file for ffmpeg
     const tmpDir = await fs.mkdtemp(join(os.tmpdir(), 'moments-'));
     const tmpInput = join(tmpDir, 'input.mp4');
-    const coverFilename = `${randomUUID()}_cover.jpg`;
+    const coverFilename = 'video-cover.jpg';
     const tmpCover = join(tmpDir, coverFilename);
 
     try {
@@ -357,12 +508,18 @@ export class MediaService {
 
       // Save cover to storage
       const coverBuffer = await fs.readFile(tmpCover);
-      const savedCover = await this.storageProvider.saveBuffer(coverBuffer, datePath, coverFilename);
+      const coverKey = this.buildVariantObjectKey(assetId, coverFilename);
+      const savedCover = await this.storageProvider.putObject({
+        key: coverKey,
+        body: coverBuffer,
+        contentType: 'image/jpeg',
+        contentLength: coverBuffer.length,
+      });
 
       return {
         ...metadata,
-        coverPath: savedCover.storagePath,
-        coverUrl: savedCover.publicUrl,
+        coverPath: savedCover.key,
+        coverUrl: this.storageProvider.getObjectUrl(savedCover.key),
       };
     } finally {
       // Cleanup temp files
@@ -392,5 +549,43 @@ export class MediaService {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
+  }
+
+  private buildOriginalObjectKey(assetId: string, originalname: string, mimeType: string, folder?: string) {
+    const datePath = format(new Date(), 'yyyy/MM/dd');
+    const ext = this.getExtFromNameOrMime(originalname, mimeType);
+    return this.buildObjectKey(assetId, `${folder ? `${folder}/` : ''}original${ext}` , datePath);
+  }
+
+  private buildVariantObjectKey(assetId: string, filename: string) {
+    const datePath = format(new Date(), 'yyyy/MM/dd');
+    return this.buildObjectKey(assetId, filename, datePath);
+  }
+
+  private buildObjectKey(assetId: string, filename: string, datePath: string) {
+    const parts = [this.keyPrefix, datePath, assetId, filename].filter(Boolean);
+    return posix.join(...parts);
+  }
+
+  private getExtFromNameOrMime(originalname: string, mimeType: string) {
+    const ext = posix.extname(originalname || '');
+    if (ext) return ext.toLowerCase();
+
+    const map: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+      'video/mp4': '.mp4',
+      'video/quicktime': '.mov',
+      'video/webm': '.webm',
+      'audio/webm': '.webm',
+      'audio/mp4': '.m4a',
+      'audio/mpeg': '.mp3',
+      'audio/wav': '.wav',
+      'audio/ogg': '.ogg',
+    };
+
+    return map[mimeType] ?? '';
   }
 }

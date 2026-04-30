@@ -584,10 +584,12 @@ MVP 中优先保证点赞数可见。
 |---|---|---|
 | id | bigint / uuid | 媒体资源 ID |
 | uploader_user_id | fk | 上传者 ID |
-| media_type | enum | image / video |
-| storage_key | string | 存储键 |
-| media_url | string | 访问地址 |
-| cover_url | string nullable | 视频封面 |
+| media_type | enum | image / video / audio |
+| storage_provider | string | 当前为 `tencent-cos` |
+| bucket | string nullable | 对象存储桶名 |
+| object_key | string | 稳定对象 key |
+| media_url | string | 对外访问地址，实际由接口动态签名返回 |
+| cover_url | string nullable | 视频封面访问地址，实际由接口动态签名返回 |
 | mime_type | string | MIME 类型 |
 | file_size | bigint | 文件大小 |
 | width | int nullable | 宽度 |
@@ -600,6 +602,7 @@ MVP 中优先保证点赞数可见。
 说明：
 - 媒体先独立存在，不必须在上传时直接绑定帖子
 - 便于支持先上传、后发帖
+- 当前 Phase 1 使用腾讯云 COS 私有桶，客户端不能自行拼接媒体 URL
 
 ### 12.4 PostMediaRelation
 

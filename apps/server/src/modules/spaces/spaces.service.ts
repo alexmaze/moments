@@ -81,7 +81,7 @@ export class SpacesService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -111,6 +111,9 @@ export class SpacesService {
       }
     }
 
+    const creatorAvatarUrl = creator?.avatarPath ? await this.mediaService.getSignedUrl(creator.avatarPath) : null;
+    const { avatarPath: _creatorAvatarPath, ...creatorRest } = creator ?? {} as any;
+
     return {
       id: space.id,
       name: space.name,
@@ -121,7 +124,10 @@ export class SpacesService {
       coverPositionY: space.coverPositionY,
       type: space.type,
       babyBirthday: space.babyBirthday,
-      creator,
+      creator: {
+        ...creatorRest,
+        avatarUrl: creatorAvatarUrl,
+      },
       memberCount: space.memberCount,
       postCount: space.postCount,
       createdAt: space.createdAt.toISOString(),
@@ -158,12 +164,13 @@ export class SpacesService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, creatorIds));
-    const creatorMap = new Map(creatorRows.map((c) => [c.id, c]));
+    const signedCreatorRows = await this.mediaService.signUserAvatarRows(creatorRows, this.mediaService.avatarCiParams);
+    const creatorMap = new Map(signedCreatorRows.map((c) => [c.id, c]));
     const coverUrlMap = await this.buildCoverUrlMap(resultSpaces.map((space) => space.coverMediaId));
 
     const data = resultSpaces.map((space) => ({
@@ -215,12 +222,13 @@ export class SpacesService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, creatorIds));
-    const creatorMap = new Map(creatorRows.map((c) => [c.id, c]));
+    const signedCreatorRows = await this.mediaService.signUserAvatarRows(creatorRows, this.mediaService.avatarCiParams);
+    const creatorMap = new Map(signedCreatorRows.map((c) => [c.id, c]));
     const coverUrlMap = await this.buildCoverUrlMap(rows.map((row) => row.space.coverMediaId));
 
     return rows.map((r) => ({
@@ -398,7 +406,7 @@ export class SpacesService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -414,9 +422,15 @@ export class SpacesService {
       ))
       .limit(1);
 
+    const joinAvatarUrl = user?.avatarPath ? await this.mediaService.getSignedUrl(user.avatarPath) : null;
+    const { avatarPath: _joinAvatarPath, ...joinUserRest } = user ?? {} as any;
+
     return {
       id: member.id,
-      user,
+      user: {
+        ...joinUserRest,
+        avatarUrl: joinAvatarUrl,
+      },
       role: member.role,
       spaceNickname: member.spaceNickname,
       joinedAt: member.joinedAt.toISOString(),
@@ -515,7 +529,7 @@ export class SpacesService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -528,9 +542,15 @@ export class SpacesService {
       .where(eq(spaceMembers.id, membership.id))
       .limit(1);
 
+    const nicknameAvatarUrl = user?.avatarPath ? await this.mediaService.getSignedUrl(user.avatarPath) : null;
+    const { avatarPath: _nicknameAvatarPath, ...nicknameUserRest } = user ?? {} as any;
+
     return {
       id: updatedMember.id,
-      user,
+      user: {
+        ...nicknameUserRest,
+        avatarUrl: nicknameAvatarUrl,
+      },
       role: updatedMember.role,
       spaceNickname: updatedMember.spaceNickname,
       joinedAt: updatedMember.joinedAt.toISOString(),
@@ -565,7 +585,7 @@ export class SpacesService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         },
       })
       .from(spaceMembers)
@@ -578,13 +598,19 @@ export class SpacesService {
     const hasMore = rows.length > safeLimit;
     const resultRows = hasMore ? rows.slice(0, safeLimit) : rows;
 
-    const data = resultRows.map((r) => ({
-      id: r.id,
-      user: r.user,
-      role: r.role,
-      spaceNickname: r.spaceNickname,
-      joinedAt: r.joinedAt.toISOString(),
-    }));
+    const signedUsers = await this.mediaService.signUserAvatarRows(resultRows.map((r) => r.user), this.mediaService.avatarCiParams);
+    const signedUserMap = new Map(signedUsers.map((user) => [user.id, user]));
+
+    const data = resultRows.map((r) => {
+      const fallbackUser = (() => { const { avatarPath: _, ...rest } = r.user; return { ...rest, avatarUrl: null as string | null }; })();
+      return {
+        id: r.id,
+        user: signedUserMap.get(r.user.id) ?? fallbackUser,
+        role: r.role,
+        spaceNickname: r.spaceNickname,
+        joinedAt: r.joinedAt.toISOString(),
+      };
+    });
 
     const last = resultRows[resultRows.length - 1];
     return {
@@ -622,15 +648,7 @@ export class SpacesService {
   }
 
   private async resolveCoverUrl(coverMediaId: string | null) {
-    if (!coverMediaId) return null;
-
-    const [asset] = await this.db
-      .select({ publicUrl: mediaAssets.publicUrl })
-      .from(mediaAssets)
-      .where(eq(mediaAssets.id, coverMediaId))
-      .limit(1);
-
-    return asset?.publicUrl ?? null;
+    return this.mediaService.signMediaAssetUrl(coverMediaId, this.mediaService.spaceCoverCiParams);
   }
 
   private async buildCoverUrlMap(coverMediaIds: Array<string | null>) {
@@ -639,12 +657,14 @@ export class SpacesService {
     if (ids.length === 0) return map;
 
     const assets = await this.db
-      .select({ id: mediaAssets.id, publicUrl: mediaAssets.publicUrl })
+      .select({ id: mediaAssets.id, storagePath: mediaAssets.storagePath })
       .from(mediaAssets)
       .where(inArray(mediaAssets.id, ids));
 
+    const ciParams = this.mediaService.spaceCoverCiParams;
     for (const asset of assets) {
-      map.set(asset.id, asset.publicUrl);
+      const url = await this.mediaService.getSignedUrlWithCi(asset.storagePath, ciParams);
+      map.set(asset.id, url ?? '');
     }
 
     return map;

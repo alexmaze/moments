@@ -28,6 +28,20 @@ DATABASE_URL=postgresql://moments:moments_dev@localhost:5432/moments
 JWT_SECRET=dev_secret_at_least_32_characters_long
 ```
 
+再准备本地对象存储配置：
+
+```bash
+mkdir -p config
+cp config/storage.example.json config/storage.json
+```
+
+并确保以下环境变量可用：
+
+```env
+TENCENT_COS_SECRET_ID=your-dev-secret-id
+TENCENT_COS_SECRET_KEY=your-dev-secret-key
+```
+
 如需验证废弃媒体回收，可额外配置：
 
 ```env
@@ -73,6 +87,8 @@ Turborepo 同时启动：
 - **后端** NestJS: `http://localhost:3000`（API 前缀 `/api`）
 - **前端** Vite: `http://localhost:5173`（proxy `/api` → 3000）
 
+媒体访问现在直接使用接口返回的 COS 签名 URL，不再通过本地 `/uploads` 静态目录代理。
+
 访问 `http://localhost:5173` 开始使用。
 
 ## 常用命令
@@ -103,10 +119,14 @@ cat packages/db/src/migrations/XXXX_*.sql
 pnpm db:migrate
 ```
 
-本次媒体清理能力落地后，拉取最新代码必须执行一次 `pnpm db:migrate`，以补齐：
+本次对象存储 Phase 1 落地后，拉取最新代码必须执行一次 `pnpm db:migrate`，以补齐：
 - `media_assets.orphaned_at`
 - `media_assets.last_cleanup_attempt_at`
 - `media_assets.cleanup_error`
+- `media_assets.storage_provider`
+- `media_assets.bucket`
+- `media_assets.object_key`
+- `media_assets.etag`
 
 ## 包依赖关系
 

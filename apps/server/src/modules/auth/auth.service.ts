@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets, users, systemSettings } from '@moments/db';
 import { RegisterDto, LoginDto } from './dto';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly mediaService: MediaService,
   ) {
     // Parse ADMIN_USERNAMES from env (comma-separated, case-insensitive)
     const adminUsernamesStr = this.configService.get<string>('ADMIN_USERNAMES', '');
@@ -102,7 +104,7 @@ export class AuthService {
     const [user] = await this.db
       .select({
         user: users,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -113,11 +115,14 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return this.buildUserResponse(user.user, user.avatarUrl);
+    return this.buildUserResponse(
+      user.user,
+      user.avatarPath ? await this.mediaService.getSignedUrl(user.avatarPath) : null,
+    );
   }
 
   private async buildUserResponse(user: typeof users.$inferSelect, avatarUrlOverride?: string | null) {
-    const avatarUrl = avatarUrlOverride ?? await this.resolveAvatarUrl(user.avatarMediaId);
+    const avatarUrl = avatarUrlOverride ?? await this.mediaService.signMediaAssetUrl(user.avatarMediaId, this.mediaService.avatarCiParams);
     return {
       id: user.id,
       username: user.username,
@@ -130,17 +135,5 @@ export class AuthService {
       isAdmin: this.isAdmin(user.username),
       createdAt: user.createdAt.toISOString(),
     };
-  }
-
-  private async resolveAvatarUrl(avatarMediaId: string | null) {
-    if (!avatarMediaId) return null;
-
-    const [asset] = await this.db
-      .select({ publicUrl: mediaAssets.publicUrl })
-      .from(mediaAssets)
-      .where(eq(mediaAssets.id, avatarMediaId))
-      .limit(1);
-
-    return asset?.publicUrl ?? null;
   }
 }

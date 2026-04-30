@@ -182,15 +182,15 @@ export default function PostsPage() {
                         >
                           {media.type === 'image' ? (
                             <img
-                              src={media.publicUrl}
+                              src={media.thumbnailUrl ?? media.publicUrl}
                               alt=""
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full relative">
-                              {media.coverUrl ? (
+                              {(media.thumbnailUrl ?? media.coverUrl) ? (
                                 <img
-                                  src={media.coverUrl}
+                                  src={media.thumbnailUrl ?? media.coverUrl!}
                                   alt=""
                                   className="w-full h-full object-cover"
                                 />

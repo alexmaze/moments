@@ -7,6 +7,7 @@ export interface MediaAssetDto {
   type: MediaType;
   publicUrl: string;
   coverUrl: string | null;
+  thumbnailUrl: string | null;
   mimeType: string;
   sizeBytes: number;
   width: number | null;

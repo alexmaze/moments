@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { eq, and, count, ilike, or } from 'drizzle-orm';
+import { eq, and, count, ilike, or, inArray } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets, posts, users } from '@moments/db';
 import { UpdateProfileDto } from './dto';
@@ -16,7 +16,7 @@ export class UsersService {
     const [user] = await this.db
       .select({
         user: users,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -36,7 +36,7 @@ export class UsersService {
       id: user.user.id,
       username: user.user.username,
       displayName: user.user.displayName,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarPath ? await this.mediaService.getSignedUrl(user.avatarPath) : null,
       bio: user.user.bio,
       locale: user.user.locale,
       theme: user.user.theme,
@@ -54,7 +54,7 @@ export class UsersService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -64,7 +64,7 @@ export class UsersService {
       ))
       .limit(limit);
 
-    return rows;
+    return this.mediaService.signUserAvatarRows(rows, this.mediaService.avatarCiParams);
   }
 
   async findByIds(ids: string[]) {
@@ -75,12 +75,13 @@ export class UsersService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
-      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id));
-    
-    return joinedRows.filter(u => ids.includes(u.id));
+      .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
+      .where(inArray(users.id, ids));
+
+    return this.mediaService.signUserAvatarRows(joinedRows, this.mediaService.avatarCiParams);
   }
 
   async updateMe(userId: string, dto: UpdateProfileDto) {
@@ -101,7 +102,7 @@ export class UsersService {
       id: updated.id,
       username: updated.username,
       displayName: updated.displayName,
-      avatarUrl: await this.resolveAvatarUrl(updated.avatarMediaId),
+      avatarUrl: await this.mediaService.signMediaAssetUrl(updated.avatarMediaId, this.mediaService.avatarCiParams),
       bio: updated.bio,
       locale: updated.locale,
       theme: updated.theme,
@@ -142,7 +143,7 @@ export class UsersService {
       id: updated.id,
       username: updated.username,
       displayName: updated.displayName,
-      avatarUrl: asset.publicUrl,
+      avatarUrl: await this.mediaService.getSignedUrl(asset.storagePath),
       bio: updated.bio,
       locale: updated.locale,
       theme: updated.theme,
@@ -151,15 +152,4 @@ export class UsersService {
     };
   }
 
-  private async resolveAvatarUrl(avatarMediaId: string | null) {
-    if (!avatarMediaId) return null;
-
-    const [asset] = await this.db
-      .select({ publicUrl: mediaAssets.publicUrl })
-      .from(mediaAssets)
-      .where(eq(mediaAssets.id, avatarMediaId))
-      .limit(1);
-
-    return asset?.publicUrl ?? null;
-  }
 }

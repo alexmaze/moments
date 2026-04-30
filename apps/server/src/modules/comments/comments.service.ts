@@ -13,6 +13,7 @@ import { CreateCommentDto } from './dto';
 import { MentionsService } from '../mentions/mentions.service';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class CommentsService {
@@ -22,6 +23,7 @@ export class CommentsService {
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
+    private readonly mediaService: MediaService,
   ) {}
 
   async create(postId: string, authorId: string, dto: CreateCommentDto) {
@@ -102,7 +104,7 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         })
         .from(users)
         .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -142,7 +144,7 @@ export class CommentsService {
               id: users.id,
               username: users.username,
               displayName: users.displayName,
-              avatarUrl: mediaAssets.publicUrl,
+              avatarPath: mediaAssets.storagePath,
             })
             .from(users)
             .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
@@ -162,9 +164,16 @@ export class CommentsService {
             replyAuthorNickname = replyMembership?.spaceNickname ?? null;
           }
 
+          const replyAuthorAvatarUrl = replyAuthor?.avatarPath ? await this.mediaService.getSignedUrl(replyAuthor.avatarPath) : null;
+          const { avatarPath: _replyAuthorAvatarPath, ...replyAuthorRest } = replyAuthor ?? {} as any;
+
           replyTo = {
             id: replyTargetComment.id,
-            author: { ...replyAuthor, spaceNickname: replyAuthorNickname },
+            author: {
+              ...replyAuthorRest,
+              avatarUrl: replyAuthorAvatarUrl,
+              spaceNickname: replyAuthorNickname,
+            },
             contentPreview: replyTargetComment.content.slice(0, 50),
           };
         }
@@ -196,12 +205,19 @@ export class CommentsService {
         spaceNickname: mentionNicknames.get(u.id) ?? null,
       }));
 
+      const authorAvatarUrl = author?.avatarPath ? await this.mediaService.getSignedUrl(author.avatarPath) : null;
+      const { avatarPath: _authorAvatarPath, ...authorRest } = author ?? {} as any;
+
       return {
         id: comment.id,
         content: comment.content,
         createdAt: comment.createdAt.toISOString(),
         isDeleted: comment.isDeleted,
-        author: { ...author, spaceNickname: authorNickname },
+        author: {
+          ...authorRest,
+          avatarUrl: authorAvatarUrl,
+          spaceNickname: authorNickname,
+        },
         replyTo,
         mentions: mentionUsersWithNickname,
       };
@@ -277,7 +293,7 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         },
         replyToId: postComments.replyToId,
       })
@@ -293,6 +309,9 @@ export class CommentsService {
       .orderBy(asc(postComments.createdAt))
       .limit(limit)
       .offset(offset);
+
+    const signedAuthors = await this.mediaService.signUserAvatarRows(rows.map((row) => row.author), this.mediaService.avatarCiParams);
+    const signedAuthorMap = new Map(signedAuthors.map((author) => [author.id, author]));
 
     const authorIds = [...new Set(rows.map(r => r.author.id))];
     const nicknameMap = new Map<string, string | null>();
@@ -335,12 +354,13 @@ export class CommentsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         })
         .from(users)
         .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
         .where(inArray(users.id, replyAuthorIds));
-      const replyAuthorMap = new Map(replyAuthorRows.map(a => [a.id, a]));
+      const signedReplyAuthors = await this.mediaService.signUserAvatarRows(replyAuthorRows, this.mediaService.avatarCiParams);
+      const replyAuthorMap = new Map(signedReplyAuthors.map(a => [a.id, a]));
 
       const replyNicknameMap = new Map<string, string | null>();
       if (spaceId && replyAuthorIds.length > 0) {
@@ -417,15 +437,21 @@ export class CommentsService {
       }
     }
 
-    const data = rows.map((row) => ({
-      id: row.id,
-      content: row.content,
-      createdAt: row.createdAt.toISOString(),
-      isDeleted: row.isDeleted,
-      author: { ...row.author, spaceNickname: nicknameMap.get(row.author.id) ?? null },
-      replyTo: row.replyToId ? replyToMap.get(row.replyToId) ?? null : null,
-      mentions: mentionsMap.get(row.id) ?? [],
-    }));
+    const data = rows.map((row) => {
+      const fallbackAuthor = (() => { const { avatarPath: _, ...rest } = row.author; return { ...rest, avatarUrl: null as string | null }; })();
+      return {
+        id: row.id,
+        content: row.content,
+        createdAt: row.createdAt.toISOString(),
+        isDeleted: row.isDeleted,
+        author: {
+          ...(signedAuthorMap.get(row.author.id) ?? fallbackAuthor),
+          spaceNickname: nicknameMap.get(row.author.id) ?? null,
+        },
+        replyTo: row.replyToId ? replyToMap.get(row.replyToId) ?? null : null,
+        mentions: mentionsMap.get(row.id) ?? [],
+      };
+    });
 
     return {
       data,

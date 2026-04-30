@@ -343,6 +343,7 @@ export class PostsService {
 
   async uploadAudio(file: Express.Multer.File, _uploaderId: string, clientDurationMs?: number) {
     const asset = await this.mediaService.uploadFile(file, _uploaderId);
+    const storedAsset = await this.mediaService.requireOwnedPendingAsset(asset.id, _uploaderId, 'audio');
     const normalizedClientDuration = this.normalizeAudioDuration(clientDurationMs);
     const finalDurationMs = this.normalizeAudioDuration(asset.durationMs) ?? normalizedClientDuration;
 
@@ -360,7 +361,7 @@ export class PostsService {
     return {
       id: asset.id,
       type: asset.type,
-      publicUrl: asset.publicUrl,
+      publicUrl: await this.mediaService.getSignedUrl(storedAsset.storagePath),
       mimeType: asset.mimeType,
       sizeBytes: asset.sizeBytes,
       durationMs: finalDurationMs,
@@ -626,12 +627,13 @@ export class PostsService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, authorIds));
-    const authorMap = new Map(authorRows.map((a) => [a.id, a]));
+    const signedAuthorRows = await this.mediaService.signUserAvatarRows(authorRows, this.mediaService.avatarCiParams);
+    const authorMap = new Map(signedAuthorRows.map((a) => [a.id, a]));
 
     // Batch load media
     const mediaRelRows = await this.db
@@ -656,6 +658,30 @@ export class PostsService {
         .from(mediaAssets)
         .where(inArray(mediaAssets.id, audioMediaIds));
       audioAssetMap = new Map(audioAssetRows.map((asset) => [asset.id, asset]));
+    }
+
+    const signedMediaRows = await this.mediaService.signMediaRows(
+      mediaRelRows.map((row) => ({
+        mediaId: row.media_assets.id,
+        storagePath: row.media_assets.storagePath,
+        coverPath: row.media_assets.coverPath,
+        type: row.media_assets.type,
+      })),
+      {
+        imageCiParams: this.mediaService.feedImageCiParams,
+        coverCiParams: this.mediaService.feedCoverCiParams,
+      },
+    );
+    const signedMediaMap = new Map(
+      signedMediaRows.map((row) => [row.mediaId, { publicUrl: row.publicUrl, coverUrl: row.coverUrl, thumbnailUrl: row.thumbnailUrl }]),
+    );
+
+    const signedAudioUrlMap = new Map<string, string>();
+    for (const asset of audioAssetMap.values()) {
+      const signedUrl = await this.mediaService.getSignedUrl(asset.storagePath);
+      if (signedUrl) {
+        signedAudioUrlMap.set(asset.id, signedUrl);
+      }
     }
 
     // Batch load likes for current user
@@ -835,8 +861,9 @@ export class PostsService {
         media: mediaRels.map((r) => ({
           id: r.media_assets.id,
           type: r.media_assets.type,
-          publicUrl: r.media_assets.publicUrl,
-          coverUrl: r.media_assets.coverUrl,
+          publicUrl: signedMediaMap.get(r.media_assets.id)?.publicUrl ?? '',
+          coverUrl: signedMediaMap.get(r.media_assets.id)?.coverUrl ?? null,
+          thumbnailUrl: signedMediaMap.get(r.media_assets.id)?.thumbnailUrl ?? null,
           mimeType: r.media_assets.mimeType,
           sizeBytes: r.media_assets.sizeBytes,
           width: r.media_assets.width,
@@ -846,7 +873,7 @@ export class PostsService {
         })),
         audio: post.audioMediaId && audioAssetMap.get(post.audioMediaId) ? {
           id: audioAssetMap.get(post.audioMediaId)!.id,
-          url: audioAssetMap.get(post.audioMediaId)!.publicUrl,
+          url: signedAudioUrlMap.get(post.audioMediaId!) ?? '',
           durationMs: audioAssetMap.get(post.audioMediaId)!.durationMs ?? 0,
           waveform: this.parseWaveform(audioAssetMap.get(post.audioMediaId)!.waveform),
           status: 'ready' as const,
@@ -923,7 +950,7 @@ export class PostsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         },
       })
       .from(postComments)
@@ -936,6 +963,9 @@ export class PostsService {
         ),
       )
       .orderBy(asc(postComments.createdAt));
+
+    const signedCommentAuthors = await this.mediaService.signUserAvatarRows(rows.map((row) => row.author), this.mediaService.avatarCiParams);
+    const signedCommentAuthorMap = new Map(signedCommentAuthors.map((author) => [author.id, author]));
 
     const allMentionedUserIds = new Set<string>();
     for (const row of rows) {
@@ -1023,7 +1053,7 @@ export class PostsService {
           content: row.content,
           createdAt: row.createdAt.toISOString(),
           isDeleted: row.isDeleted,
-          author: { ...row.author, spaceNickname: authorNickname },
+          author: { ...(signedCommentAuthorMap.get(row.author.id) ?? (() => { const { avatarPath: _, ...rest } = row.author; return { ...rest, avatarUrl: null }; })()), spaceNickname: authorNickname },
           replyTo: null,
           mentions,
         });

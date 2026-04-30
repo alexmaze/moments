@@ -156,11 +156,12 @@ function MediaCell({
   const mediaClass = 'w-full h-full object-cover';
 
   if (item.type === 'video') {
+    const videoThumb = item.thumbnailUrl ?? item.coverUrl;
     return (
       <>
-        {item.coverUrl ? (
+        {videoThumb ? (
           <img
-            src={item.coverUrl}
+            src={videoThumb}
             alt=""
             loading="lazy"
             decoding="async"
@@ -191,7 +192,7 @@ function MediaCell({
 
   return (
     <img
-      src={item.publicUrl}
+      src={item.thumbnailUrl ?? item.publicUrl}
       alt=""
       loading="lazy"
       decoding="async"

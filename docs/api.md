@@ -2,6 +2,8 @@
 
 所有接口统一前缀 `/api`。需要认证的接口请在请求头中携带 `Authorization: Bearer <token>`。
 
+媒体相关字段如 `avatarUrl`、`publicUrl`、`coverUrl`、`audio.url` 现在返回的是腾讯云 COS 私有桶签名 URL，不再是站内 `/uploads/...` 静态路径。默认签名有效期 8 小时，客户端应以接口返回值为准，不要自行拼接。
+
 ---
 
 ## Auth（认证）
@@ -99,7 +101,7 @@ GET /api/auth/me
   "id": "uuid",
   "username": "alex",
   "displayName": "Alex",
-  "avatarUrl": "http://localhost:3000/uploads/avatar.jpg",
+  "avatarUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
   "bio": "Hello world",
   "createdAt": "2025-01-01T00:00:00.000Z"
 }
@@ -145,18 +147,18 @@ GET /api/posts
         {
           "id": "uuid",
           "type": "image",
-          "publicUrl": "/uploads/2025/01/01/abc.jpg",
+          "publicUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
           "coverUrl": null,
           "mimeType": "image/jpeg",
           "width": 1920,
           "height": 1080,
-          "durationSecs": null,
+          "durationMs": null,
           "sortOrder": 0
         }
       ],
       "audio": {
-        "url": "/uploads/2026/04/21/audio/abc.webm",
-        "durationSec": 17,
+        "url": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../audio/original.webm?q-sign-algorithm=sha1&...",
+        "durationMs": 17000,
         "waveform": [26, 41, 59, 73, 62, 38, 21],
         "status": "ready",
         "mimeType": "audio/webm",
@@ -225,8 +227,8 @@ POST /api/posts/audio-upload
 {
   "id": "uuid",
   "type": "audio",
-  "publicUrl": "/uploads/2026/04/21/audio/abc.webm",
-  "durationSecs": 17,
+  "publicUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../audio/original.webm?q-sign-algorithm=sha1&...",
+  "durationMs": 17000,
   "mimeType": "audio/webm",
   "sizeBytes": 128430
 }
@@ -360,17 +362,17 @@ POST /api/media/upload
 {
   "id": "uuid",
   "type": "image",
-  "publicUrl": "/uploads/2025/01/01/abc.jpg",
+  "publicUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
   "coverUrl": null,
   "mimeType": "image/jpeg",
   "sizeBytes": 204800,
   "width": 1920,
   "height": 1080,
-  "durationSecs": null
+  "durationMs": null
 }
 ```
 
-> 视频文件会自动提取首帧作为封面（`coverUrl`），并解析宽高和时长（`durationSecs`，单位秒）。
+> 视频文件会自动提取首帧作为封面（`coverUrl`），并解析宽高和时长（`durationMs`，单位毫秒）。
 
 **错误**:
 
@@ -427,7 +429,7 @@ GET /api/users/:username
   "id": "uuid",
   "username": "alex",
   "displayName": "Alex",
-  "avatarUrl": "http://localhost:3000/uploads/avatar.jpg",
+  "avatarUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
   "bio": "Hello world",
   "postCount": 42,
   "createdAt": "2025-01-01T00:00:00.000Z"
@@ -465,7 +467,7 @@ GET /api/users/search
     "id": "uuid",
     "username": "alex",
     "displayName": "Alex",
-    "avatarUrl": "http://localhost:3000/uploads/avatar.jpg"
+    "avatarUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&..."
   }
 ]
 ```
@@ -529,7 +531,7 @@ PATCH /api/users/me
   "id": "uuid",
   "username": "alex",
   "displayName": "New Name",
-  "avatarUrl": "http://localhost:3000/uploads/avatar.jpg",
+  "avatarUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
   "bio": "Updated bio",
   "createdAt": "2025-01-01T00:00:00.000Z"
 }
@@ -560,7 +562,7 @@ POST /api/users/me/avatar
   "id": "uuid",
   "username": "alex",
   "displayName": "Alex",
-  "avatarUrl": "/uploads/2025/01/01/avatar.jpg",
+  "avatarUrl": "https://bucket.cos.ap-shanghai.myqcloud.com/moments/.../original.jpg?q-sign-algorithm=sha1&...",
   "bio": "Hello world",
   "createdAt": "2025-01-01T00:00:00.000Z"
 }

@@ -19,6 +19,7 @@ export interface NotificationPostPreviewDto {
     type: 'image' | 'video';
     publicUrl: string;
     coverUrl: string | null;
+    thumbnailUrl: string | null;
   } | null;
   audio: {
     durationMs: number;

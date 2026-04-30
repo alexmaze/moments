@@ -10,6 +10,7 @@ import {
   posts,
   postMediaRelations,
 } from '@moments/db';
+import { MediaService } from '../media/media.service';
 
 const CONTENT_PREVIEW_MAX = 80;
 
@@ -26,6 +27,7 @@ function truncatePreview(content: string | null): string | null {
 export class NotificationsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
+    private readonly mediaService: MediaService,
   ) {}
 
   async createMentionInPostNotification(
@@ -288,13 +290,14 @@ export class NotificationsService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, uniqueActorIds));
 
-    const actorUserMap = new Map(actorUserRows.map((u) => [u.id, u]));
+    const signedActorUsers = await this.mediaService.signUserAvatarRows(actorUserRows, this.mediaService.avatarCiParams);
+    const actorUserMap = new Map(signedActorUsers.map((u) => [u.id, u]));
 
     const actorsByNotif = new Map<string, string[]>();
     for (const row of actorRows) {
@@ -355,13 +358,17 @@ export class NotificationsService {
           .select({
             id: mediaAssets.id,
             type: mediaAssets.type,
-            publicUrl: mediaAssets.publicUrl,
-            coverUrl: mediaAssets.coverUrl,
+            storagePath: mediaAssets.storagePath,
+            coverPath: mediaAssets.coverPath,
           })
           .from(mediaAssets)
           .where(inArray(mediaAssets.id, mediaIds))
       : [];
-    const mediaMap = new Map(mediaRows.map((m) => [m.id, m]));
+    const signedMediaRows = await this.mediaService.signMediaRows(mediaRows, {
+      imageCiParams: this.mediaService.smallThumbCiParams,
+      coverCiParams: this.mediaService.smallThumbCiParams,
+    });
+    const mediaMap = new Map(signedMediaRows.map((m) => [m.id, m]));
 
     const data = resultRows.map((notif) => {
       const actorIdsForNotif = actorsByNotif.get(notif.id) || [];
@@ -378,7 +385,7 @@ export class NotificationsService {
         ? { postId: notif.postId, ...(notif.commentId ? { commentId: notif.commentId } : {}) }
         : null;
 
-      let postPreview: { id: string; content: string | null; firstMedia: { type: 'image' | 'video'; publicUrl: string; coverUrl: string | null } | null; audio: { durationMs: number } | null } | null = null;
+      let postPreview: { id: string; content: string | null; firstMedia: { type: 'image' | 'video'; publicUrl: string; coverUrl: string | null; thumbnailUrl: string | null } | null; audio: { durationMs: number } | null } | null = null;
       if (notif.postId) {
         const post = postMap.get(notif.postId);
         if (post) {
@@ -387,7 +394,7 @@ export class NotificationsService {
             ? (() => {
                 const m = mediaMap.get(firstMediaRel.mediaId);
                 if (!m || (m.type !== 'image' && m.type !== 'video')) return null;
-                return { type: m.type, publicUrl: m.publicUrl, coverUrl: m.coverUrl };
+                return { type: m.type, publicUrl: m.publicUrl, coverUrl: m.coverUrl, thumbnailUrl: m.thumbnailUrl };
               })()
             : null;
 

@@ -21,14 +21,15 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USER:-moments}:${DB_PASSWORD:-moments_prod}@db:5432/moments
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      BASE_URL: ${BASE_URL:-http://localhost:3000}
-      UPLOAD_DIR: /app/uploads
+      STORAGE_CONFIG_FILE: /app/config/storage.json
+      TENCENT_COS_SECRET_ID: ${TENCENT_COS_SECRET_ID:?TENCENT_COS_SECRET_ID is required}
+      TENCENT_COS_SECRET_KEY: ${TENCENT_COS_SECRET_KEY:?TENCENT_COS_SECRET_KEY is required}
       NODE_ENV: production
       PORT: 3000
     ports:
       - "${PORT:-3000}:3000"
     volumes:
-      - uploads_data:/app/uploads
+      - ../config:/app/config:ro
     depends_on:
       db:
         condition: service_healthy
@@ -36,4 +37,3 @@ services:
 
 volumes:
   postgres_data:
-  uploads_data:

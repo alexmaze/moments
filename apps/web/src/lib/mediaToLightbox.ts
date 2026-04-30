@@ -26,6 +26,7 @@ export function mediaToLightboxSlides(items: PostMediaDto[]): Slide[] {
       src: item.publicUrl,
       width: item.width ?? undefined,
       height: item.height ?? undefined,
-    };
+      thumbnail: item.thumbnailUrl ?? undefined,
+    } as Slide;
   });
 }

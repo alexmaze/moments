@@ -23,20 +23,14 @@ async function bootstrap() {
     }),
   );
 
-  // Serve uploaded media files
-  const uploadDir = configService.get<string>('UPLOAD_DIR', './uploads');
-  app.useStaticAssets(join(process.cwd(), uploadDir), {
-    prefix: '/uploads',
-  });
-
   // In production, serve the frontend SPA
   const publicDir = join(__dirname, '..', 'public');
   if (configService.get('NODE_ENV') === 'production' && existsSync(publicDir)) {
     app.useStaticAssets(publicDir);
 
-    // SPA fallback: serve index.html for all non-API, non-uploads routes
+    // SPA fallback: serve index.html for all non-API routes
     const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get(/^\/(?!api|uploads).*/, (_req: unknown, res: { sendFile: (path: string) => void }) => {
+    expressApp.get(/^\/(?!api).*/, (_req: unknown, res: { sendFile: (path: string) => void }) => {
       res.sendFile(join(publicDir, 'index.html'));
     });
   }

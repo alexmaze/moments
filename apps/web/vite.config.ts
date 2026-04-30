@@ -20,7 +20,6 @@ export default defineConfig({
     allowedHosts: ["t-sg"],
     proxy: {
       '/api': 'http://localhost:3000',
-      '/uploads': 'http://localhost:3000',
     },
   },
 });

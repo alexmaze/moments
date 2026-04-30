@@ -18,7 +18,7 @@
 | 前端 | React 19 + Vite + Tailwind CSS v4 + TanStack Query |
 | 后端 | NestJS + Drizzle ORM + PostgreSQL 16 |
 | 认证 | JWT (Passport.js) |
-| 媒体 | 本地存储 + ffmpeg 视频封面抽帧 |
+| 媒体 | 腾讯云 COS 私有桶 + 签名 URL + ffmpeg 视频封面抽帧 |
 | 工程 | pnpm workspaces + Turborepo |
 | 部署 | Docker 单容器 |
 

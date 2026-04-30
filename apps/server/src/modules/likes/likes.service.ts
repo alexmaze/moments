@@ -4,12 +4,14 @@ import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, posts, postLikes, spaceMembers, users, mediaAssets } from '@moments/db';
 import { NotificationsService } from '../notifications/notifications.service';
 import type { LikedUserDto } from '@moments/shared';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class LikesService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
     private readonly notificationsService: NotificationsService,
+    private readonly mediaService: MediaService,
   ) {}
 
   async toggle(postId: string, userId: string) {
@@ -123,7 +125,7 @@ export class LikesService {
       conditions.push(lt(postLikes.createdAt, new Date(cursor)));
     }
 
-    let rows: { id: string; username: string; displayName: string; avatarUrl: string | null; spaceNickname: string | null; likedAt: Date }[];
+    let rows: { id: string; username: string; displayName: string; avatarPath: string | null; spaceNickname: string | null; likedAt: Date }[];
 
     if (post.spaceId) {
       rows = await this.db
@@ -131,7 +133,7 @@ export class LikesService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
           spaceNickname: spaceMembers.spaceNickname,
           likedAt: postLikes.createdAt,
         })
@@ -151,7 +153,7 @@ export class LikesService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
           spaceNickname: sql<string | null>`${null}`,
           likedAt: postLikes.createdAt,
         })
@@ -165,8 +167,9 @@ export class LikesService {
 
     const hasMore = rows.length > safeLimit;
     const data = hasMore ? rows.slice(0, safeLimit) : rows;
+    const signedRows = await this.mediaService.signUserAvatarRows(data, this.mediaService.avatarCiParams);
 
-    const likedUsers: LikedUserDto[] = data.map((row) => ({
+    const likedUsers: LikedUserDto[] = signedRows.map((row) => ({
       id: row.id,
       username: row.username,
       displayName: row.spaceNickname ?? row.displayName,

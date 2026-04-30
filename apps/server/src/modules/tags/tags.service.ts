@@ -15,6 +15,7 @@ import {
   spaceMembers,
 } from '@moments/db';
 import { parseHashtags, normalizeHashtag } from '@moments/shared';
+import { MediaService } from '../media/media.service';
 
 @Injectable()
 export class TagsService {
@@ -22,6 +23,7 @@ export class TagsService {
 
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleClient,
+    private readonly mediaService: MediaService,
   ) {}
 
   async getTags(query?: string, limit = 10) {
@@ -170,12 +172,13 @@ export class TagsService {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: mediaAssets.publicUrl,
+        avatarPath: mediaAssets.storagePath,
       })
       .from(users)
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(inArray(users.id, authorIds));
-    const authorMap = new Map(authorRows.map(a => [a.id, a]));
+    const signedAuthorRows = await this.mediaService.signUserAvatarRows(authorRows, this.mediaService.avatarCiParams);
+    const authorMap = new Map(signedAuthorRows.map(a => [a.id, a]));
 
     const mediaRelRows = await this.db
       .select()
@@ -190,6 +193,22 @@ export class TagsService {
       list.push(row);
       mediaByPost.set(row.post_media_relations.postId, list);
     }
+
+    const signedMediaRows = await this.mediaService.signMediaRows(
+      mediaRelRows.map((row) => ({
+        mediaId: row.media_assets.id,
+        storagePath: row.media_assets.storagePath,
+        coverPath: row.media_assets.coverPath,
+        type: row.media_assets.type,
+      })),
+      {
+        imageCiParams: this.mediaService.feedImageCiParams,
+        coverCiParams: this.mediaService.feedCoverCiParams,
+      },
+    );
+    const signedMediaMap = new Map(
+      signedMediaRows.map((row) => [row.mediaId, { publicUrl: row.publicUrl, coverUrl: row.coverUrl, thumbnailUrl: row.thumbnailUrl }]),
+    );
 
     let likedPostIds = new Set<string>();
     if (currentUserId) {
@@ -266,8 +285,9 @@ export class TagsService {
         media: mediaRels.map(r => ({
           id: r.media_assets.id,
           type: r.media_assets.type,
-          publicUrl: r.media_assets.publicUrl,
-          coverUrl: r.media_assets.coverUrl,
+          publicUrl: signedMediaMap.get(r.media_assets.id)?.publicUrl ?? '',
+          coverUrl: signedMediaMap.get(r.media_assets.id)?.coverUrl ?? null,
+          thumbnailUrl: signedMediaMap.get(r.media_assets.id)?.thumbnailUrl ?? null,
           mimeType: r.media_assets.mimeType,
           width: r.media_assets.width,
           height: r.media_assets.height,
@@ -311,7 +331,7 @@ export class TagsService {
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          avatarUrl: mediaAssets.publicUrl,
+          avatarPath: mediaAssets.storagePath,
         },
       })
       .from(postComments)
@@ -319,6 +339,9 @@ export class TagsService {
       .leftJoin(mediaAssets, eq(users.avatarMediaId, mediaAssets.id))
       .where(and(inArray(postComments.postId, postIds), eq(postComments.isDeleted, false)))
       .orderBy(asc(postComments.createdAt));
+
+    const signedCommentAuthors = await this.mediaService.signUserAvatarRows(rows.map((row) => row.author), this.mediaService.avatarCiParams);
+    const signedCommentAuthorMap = new Map(signedCommentAuthors.map((author) => [author.id, author]));
 
     for (const row of rows) {
       const list = result.get(row.postId)!;
@@ -328,7 +351,7 @@ export class TagsService {
           content: row.content,
           createdAt: row.createdAt.toISOString(),
           isDeleted: row.isDeleted,
-          author: row.author,
+          author: signedCommentAuthorMap.get(row.author.id) ?? (() => { const { avatarPath: _, ...rest } = row.author; return { ...rest, avatarUrl: null }; })(),
         });
       }
     }

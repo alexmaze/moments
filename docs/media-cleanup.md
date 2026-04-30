@@ -4,6 +4,7 @@
 >
 > 当前已落地：
 > - `media_assets` 新增 `orphaned_at`、`last_cleanup_attempt_at`、`cleanup_error`
+> - Phase 1 已切到腾讯云 COS 私有桶，清理对象为 COS object key
 > - 统一通过 `MediaService` 做 attached/orphaned 状态流转
 > - 替换头像、替换空间封面、删除帖子、删除空间后会触发无引用检查
 > - 服务端内置后台清理 worker，默认每小时执行一次
@@ -110,6 +111,10 @@
 - `status`
 - `purpose`
 - `storage_path`
+- `storage_provider`
+- `bucket`
+- `object_key`
+- `etag`
 - `public_url`
 - `cover_path`
 - `cover_url`
@@ -117,8 +122,14 @@
 - `size_bytes`
 - `width`
 - `height`
-- `duration_secs`
+- `duration_ms`
 - `created_at`
+
+其中：
+
+- `object_key` / `cover_path` 是实际删除时使用的稳定对象标识
+- `public_url` / `cover_url` 仅为兼容字段，不应作为长期可访问地址
+- 对外访问统一由接口实时签发 COS 私有桶签名 URL
 
 ### 建议新增字段
 
@@ -217,7 +228,7 @@ purpose 保留
 
 每条媒体可能需要删除：
 
-- 主文件：`storage_path`
+- 主文件：`object_key`（兼容实现中仍与 `storage_path` 同值）
 - 视频封面：`cover_path`，如果存在
 
 注意：
