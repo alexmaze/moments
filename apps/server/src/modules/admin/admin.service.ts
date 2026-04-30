@@ -551,7 +551,6 @@ export class AdminService {
       [todayPostCount],
       [commentCount],
       [likeCount],
-      [storageResult],
     ] = await Promise.all([
       this.db.select({ count: sql<number>`count(*)::int` }).from(users),
       this.db.select({ count: sql<number>`count(*)::int` }).from(users).where(sql`${users.createdAt} >= ${today}`),
@@ -559,8 +558,19 @@ export class AdminService {
       this.db.select({ count: sql<number>`count(*)::int` }).from(posts).where(and(eq(posts.isDeleted, false), sql`${posts.createdAt} >= ${today}`)),
       this.db.select({ count: sql<number>`count(*)::int` }).from(postComments).where(eq(postComments.isDeleted, false)),
       this.db.select({ count: sql<number>`count(*)::int` }).from(postLikes),
-      this.db.select({ totalSize: sql<string>`coalesce(sum(size_bytes), 0)::text` }).from(mediaAssets),
     ]);
+
+    // COS storage stats — graceful degradation: fallback to DB SUM on failure
+    let storageStats: { totalBytes: number; objectCount: number };
+    try {
+      storageStats = await this.mediaService.getStorageStats();
+    } catch {
+      // Fallback: sum from DB (less accurate but keeps dashboard functional)
+      const [fallback] = await this.db
+        .select({ totalSize: sql<string>`coalesce(sum(size_bytes), 0)::text` })
+        .from(mediaAssets);
+      storageStats = { totalBytes: Number(fallback.totalSize), objectCount: -1 };
+    }
 
     const [dbSizeResult] = await this.db
       .select({ dbSize: sql<string>`pg_database_size(current_database())::text` })
@@ -571,7 +581,7 @@ export class AdminService {
       posts: { total: postCount.count, today: todayPostCount.count },
       comments: { total: commentCount.count },
       likes: { total: likeCount.count },
-      storage: { totalBytes: Number(storageResult.totalSize) },
+      storage: { totalBytes: storageStats.totalBytes, objectCount: storageStats.objectCount },
       database: { totalBytes: Number(dbSizeResult.dbSize) },
     };
   }

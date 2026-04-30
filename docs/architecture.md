@@ -136,6 +136,7 @@ pending/orphaned ──(挂载到帖子/头像/空间封面)──▶ attached
   - `putObject()`
   - `deleteObject()`
   - `getSignedUrl()`
+  - `getBucketStats(prefix)` — ListObjects 遍历统计存储占用，10 分钟内存缓存 + in-flight 去重
 
 设计目的不是保留本地模式，而是避免 `MediaService` 直接耦合 COS 请求签名细节。
 

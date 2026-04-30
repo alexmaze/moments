@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import COS from 'cos-nodejs-sdk-v5';
 import { LRUCache } from 'lru-cache';
-import { IStorageProvider, PutObjectInput, StoredObject } from './storage.interface';
+import { BucketStats, IStorageProvider, PutObjectInput, StoredObject } from './storage.interface';
 import { StorageConfigService } from './storage.config';
 
 function encodeKey(key: string) {
@@ -177,5 +177,85 @@ export class TencentCosStorageProvider implements IStorageProvider {
 
     this.setCachedUrl(key, cacheKey, url, this.cacheTtlMs(expiresInSeconds));
     return url;
+  }
+
+  // ─── Bucket stats ─────────────────────────────────────────────────────────
+
+  /** Cache TTL for bucket stats: 10 minutes. */
+  private static readonly BUCKET_STATS_TTL_MS = 10 * 60 * 1000;
+
+  /** Max pages to iterate before aborting (safety valve against infinite loop). */
+  private static readonly MAX_LIST_PAGES = 10_000;
+
+  private bucketStatsCache: { key: string; stats: BucketStats; expiresAt: number } | null = null;
+
+  /** In-flight dedup: concurrent callers share the same promise when cache is missed. */
+  private bucketStatsInflight: Promise<BucketStats> | null = null;
+
+  async getBucketStats(prefix: string): Promise<BucketStats> {
+    const now = Date.now();
+    if (this.bucketStatsCache && this.bucketStatsCache.key === prefix && now < this.bucketStatsCache.expiresAt) {
+      return this.bucketStatsCache.stats;
+    }
+
+    // Deduplicate concurrent requests
+    if (this.bucketStatsInflight) {
+      return this.bucketStatsInflight;
+    }
+
+    this.bucketStatsInflight = this.fetchBucketStats(prefix);
+    try {
+      const stats = await this.bucketStatsInflight;
+      return stats;
+    } finally {
+      this.bucketStatsInflight = null;
+    }
+  }
+
+  private async fetchBucketStats(prefix: string): Promise<BucketStats> {
+    let totalBytes = 0;
+    let objectCount = 0;
+    let marker: string | undefined;
+    let pageCount = 0;
+
+    // Paginate through all objects under the prefix
+    while (pageCount < TencentCosStorageProvider.MAX_LIST_PAGES) {
+      pageCount++;
+
+      const result = await this.cos.getBucket({
+        Bucket: this.bucket,
+        Region: this.region,
+        Prefix: prefix ? `${prefix}/` : '',
+        MaxKeys: 1000,
+        Marker: marker || '',
+      });
+
+      for (const item of result.Contents || []) {
+        totalBytes += Number(item.Size) || 0;
+        objectCount++;
+      }
+
+      if (result.IsTruncated === 'true') {
+        const nextMarker = result.NextMarker;
+        // Safety: if NextMarker is empty or unchanged, use last object key to advance
+        if (!nextMarker || nextMarker === marker) {
+          const contents = result.Contents || [];
+          const lastKey = contents.length > 0 ? contents[contents.length - 1].Key : undefined;
+          if (!lastKey || lastKey === marker) {
+            // Cannot advance — break out to avoid infinite loop
+            break;
+          }
+          marker = lastKey;
+        } else {
+          marker = nextMarker;
+        }
+      } else {
+        break;
+      }
+    }
+
+    const stats: BucketStats = { totalBytes, objectCount };
+    this.bucketStatsCache = { key: prefix, stats, expiresAt: Date.now() + TencentCosStorageProvider.BUCKET_STATS_TTL_MS };
+    return stats;
   }
 }

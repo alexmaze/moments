@@ -131,6 +131,9 @@ interface StorageProvider {
   deleteObject(key: string): Promise<void>;
   headObject(key: string): Promise<StoredObjectMeta | null>;
   getSignedUrl(key: string, expiresInSeconds: number): Promise<string>;
+
+  /** 统计 prefix 下所有对象的存储占用（用于管理后台） */
+  getBucketStats(prefix: string): Promise<{ totalBytes: number; objectCount: number }>;
 }
 ```
 

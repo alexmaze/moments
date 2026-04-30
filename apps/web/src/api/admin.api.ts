@@ -23,7 +23,7 @@ export interface AdminStats {
   posts: { total: number; today: number };
   comments: { total: number };
   likes: { total: number };
-  storage: { totalBytes: number };
+  storage: { totalBytes: number; objectCount: number };
   database: { totalBytes: number };
 }
 

@@ -13,6 +13,11 @@ export interface PutObjectInput {
   cacheControl?: string;
 }
 
+export interface BucketStats {
+  totalBytes: number;
+  objectCount: number;
+}
+
 export interface IStorageProvider {
   readonly kind: 'tencent-cos';
 
@@ -23,4 +28,7 @@ export interface IStorageProvider {
 
   /** Generate a signed URL with CI image-processing params co-signed into the HMAC. */
   getSignedCiUrl?(key: string, expiresInSeconds: number, ciParams: string): Promise<string>;
+
+  /** Get storage usage statistics for objects under the given prefix. */
+  getBucketStats(prefix: string): Promise<BucketStats>;
 }

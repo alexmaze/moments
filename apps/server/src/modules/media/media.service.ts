@@ -300,6 +300,11 @@ export class MediaService {
     return this.storageProvider.getSignedUrl(storagePath, this.signedUrlTtlSeconds);
   }
 
+  /** Get COS bucket storage stats (cached for 10 min internally). */
+  async getStorageStats() {
+    return this.storageProvider.getBucketStats(this.keyPrefix);
+  }
+
   /** CI config accessors — return null when CI is disabled */
   get feedImageCiParams(): string | null { return this.ciConfig?.feedImage ?? null; }
   get feedCoverCiParams(): string | null { return this.ciConfig?.feedCover ?? null; }

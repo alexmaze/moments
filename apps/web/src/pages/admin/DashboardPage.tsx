@@ -89,6 +89,7 @@ function StatsGrid({ stats }: { stats: AdminStats }) {
       <StatCard
         title="Storage Used"
         value={formatStorage(stats.storage.totalBytes)}
+        subtitle={stats.storage.objectCount >= 0 ? `${formatNumber(stats.storage.objectCount)} objects` : undefined}
         icon={HardDrive}
         iconColor="bg-amber-500"
       />

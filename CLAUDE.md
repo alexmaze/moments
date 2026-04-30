@@ -238,7 +238,7 @@ pnpm db:migrate    # applies it to the database
 
 - `auth.adminUsernames` config. `@AdminOnly()` backend guard. `AdminGuard` frontend redirect.
 - Pages: Dashboard (stats), Users (ban/unban), Posts (force delete), Settings (registration toggle).
-- `GET /api/admin/stats`: users, posts, comments, likes, storage bytes, DB size.
+- `GET /api/admin/stats`: users, posts, comments, likes, storage (COS ListObjects with 10-min cache, fallback to DB SUM; returns `totalBytes` + `objectCount`), DB size.
 
 ## Docker / Production
 
