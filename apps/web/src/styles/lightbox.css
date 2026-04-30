@@ -1,0 +1,11 @@
+/* ─── Lightbox — progressive image loading ─────────────────────────────── */
+
+.progressive-slide {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.progressive-slide .fullres-layer {
+  transition: opacity 0.3s ease;
+}

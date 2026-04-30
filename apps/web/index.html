@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>近况</title>
 
-    <!-- Theme FOUT prevention: apply .dark before CSS paints -->
+    <!-- FOUT prevention: applies .dark before first CSS paint.
+         COUPLING: reads Zustand persist envelope at localStorage key 'moments-theme'
+         (format: { state: { theme: 'light' | 'dark' | null } }).
+         If the storage key or envelope shape changes in src/store/theme.store.ts,
+         update this script to match. -->
     <script>
       (function () {
         try {

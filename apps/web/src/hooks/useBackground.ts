@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { useBackgroundStore } from '@/store/background.store';
-import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
+import { useThemeStore } from '@/store/theme.store';
+import { resolveTheme } from '@/lib/theme';
 import { resolveBackgroundStyle } from '@/lib/backgroundPresets';
 
 interface UseBackgroundReturn {
@@ -14,8 +15,7 @@ export function useBackground(): UseBackgroundReturn {
   const theme = useThemeStore((s) => s.theme);
 
   const backgroundStyle = useMemo(() => {
-    const effectiveTheme = theme ?? getEffectiveTheme();
-    const isDark = effectiveTheme === 'dark';
+    const isDark = resolveTheme(theme) === 'dark';
     return resolveBackgroundStyle(background, isDark);
   }, [background, theme]);
 

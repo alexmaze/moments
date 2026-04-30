@@ -1,0 +1,39 @@
+/* ─── Utility: hide native scrollbar ──────────────────────────────────── */
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ─── Utility: glassmorphic surface materials ────────────────────────────
+   Three tiers of frosted-glass backgrounds. Use instead of bare `bg-card`
+   on containers where the background texture should show through.
+
+   Tokens in tokens.css control the feel globally:
+     --card-alpha / --card-blur       → surface-card (feed cards, panels)
+     --overlay-alpha / --overlay-blur → surface-overlay (dialogs, menus)
+     --toast-alpha / --toast-blur     → surface-toast (sonner toasts)
+
+   The -webkit-backdrop-filter prefix is retained for Safari < 18
+   compatibility. It can be removed once Safari 18+ is the minimum baseline.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@utility surface-card {
+  background-color: hsl(var(--card) / var(--card-alpha));
+  backdrop-filter: blur(var(--card-blur));
+  -webkit-backdrop-filter: blur(var(--card-blur));
+}
+
+@utility surface-overlay {
+  background-color: hsl(var(--card) / var(--overlay-alpha));
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+}
+
+@utility surface-toast {
+  background-color: hsl(var(--card) / var(--toast-alpha));
+  backdrop-filter: blur(var(--toast-blur));
+  -webkit-backdrop-filter: blur(var(--toast-blur));
+}

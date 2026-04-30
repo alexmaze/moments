@@ -1,0 +1,104 @@
+/* ─── Design tokens ─────────────────────────────────────────────────────────
+   All values are bare HSL channels (h s% l%) consumed via hsl(var(--name))
+   in the @theme bridge. The audio-waveform group is an exception — those
+   tokens require opacity variants referencing other tokens, so they are
+   pre-computed as full hsl() values and consumed directly (not via @theme).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ── Surfaces ── */
+    --background: 30 20% 98%;
+    --foreground: 20 14% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
+
+    /* ── Brand amber ── */
+    --primary: 24 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* ── Subtle surfaces ── */
+    --secondary: 30 20% 94%;
+    --secondary-foreground: 20 14% 10%;
+    --muted: 30 15% 93%;
+    --muted-foreground: 25 10% 46%;
+    --accent: 30 20% 94%;
+    --accent-foreground: 20 14% 10%;
+
+    /* ── Semantic ── */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --like: 5 85% 57%;
+
+    /* ── Chrome ── */
+    --border: 30 18% 92%;
+    --input: 30 18% 88%;
+    --ring: 24 80% 50%;
+
+    /* ── Radius ── */
+    --radius: 0.75rem;
+
+    /* ── Glassmorphism ── */
+    --card-alpha: 0.50;
+    --card-blur: 24px;
+    --overlay-alpha: 0.94;
+    --overlay-blur: 20px;
+    --toast-alpha: 0.88;
+    --toast-blur: 24px;
+
+    /* ── Audio waveform (pre-computed — see file header) ── */
+    --audio-waveform-surface: hsl(var(--primary) / 0.05);
+    --audio-waveform-progress: hsl(var(--primary) / 0.16);
+    --audio-waveform-bar: hsl(var(--primary) / 0.85);
+    --audio-waveform-cursor: hsl(20 85% 32% / 0.9);
+    --audio-waveform-tag-surface: hsl(0 0% 100% / 0.65);
+    --audio-waveform-tag-foreground: hsl(var(--foreground) / 0.8);
+    --audio-waveform-tag-border: hsl(var(--border) / 0.55);
+  }
+
+  /* ── Dark mode — warm dark tones ─────────────────────────────────────── */
+  .dark {
+    --background: 20 10% 9%;
+    --foreground: 30 15% 92%;
+    --card: 20 8% 14%;
+    --card-foreground: 30 15% 92%;
+    --popover: 20 8% 14%;
+    --popover-foreground: 30 15% 92%;
+
+    --primary: 24 80% 62%;
+    --primary-foreground: 20 10% 9%;
+
+    --secondary: 20 8% 19%;
+    --secondary-foreground: 30 15% 92%;
+    --muted: 20 8% 19%;
+    --muted-foreground: 25 8% 58%;
+    --accent: 20 8% 23%;
+    --accent-foreground: 30 15% 92%;
+
+    --destructive: 0 62% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --like: 5 75% 63%;
+
+    --border: 20 8% 18%;
+    --input: 20 8% 22%;
+    --ring: 24 80% 62%;
+
+    /* Slightly lower alpha so cards don't feel heavy against the dark bg */
+    --card-alpha: 0.42;
+    --card-blur: 24px;
+    --overlay-alpha: 0.90;
+    --overlay-blur: 20px;
+    --toast-alpha: 0.84;
+    --toast-blur: 24px;
+
+    --audio-waveform-surface: hsl(var(--primary) / 0.08);
+    --audio-waveform-progress: hsl(var(--primary) / 0.2);
+    --audio-waveform-bar: hsl(var(--primary) / 0.9);
+    --audio-waveform-cursor: hsl(var(--primary) / 0.98);
+    --audio-waveform-tag-surface: hsl(20 8% 18% / 0.72);
+    --audio-waveform-tag-foreground: hsl(var(--foreground) / 0.88);
+    --audio-waveform-tag-border: hsl(var(--border) / 0.72);
+  }
+}

@@ -134,7 +134,7 @@ Internal container scrolling, NOT page-level. Only `<main>` scrolls.
 
 ### Design System (constraints for consistency)
 - **Theme**: Warm amber. Brand `--primary: 24 80% 50%`. Like color `--like: hsl(5, 85%, 57%)`.
-- **Tokens**: shadcn/ui-style HSL CSS vars in `index.css`. All styling via Tailwind utilities consuming tokens.
+- **Tokens**: shadcn/ui-style HSL CSS vars split across `src/styles/` (`tokens.css`, `theme-bridge.css`, `animations.css`, `scrollbars.css`, `surfaces.css`, `lightbox.css`), composed via `index.css` imports. All styling via Tailwind utilities consuming tokens.
 - **Surfaces**: Three glassmorphism levels (`surface-card`, `surface-overlay`, `surface-toast`) in CSS tokens. Don't hardcode alpha/blur values.
 - **Dark mode**: 3 options (Light/Dark/System). FOUT prevention via inline `<head>` script. Synced from DB on login.
 - **Custom background**: texture presets in `lib/backgroundPresets.ts`. Rendered as fixed -z-10 layer inside AppLayout's `relative isolate` root.

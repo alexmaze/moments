@@ -2,7 +2,8 @@ import { useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import EmojiPicker, { type EmojiClickData, Theme, Categories } from 'emoji-picker-react';
 import { useTranslation } from 'react-i18next';
-import { getEffectiveTheme } from '@/store/theme.store';
+import { useThemeStore } from '@/store/theme.store';
+import { resolveTheme } from '@/lib/theme';
 
 interface EmojiPickerPopoverProps {
   open: boolean;
@@ -64,7 +65,7 @@ export function EmojiPickerPopover({
   const anchorRect = anchorRef.current.getBoundingClientRect();
   const top = anchorRect.bottom + 8;
   const left = Math.max(8, Math.min(anchorRect.left, window.innerWidth - 340));
-  const isDark = getEffectiveTheme() === 'dark';
+  const isDark = resolveTheme(useThemeStore.getState().theme) === 'dark';
 
   return createPortal(
     <div

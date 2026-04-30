@@ -1,17 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { SupportedTheme } from '@moments/shared';
-
-/** Detect theme from OS preference */
-export function detectSystemTheme(): SupportedTheme {
-  if (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  ) {
-    return 'dark';
-  }
-  return 'light';
-}
+import { isValidTheme } from '@/lib/theme';
 
 interface ThemeState {
   /** null = follow system preference */
@@ -26,14 +16,19 @@ export const useThemeStore = create<ThemeState>()(
       setTheme: (theme) => set({ theme }),
     }),
     {
+      // COUPLING: This storage key and the { state: { theme } } envelope shape
+      // are mirrored in the FOUT prevention inline script in index.html.
+      // Change both together if you rename this or restructure partialize().
       name: 'moments-theme',
       partialize: (state) => ({ theme: state.theme }),
+      onRehydrateStorage: () => (state, error) => {
+        // Guard against corrupt/legacy stored values.
+        // Uses setState so the correction flows through persist's write-back,
+        // cleaning the dirty value from localStorage on the first startup.
+        if (!error && state && !isValidTheme(state.theme)) {
+          useThemeStore.setState({ theme: null });
+        }
+      },
     },
   ),
 );
-
-/** Get the effective theme to use (resolved from store or system) */
-export function getEffectiveTheme(): SupportedTheme {
-  const stored = useThemeStore.getState().theme;
-  return stored ?? detectSystemTheme();
-}

@@ -1,0 +1,46 @@
+/* ─── Tailwind v4 token bridge ──────────────────────────────────────────────
+   Wraps bare HSL channel tokens in hsl() so Tailwind can generate utilities
+   like bg-primary, text-foreground, border-ring, etc.
+   Only tokens that need Tailwind class coverage go here.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-like: hsl(var(--like));
+
+  /* Radius scale */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Warm-tinted shadows — softened and more diffuse for a lighter feel */
+  --shadow-sm:
+    0 2px 8px 0 hsl(20 30% 15% / 0.05),
+    0 1px 2px -1px hsl(20 30% 15% / 0.04);
+  --shadow-md:
+    0 6px 16px -2px hsl(20 30% 15% / 0.06),
+    0 2px 6px -2px hsl(20 30% 15% / 0.05);
+  --shadow-lg:
+    0 16px 32px -8px hsl(20 30% 15% / 0.08),
+    0 4px 12px -4px hsl(20 30% 15% / 0.06);
+}

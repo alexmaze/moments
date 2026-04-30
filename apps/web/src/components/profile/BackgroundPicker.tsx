@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TEXTURE_PRESETS, PRESET_MAP } from '@/lib/backgroundPresets';
-import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
+import { TEXTURE_PRESETS, resolveBackgroundStyle } from '@/lib/backgroundPresets';
+import { useThemeStore } from '@/store/theme.store';
+import { resolveTheme } from '@/lib/theme';
 import type { CSSProperties } from 'react';
 
 function Swatch({
@@ -48,22 +49,12 @@ export default function BackgroundPicker({ value, onChange }: BackgroundPickerPr
   const { t } = useTranslation('profile');
   const theme = useThemeStore((s) => s.theme);
 
-  const effectiveTheme = theme ?? getEffectiveTheme();
-  const isDark = effectiveTheme === 'dark';
+  const isDark = resolveTheme(theme) === 'dark';
 
-  const getSwatchStyle = (presetId: string): CSSProperties => {
-    const preset = PRESET_MAP.get(presetId);
-    if (!preset) return {};
-    const variant = isDark ? preset.dark : preset.light;
-    return {
-      backgroundColor: variant.fillColor,
-      backgroundImage: `url(${preset.textureFile})`,
-      backgroundRepeat: 'repeat',
-    };
-  };
+  const getSwatchStyle = (presetId: string): CSSProperties =>
+    resolveBackgroundStyle(presetId, isDark);
 
-  const selectedPreset = PRESET_MAP.get(value ?? '');
-  const previewStyle = selectedPreset ? getSwatchStyle(value!) : null;
+  const previewStyle = value ? resolveBackgroundStyle(value, isDark) : null;
 
   return (
     <div className="space-y-2">
@@ -93,7 +84,7 @@ export default function BackgroundPicker({ value, onChange }: BackgroundPickerPr
         ))}
       </div>
 
-      {value && previewStyle && (
+      {previewStyle && Object.keys(previewStyle).length > 0 && (
         <div
           aria-label="Background preview"
           className="w-full h-20 rounded-lg border transition-all duration-300"

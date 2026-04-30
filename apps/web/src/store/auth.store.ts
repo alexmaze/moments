@@ -14,6 +14,13 @@ interface AuthState {
   clearAuth: () => void;
 }
 
+// ── User preference sync ───────────────────────────────────────────────────
+// These functions run after setAuth / setCurrentUser to push server-persisted
+// user preferences into their respective local stores. This is the sole
+// coordination point between auth events and preference stores.
+// null = user hasn't set a preference → each store keeps its own default.
+// ────────────────────────────────────────────────────────────────────────────
+
 function syncLocaleFromUser(user: UserDto) {
   // null = user hasn't set a preference, keep using browser language
   useLocaleStore.getState().setLocale(user.locale);

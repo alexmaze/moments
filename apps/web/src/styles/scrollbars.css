@@ -1,0 +1,44 @@
+/* ─── OverlayScrollbars — Moments amber theme ────────────────────────────
+   --os-moments-* tokens drive .os-theme-moments handle/track colours.
+   These use full hsl() values (not bare channels) because they are consumed
+   by the OverlayScrollbars library directly, not through Tailwind utilities.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --os-moments-handle:        hsl(25 15% 60% / 0.45);
+  --os-moments-handle-hover:  hsl(25 15% 45% / 0.70);
+  --os-moments-handle-active: hsl(24 80% 50% / 0.80);
+  --os-moments-track:         transparent;
+  --os-moments-track-hover:   hsl(30 15% 85% / 0.30);
+}
+
+.dark {
+  --os-moments-handle:        hsl(30 10% 70% / 0.35);
+  --os-moments-handle-hover:  hsl(30 10% 80% / 0.55);
+  --os-moments-handle-active: hsl(24 80% 62% / 0.75);
+  --os-moments-track:         transparent;
+  --os-moments-track-hover:   hsl(20 8% 30% / 0.40);
+}
+
+.os-theme-moments {
+  --os-size:                          6px;
+  --os-padding-perpendicular:         2px;
+  --os-padding-axis:                  4px;
+
+  --os-track-bg:                      var(--os-moments-track);
+  --os-track-bg-hover:                var(--os-moments-track-hover);
+  --os-track-bg-active:               var(--os-moments-track);
+  --os-track-border-radius:           9999px;
+
+  --os-handle-bg:                     var(--os-moments-handle);
+  --os-handle-bg-hover:               var(--os-moments-handle-hover);
+  --os-handle-bg-active:              var(--os-moments-handle-active);
+  --os-handle-border-radius:          9999px;
+  --os-handle-min-size:               36px;
+  --os-handle-perpendicular-size:     100%;
+  --os-handle-interactive-area-offset: 4px;
+}
+
+.os-theme-moments.os-scrollbar-horizontal {
+  --os-size: 5px;
+}
