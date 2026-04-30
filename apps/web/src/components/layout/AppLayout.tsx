@@ -7,6 +7,7 @@ import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { ScrollContainerContext } from './ScrollContainerContext';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
+import PageTransition from './PageTransition';
 import { cn } from '@/lib/utils';
 import { Home, User, LogOut, Users, Bell, Shield } from 'lucide-react';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -166,7 +167,9 @@ export default function AppLayout() {
         <ScrollContainerContext.Provider value={mainEl}>
           <MediaLightboxProvider>
             <div className="max-w-2xl mx-auto w-full px-4 py-4 pb-6">
-              <Outlet />
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
             </div>
           </MediaLightboxProvider>
         </ScrollContainerContext.Provider>

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Logo from '@/components/ui/Logo';
+import PageTransition from './PageTransition';
 
 export default function GuestLayout() {
   const { t } = useTranslation();
@@ -24,7 +25,9 @@ export default function GuestLayout() {
         </h1>
       </header>
       <main className="relative w-full max-w-md px-4">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
     </div>
   );

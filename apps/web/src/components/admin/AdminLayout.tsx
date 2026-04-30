@@ -13,6 +13,7 @@ import {
 import { useAuthStore } from '@/store/auth.store';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import Logo from '@/components/ui/Logo';
+import PageTransition from '@/components/layout/PageTransition';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -114,7 +115,9 @@ export default function AdminLayout() {
 
         <main className="p-6">
           <MediaLightboxProvider>
-            <Outlet />
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
           </MediaLightboxProvider>
         </main>
       </div>
