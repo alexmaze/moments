@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Camera, ImagePlus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import FallbackImage from '@/components/ui/FallbackImage';
 import ImageCropDialog from '@/components/media/ImageCropDialog';
 import { uploadMediaApi } from '@/api/media.api';
 import { useSpace, useUpdateSpace } from '@/hooks/useSpaces';
@@ -188,11 +189,12 @@ export default function SpaceEditPage() {
             <div className="space-y-4 rounded-2xl border border-border/80 bg-background/40 p-4">
               <div className="overflow-hidden rounded-2xl border border-border bg-muted/30">
                 {coverUrl ? (
-                  <img
+                  <FallbackImage
                     src={coverUrl}
                     alt={name || space.name}
                     className="h-52 w-full object-cover"
                     style={{ objectPosition: `center ${coverPositionY}%` }}
+                    fallbackClassName="h-52 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"
                   />
                 ) : (
                   <div className="flex h-52 items-center justify-center bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5">

@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore, getEffectiveTheme } from '@/store/theme.store';
 import { useBackground } from '@/hooks/useBackground';
 import { useBodyScrollbar } from '@/hooks/useBodyScrollbar';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { ScrollContainerContext } from './ScrollContainerContext';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import { cn } from '@/lib/utils';
-import { Home, User, LogOut, Sun, Moon, Monitor, Users, Bell, Shield } from 'lucide-react';
+import { Home, User, LogOut, Users, Bell, Shield } from 'lucide-react';
+import UserAvatar from '@/components/ui/UserAvatar';
+import ThemeSegmentedControl from '@/components/ui/ThemeSegmentedControl';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -24,9 +25,6 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const theme = useThemeStore((s) => s.theme);
-  const setTheme = useThemeStore((s) => s.setTheme);
-
   const { backgroundStyle, hasCustomBackground } = useBackground();
 
   // Main = the real scroll container. We keep it in state rather than a
@@ -35,24 +33,6 @@ export default function AppLayout() {
   const [mainEl, setMainEl] = useState<HTMLElement | null>(null);
 
   useBodyScrollbar(mainEl);
-
-  // Cycles: null (system) → 'light' → 'dark' → null
-  function cycleTheme() {
-    if (theme === null) return setTheme('light');
-    if (theme === 'light') return setTheme('dark');
-    return setTheme(null);
-  }
-
-  // Icon reflects current state: Monitor for system, Sun/Moon for explicit
-  const ThemeIcon = theme === null
-    ? Monitor
-    : getEffectiveTheme() === 'dark' ? Moon : Sun;
-
-  const themeLabel = theme === null
-    ? t('theme.system')
-    : theme === 'light'
-      ? t('theme.light')
-      : t('theme.dark');
 
   const isHome = location.pathname === '/';
   const isSpaces = location.pathname.startsWith('/spaces');
@@ -130,17 +110,11 @@ export default function AppLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
-                  {currentUser.avatarUrl ? (
-                    <img
-                      src={currentUser.avatarUrl}
-                      alt={currentUser.displayName}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  )}
+                  <UserAvatar
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.displayName}
+                    size="sm"
+                  />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -154,10 +128,9 @@ export default function AppLayout() {
                     {t('nav.admin')}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={cycleTheme}>
-                  <ThemeIcon className="w-4 h-4" />
-                  {themeLabel}
-                </DropdownMenuItem>
+                <div className="px-2 py-1.5">
+                  <ThemeSegmentedControl />
+                </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={handleLogout} destructive>
                   <LogOut className="w-4 h-4" />

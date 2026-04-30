@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, UserX, UserCheck, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi, type AdminUser } from '@/api/admin.api';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 type StatusFilter = 'all' | 'active' | 'banned';
 
@@ -230,19 +231,11 @@ function UserRow({
     <tr className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.displayName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-medium text-muted-foreground">
-                {user.displayName.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
+          <UserAvatar
+            src={user.avatarUrl}
+            alt={user.displayName}
+            size="md"
+          />
           <div>
             <p className="text-sm font-medium text-foreground">{user.displayName}</p>
             <p className="text-xs text-muted-foreground">@{user.username}</p>

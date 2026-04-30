@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { User } from 'lucide-react';
 import type { UserProfileDto } from '@moments/shared';
 import { formatDate } from '@/lib/utils';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 interface ProfileHeaderProps {
   profile: UserProfileDto;
@@ -16,16 +16,12 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
 
-  const avatarContent = profile.avatarUrl ? (
-    <img
+  const avatarContent = (
+    <UserAvatar
       src={profile.avatarUrl}
       alt={profile.displayName}
-      className="w-20 h-20 rounded-full object-cover"
+      size="xl"
     />
-  ) : (
-    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-      <User className="w-8 h-8 text-muted-foreground" />
-    </div>
   );
 
   return (

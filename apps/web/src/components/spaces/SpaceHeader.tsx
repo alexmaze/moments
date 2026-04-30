@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Users, FileText, Check, Settings, ChevronDown, Cake } from 'lucide-react';
 import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
 import i18n from '@/i18n';
+import FallbackImage from '@/components/ui/FallbackImage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,11 +55,12 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
   return (
     <div>
       {space.coverUrl ? (
-        <img
+        <FallbackImage
           src={space.coverUrl}
           alt={space.name}
           className="h-32 w-full rounded-xl object-cover"
           style={{ objectPosition: `center ${space.coverPositionY}%` }}
+          fallbackClassName="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"
         />
       ) : (
         <div className="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />

@@ -2,11 +2,12 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { X, User } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLikedUsers } from '@/hooks/usePosts';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { formatRelativeTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 interface LikedUsersListProps {
   postId: string;
@@ -125,19 +126,13 @@ export default function LikedUsersList({
                 onClick={() => handleUserClick(user.username)}
                 className="flex items-center gap-3 w-full py-2.5 text-left hover:bg-accent/50 rounded-lg px-1 transition-colors"
               >
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.displayName}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-10 h-10 rounded-full object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <User className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                )}
+                <UserAvatar
+                  src={user.avatarUrl}
+                  alt={user.displayName}
+                  size="md"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
                     {user.displayName}

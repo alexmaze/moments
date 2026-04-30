@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Trash2, Loader2, ChevronLeft, ChevronRight, User, Play } from 'lucide-react';
+import { Search, Trash2, Loader2, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
+import UserAvatar from '@/components/ui/UserAvatar';
+import FallbackImage from '@/components/ui/FallbackImage';
 import PostAudioPlayer from '@/components/feed/PostAudioPlayer';
 import {
   AlertDialog,
@@ -149,17 +151,11 @@ export default function PostsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {post.author.avatarUrl ? (
-                        <img
-                          src={post.author.avatarUrl}
-                          alt={post.author.displayName}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                          <User className="w-3 h-3 text-muted-foreground" />
-                        </div>
-                      )}
+                      <UserAvatar
+                        src={post.author.avatarUrl}
+                        alt={post.author.displayName}
+                        size="xs"
+                      />
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-foreground truncate">
                           {post.author.displayName}
@@ -181,7 +177,7 @@ export default function PostsPage() {
                           className="relative w-12 h-12 rounded overflow-hidden bg-muted"
                         >
                           {media.type === 'image' ? (
-                            <img
+                            <FallbackImage
                               src={media.thumbnailUrl ?? media.publicUrl}
                               alt=""
                               className="w-full h-full object-cover"
@@ -189,10 +185,11 @@ export default function PostsPage() {
                           ) : (
                             <div className="w-full h-full relative">
                               {(media.thumbnailUrl ?? media.coverUrl) ? (
-                                <img
+                                <FallbackImage
                                   src={media.thumbnailUrl ?? media.coverUrl!}
                                   alt=""
                                   className="w-full h-full object-cover"
+                                  fallbackVariant="video"
                                 />
                               ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center">

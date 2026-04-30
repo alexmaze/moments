@@ -10,6 +10,7 @@
   },
   "theme": {
     "system": "Follow system",
+    "systemShort": "System",
     "light": "Light",
     "dark": "Dark"
   },

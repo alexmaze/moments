@@ -1,13 +1,14 @@
 import { useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Trash2, MessageSquare } from 'lucide-react';
+import { Trash2, MessageSquare } from 'lucide-react';
 import type { CommentDto, MentionUserDto } from '@moments/shared';
 import { useAuthStore } from '@/store/auth.store';
 import { useDeleteComment } from '@/hooks/useComments';
 import { formatRelativeTime } from '@/lib/utils';
 import { renderContentWithTagsAndMentions } from '@moments/shared';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/ui/UserAvatar';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -78,17 +79,11 @@ export default function CommentItem({ comment, postId, onReply, isHighlighted, h
       )}
     >
       <Link to={`/users/${comment.author.username}`} className="shrink-0">
-        {comment.author.avatarUrl ? (
-          <img
-            src={comment.author.avatarUrl}
-            alt={comment.author.spaceNickname ?? comment.author.displayName}
-            className="w-8 h-8 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <User className="w-4 h-4 text-muted-foreground" />
-          </div>
-        )}
+        <UserAvatar
+          src={comment.author.avatarUrl}
+          alt={comment.author.spaceNickname ?? comment.author.displayName}
+          size="sm"
+        />
       </Link>
 
       <div className="flex-1 min-w-0">

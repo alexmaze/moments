@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, FileText } from 'lucide-react';
 import type { SpaceDto } from '@moments/shared';
+import FallbackImage from '@/components/ui/FallbackImage';
 
 interface SpaceCardProps {
   space: SpaceDto;
@@ -17,11 +18,12 @@ export function SpaceCard({ space }: SpaceCardProps) {
     >
       {/* Cover */}
       {space.coverUrl ? (
-        <img
+        <FallbackImage
           src={space.coverUrl}
           alt={space.name}
           className="h-24 w-full object-cover"
           style={{ objectPosition: `center ${space.coverPositionY}%` }}
+          fallbackClassName="h-24 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"
         />
       ) : (
         <div className="h-24 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />

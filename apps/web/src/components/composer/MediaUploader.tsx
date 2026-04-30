@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Plus, X, Play, Image } from 'lucide-react';
 import type { UploadItem } from '@/hooks/useMediaUpload';
+import FallbackImage from '@/components/ui/FallbackImage';
 
 interface MediaUploaderProps {
   items: UploadItem[];
@@ -39,10 +40,11 @@ export default function MediaUploader({ items, addFiles, removeItem, reorderItem
               {item.type === 'video' ? (
                 <>
                   {(item.coverUrl || item.preview) ? (
-                    <img
+                    <FallbackImage
                       src={item.coverUrl || item.preview}
                       alt=""
                       className="w-full h-full object-cover"
+                      fallbackVariant="video"
                     />
                   ) : (
                     <div className="w-full h-full bg-muted" />
@@ -54,7 +56,7 @@ export default function MediaUploader({ items, addFiles, removeItem, reorderItem
                   </div>
                 </>
               ) : item.preview ? (
-                <img
+                <FallbackImage
                   src={item.preview}
                   alt=""
                   className="w-full h-full object-cover"

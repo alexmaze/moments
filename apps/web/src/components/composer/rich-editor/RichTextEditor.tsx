@@ -17,7 +17,8 @@ import {
 import { $convertFromStorageFormat, $convertToStorageFormat } from './serialization';
 import { searchUsersApi } from '@/api/users.api';
 import { getTagsApi } from '@/api/tags.api';
-import { Loader2, User } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export interface RichTextEditorRef {
   focus: () => void;
@@ -207,17 +208,12 @@ const MenuItemComponent = forwardRef<HTMLLIElement, BeautifulMentionsMenuItemPro
         {...props}
       >
         {isMention && (
-          avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="w-5 h-5 rounded-full object-cover shrink-0"
-            />
-          ) : (
-            <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center shrink-0">
-              <User className="w-3 h-3 text-muted-foreground" />
-            </div>
-          )
+          <UserAvatar
+            src={avatarUrl}
+            alt=""
+            size="xs"
+            containerClassName="w-5 h-5"
+          />
         )}
         <span>{item.displayValue || item.value}</span>
       </li>

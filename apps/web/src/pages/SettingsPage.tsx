@@ -6,6 +6,8 @@ import { ArrowLeft, Camera, Palette, Settings, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateProfileApi } from '@/api/users.api';
 import BackgroundPicker from '@/components/profile/BackgroundPicker';
+import ThemeSegmentedControl from '@/components/ui/ThemeSegmentedControl';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useAvatarUpload } from '@/hooks/useAvatarUpload';
 import i18n from '@/i18n';
 import { useAuthStore } from '@/store/auth.store';
@@ -13,7 +15,7 @@ import { detectBrowserLocale } from '@/store/locale.store';
 import { useThemeStore } from '@/store/theme.store';
 import { useBackgroundStore } from '@/store/background.store';
 import { cn } from '@/lib/utils';
-import type { SupportedLocale, SupportedTheme } from '@moments/shared';
+import type { SupportedLocale } from '@moments/shared';
 
 type Tab = 'profile' | 'appearance';
 
@@ -53,6 +55,7 @@ export default function SettingsPage() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const liveAvatarUrl = useAuthStore((s) => s.currentUser?.avatarUrl);
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser);
+  const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const setBackground = useBackgroundStore((s) => s.setBackground);
 
@@ -61,7 +64,6 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState(currentUser?.displayName ?? '');
   const [bio, setBio] = useState(currentUser?.bio ?? '');
   const [localeValue, setLocaleValue] = useState<string>(currentUser?.locale ?? 'auto');
-  const [themeValue, setThemeValue] = useState<string>(currentUser?.theme ?? 'system');
   const [backgroundValue, setBackgroundValue] = useState<string | null>(currentUser?.background ?? null);
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export default function SettingsPage() {
     setDisplayName(currentUser.displayName);
     setBio(currentUser.bio ?? '');
     setLocaleValue(currentUser.locale ?? 'auto');
-    setThemeValue(currentUser.theme ?? 'system');
+    setTheme(currentUser.theme ?? null);
     setBackgroundValue(currentUser.background ?? null);
   }, [currentUser]);
 
@@ -82,7 +84,7 @@ export default function SettingsPage() {
   );
 
   const appearanceDirty = !!currentUser && (
-    themeValue !== (currentUser.theme ?? 'system') ||
+    theme !== (currentUser.theme ?? null) ||
     backgroundValue !== (currentUser.background ?? null)
   );
 
@@ -115,7 +117,6 @@ export default function SettingsPage() {
       if (!currentUser) return;
       setTheme(currentUser.theme ?? null);
       setBackground(currentUser.background ?? null);
-      setThemeValue(currentUser.theme ?? 'system');
       setBackgroundValue(currentUser.background ?? null);
       toast.error(t('edit.saveError'));
     },
@@ -135,7 +136,7 @@ export default function SettingsPage() {
 
   const handleAppearanceSave = () => {
     appearanceMutation.mutate({
-      theme: themeValue === 'system' ? null : (themeValue as SupportedTheme),
+      theme: theme,
       background: backgroundValue,
     });
   };
@@ -207,10 +208,10 @@ export default function SettingsPage() {
                     aria-label={t('edit.avatarChange')}
                   >
                     {displayAvatarUrl ? (
-                      <img
+                      <UserAvatar
                         src={displayAvatarUrl}
                         alt={currentUser.displayName}
-                        className="h-20 w-20 rounded-full object-cover"
+                        size="xl"
                       />
                     ) : (
                       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
@@ -316,22 +317,10 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   {t('edit.themeLabel')}
                 </label>
-                <select
-                  value={themeValue}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setThemeValue(value);
-                    setTheme(value === 'system' ? null : (value as SupportedTheme));
-                  }}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="system">{t('edit.themeSystem')}</option>
-                  <option value="light">{t('edit.themeLight')}</option>
-                  <option value="dark">{t('edit.themeDark')}</option>
-                </select>
+                <ThemeSegmentedControl />
               </div>
 
               <BackgroundPicker

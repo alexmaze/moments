@@ -10,6 +10,7 @@
   },
   "theme": {
     "system": "跟随系统",
+    "systemShort": "系统",
     "light": "浅色",
     "dark": "深色"
   },

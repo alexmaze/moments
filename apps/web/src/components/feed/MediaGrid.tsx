@@ -1,5 +1,6 @@
 import type { PostMediaDto } from '@moments/shared';
 import { Play } from 'lucide-react';
+import FallbackImage from '@/components/ui/FallbackImage';
 
 interface MediaGridProps {
   items: PostMediaDto[];
@@ -160,12 +161,13 @@ function MediaCell({
     return (
       <>
         {videoThumb ? (
-          <img
+          <FallbackImage
             src={videoThumb}
             alt=""
             loading="lazy"
             decoding="async"
             className={mediaClass}
+            fallbackVariant="video"
           />
         ) : (
           <video
@@ -191,7 +193,7 @@ function MediaCell({
   }
 
   return (
-    <img
+    <FallbackImage
       src={item.thumbnailUrl ?? item.publicUrl}
       alt=""
       loading="lazy"

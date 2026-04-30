@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { User, Pencil, X, Check } from 'lucide-react';
+import { Pencil, X, Check } from 'lucide-react';
 import { useSpaceMembers, useUpdateSpaceNickname } from '@/hooks/useSpaces';
 import { useAuthStore } from '@/store/auth.store';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { formatRelativeTime } from '@/lib/utils';
 import type { SpaceMemberRole } from '@moments/shared';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 interface SpaceMembersTabProps {
   slug: string;
@@ -176,17 +177,11 @@ export function SpaceMembersTab({ slug }: SpaceMembersTabProps) {
               to={`/users/${member.user.username}`}
               className="shrink-0"
             >
-              {member.user.avatarUrl ? (
-                <img
-                  src={member.user.avatarUrl}
-                  alt={member.user.displayName}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
+              <UserAvatar
+                src={member.user.avatarUrl}
+                alt={member.user.displayName}
+                size="md"
+              />
             </Link>
 
             <div className="min-w-0 flex-1">

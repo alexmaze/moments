@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, User, Loader2, Smile, Mic } from 'lucide-react';
+import { Image, Loader2, Smile, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth.store';
 import { useCreatePost, useUpdatePost } from '@/hooks/usePosts';
@@ -8,6 +8,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { uploadPostAudioApi } from '@/api/posts.api';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import type { PostDto } from '@moments/shared';
+import UserAvatar from '@/components/ui/UserAvatar';
 import MediaUploader from './MediaUploader';
 import AudioRecorderPanel from './AudioRecorderPanel';
 import { SpaceSelector } from '@/components/spaces/SpaceSelector';
@@ -234,17 +235,11 @@ export default function QuickComposer({
   const renderComposer = () => (
     <div className="p-4 relative">
       <div className="flex gap-3">
-        {currentUser?.avatarUrl ? (
-          <img
-            src={currentUser.avatarUrl}
-            alt={currentUser.displayName}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-muted-foreground" />
-          </div>
-        )}
+        <UserAvatar
+          src={currentUser?.avatarUrl}
+          alt={currentUser?.displayName}
+          size="md"
+        />
 
         <RichTextEditor
           ref={editorRef}
@@ -377,17 +372,11 @@ export default function QuickComposer({
           onClick={handleExpand}
           className="w-full flex items-center gap-3 p-4 text-left"
         >
-          {currentUser?.avatarUrl ? (
-            <img
-              src={currentUser.avatarUrl}
-              alt={currentUser.displayName}
-              className="w-10 h-10 rounded-full object-cover shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-              <User className="w-5 h-5 text-muted-foreground" />
-            </div>
-          )}
+          <UserAvatar
+            src={currentUser?.avatarUrl}
+            alt={currentUser?.displayName}
+            size="md"
+          />
 
           <span className="text-sm text-muted-foreground flex-1">
             {t('quickComposer.placeholder')}

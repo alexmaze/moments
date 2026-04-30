@@ -6,9 +6,10 @@ import { useAuthStore } from '@/store/auth.store';
 import { useToggleLike, useDeletePost } from '@/hooks/usePosts';
 import { formatRelativeTime } from '@/lib/utils';
 import { mediaToLightboxSlides } from '@/lib/mediaToLightbox';
-import { User, Trash2, Heart, MessageSquare, Users, Ellipsis, Pencil } from 'lucide-react';
+import { Trash2, Heart, MessageSquare, Users, Ellipsis, Pencil } from 'lucide-react';
 import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
 import i18n from '@/i18n';
+import UserAvatar from '@/components/ui/UserAvatar';
 import MediaGrid from './MediaGrid';
 import PostAudioPlayer from './PostAudioPlayer';
 import { useMediaLightbox } from './MediaLightboxProvider';
@@ -77,19 +78,11 @@ function PostCardInner({ post, variant = 'feed', highlightCommentId }: PostCardP
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link to={`/users/${post.author.username}`} onClick={(e) => e.stopPropagation()}>
-          {post.author.avatarUrl ? (
-            <img
-              src={post.author.avatarUrl}
-              alt={post.space ? (post.author.spaceNickname ?? post.author.displayName) : post.author.displayName}
-              loading="lazy"
-              decoding="async"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-              <User className="w-5 h-5 text-muted-foreground" />
-            </div>
-          )}
+          <UserAvatar
+            src={post.author.avatarUrl}
+            alt={post.space ? (post.author.spaceNickname ?? post.author.displayName) : post.author.displayName}
+            size="md"
+          />
         </Link>
 
         <div className="flex-1 min-w-0">

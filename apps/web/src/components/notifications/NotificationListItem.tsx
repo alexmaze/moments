@@ -2,12 +2,14 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { User, Music } from 'lucide-react';
+import { Music } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { markNotificationReadApi } from '@/api/notifications.api';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import type { NotificationItemDto } from '@moments/shared';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/ui/UserAvatar';
+import FallbackImage from '@/components/ui/FallbackImage';
 
 interface NotificationListItemProps {
   notification: NotificationItemDto;
@@ -29,7 +31,7 @@ function PostPreview({ post }: { post: NonNullable<NotificationItemDto['post']> 
     return (
       <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
         {thumbSrc ? (
-          <img
+          <FallbackImage
             src={thumbSrc}
             alt=""
             className="w-full h-full object-cover"
@@ -133,20 +135,14 @@ export function NotificationListItem({ notification }: NotificationListItemProps
           {avatars.map((actor, idx) => (
             <div
               key={actor.id}
-              className="relative w-8 h-8 rounded-full border-2 border-card overflow-hidden"
+              className="relative rounded-full border-2 border-card overflow-hidden"
               style={{ zIndex: 3 - idx }}
             >
-              {actor.avatarUrl ? (
-                <img
-                  src={actor.avatarUrl}
-                  alt={actor.displayName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                </div>
-              )}
+              <UserAvatar
+                src={actor.avatarUrl}
+                alt={actor.displayName}
+                size="sm"
+              />
             </div>
           ))}
         </div>
@@ -157,19 +153,11 @@ export function NotificationListItem({ notification }: NotificationListItemProps
     if (!actor) return null;
 
     return (
-      <div className="w-10 h-10 rounded-full overflow-hidden">
-        {actor.avatarUrl ? (
-          <img
-            src={actor.avatarUrl}
-            alt={actor.displayName}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <User className="w-5 h-5 text-muted-foreground" />
-          </div>
-        )}
-      </div>
+      <UserAvatar
+        src={actor.avatarUrl}
+        alt={actor.displayName}
+        size="md"
+      />
     );
   };
 
