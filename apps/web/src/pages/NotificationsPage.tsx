@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check } from 'lucide-react';
+import { BellOff, Check } from 'lucide-react';
 import { useNotifications, useMarkAllNotificationsRead, useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { NotificationListItem } from '@/components/notifications/NotificationListItem';
-import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 
 export default function NotificationsPage() {
   const { t } = useTranslation('notifications');
@@ -54,10 +55,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
-        {unreadCount > 0 && (
+    <div className="pb-6">
+      {unreadCount > 0 && (
+        <div className="mb-4 flex justify-end">
           <button
             onClick={handleMarkAllRead}
             disabled={markAllRead.isPending}
@@ -66,33 +66,19 @@ export default function NotificationsPage() {
             <Check className="w-4 h-4" />
             {t('markAllRead')}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setFilter('all')}
-          className={cn(
-            'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
-            filter === 'all'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent',
-          )}
-        >
-          {t('all')}
-        </button>
-        <button
-          onClick={() => setFilter('unread')}
-          className={cn(
-            'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
-            filter === 'unread'
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent',
-          )}
-        >
-          {t('unread')}
-        </button>
-      </div>
+      <SegmentedControl
+        className="mb-4"
+        ariaLabel={t('all')}
+        options={[
+          { value: 'all', label: t('all') },
+          { value: 'unread', label: t('unread') },
+        ]}
+        value={filter}
+        onValueChange={setFilter}
+      />
 
       {isLoading && (
         <div className="space-y-2">
@@ -106,11 +92,10 @@ export default function NotificationsPage() {
       )}
 
       {!isLoading && notifications.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-medium text-muted-foreground">
-            {filter === 'unread' ? t('emptyRead') : t('empty')}
-          </p>
-        </div>
+        <EmptyState
+          icon={BellOff}
+          title={filter === 'unread' ? t('emptyRead') : t('empty')}
+        />
       )}
 
       {notifications.length > 0 && (

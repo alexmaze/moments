@@ -133,8 +133,8 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
                   onChange(undefined);
                   setIsOpen(false);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
-                  !selectedSpaceId ? 'bg-primary/5 text-primary' : 'text-foreground'
+                className={`mx-2 flex w-[calc(100%-1rem)] items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-[border-color,box-shadow,color,background-color] duration-200 hover:bg-muted ${
+                  !selectedSpaceId ? 'selected-control text-primary' : 'border-transparent text-foreground'
                 }`}
               >
                 <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -152,10 +152,10 @@ export function SpaceSelector({ selectedSpaceId, onChange }: SpaceSelectorProps)
                     onChange(space.id);
                     setIsOpen(false);
                   }}
-                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
+                  className={`mx-2 flex w-[calc(100%-1rem)] items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-[border-color,box-shadow,color,background-color] duration-200 hover:bg-muted ${
                     selectedSpaceId === space.id
-                      ? 'bg-primary/5 text-primary'
-                      : 'text-foreground'
+                      ? 'selected-control text-primary'
+                      : 'border-transparent text-foreground'
                   }`}
                 >
                   {space.type === 'baby' ? (

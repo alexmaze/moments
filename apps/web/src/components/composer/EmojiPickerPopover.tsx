@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import EmojiPicker, { type EmojiClickData, Theme, Categories } from 'emoji-picker-react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,40 @@ interface EmojiPickerPopoverProps {
   onEmojiSelect: (emoji: string) => void;
   anchorRef?: React.RefObject<HTMLElement | null>;
 }
+
+const PICKER_WIDTH = 280;
+const PICKER_HEIGHT = 340;
+
+const pickerStyle = {
+  '--epr-horizontal-padding': '8px',
+  '--epr-header-padding': '10px var(--epr-horizontal-padding)',
+  '--epr-search-input-height': '34px',
+  '--epr-search-input-padding': '0 26px',
+  '--epr-category-navigation-button-size': '26px',
+  '--epr-preview-height': '52px',
+  '--epr-preview-text-size': '12px',
+  '--epr-category-label-height': '26px',
+  '--epr-emoji-size': '24px',
+  '--epr-emoji-padding': '4px',
+} as CSSProperties;
+
+const pickerScopedCss = `
+  [data-emoji-picker-popover] .epr-emoji-category-label {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+  }
+
+  [data-emoji-picker-popover] .EmojiPickerReact input {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+  }
+
+  [data-emoji-picker-popover] .EmojiPickerReact [class*="preview"] {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+  }
+`;
 
 export function EmojiPickerPopover({
   open,
@@ -64,21 +98,27 @@ export function EmojiPickerPopover({
 
   const anchorRect = anchorRef.current.getBoundingClientRect();
   const top = anchorRect.bottom + 8;
-  const left = Math.max(8, Math.min(anchorRect.left, window.innerWidth - 340));
+  const left = Math.max(8, Math.min(anchorRect.left, window.innerWidth - PICKER_WIDTH - 8));
   const isDark = resolveTheme(useThemeStore.getState().theme) === 'dark';
 
   return createPortal(
     <div
       ref={containerRef}
+      data-emoji-picker-popover
       className="fixed z-[9999] rounded-xl border border-border surface-overlay shadow-lg overflow-hidden"
       style={{ top, left }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
+      <style>{pickerScopedCss}</style>
       <EmojiPicker
         onEmojiClick={(emojiData: EmojiClickData) => {
           onEmojiSelect(emojiData.emoji);
           onOpenChange(false);
         }}
         theme={isDark ? Theme.DARK : Theme.LIGHT}
+        style={pickerStyle}
         searchPlaceholder={t('quickComposer.emojiSearch')}
         searchClearButtonLabel={t('quickComposer.emojiClear')}
         previewConfig={{
@@ -86,8 +126,8 @@ export function EmojiPickerPopover({
           defaultCaption: t('quickComposer.emojiPreview'),
         }}
         categories={categories}
-        width={320}
-        height={400}
+        width={PICKER_WIDTH}
+        height={PICKER_HEIGHT}
         lazyLoadEmojis={true}
       />
     </div>,

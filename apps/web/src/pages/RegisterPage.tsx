@@ -60,7 +60,7 @@ export default function RegisterPage() {
             type="text"
             autoComplete="username"
             {...register('username')}
-            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             placeholder={t('register.usernamePlaceholder')}
           />
           {errors.username && (
@@ -76,7 +76,7 @@ export default function RegisterPage() {
             id="displayName"
             type="text"
             {...register('displayName')}
-            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             placeholder={t('register.displayNamePlaceholder')}
           />
           {errors.displayName && (
@@ -93,7 +93,7 @@ export default function RegisterPage() {
             type="password"
             autoComplete="new-password"
             {...register('password')}
-            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             placeholder={t('register.passwordPlaceholder')}
           />
           {errors.password && (

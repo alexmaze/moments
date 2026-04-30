@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Camera, Palette, Settings, User } from 'lucide-react';
+import { ArrowLeft, Camera, ChevronDown, Palette, Settings, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateProfileApi } from '@/api/users.api';
 import BackgroundPicker from '@/components/profile/BackgroundPicker';
@@ -147,7 +147,7 @@ export default function SettingsPage() {
     <div className="space-y-4">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 rounded-full border border-border surface-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md"
       >
         <ArrowLeft className="h-4 w-4" />
         {t('back')}
@@ -258,7 +258,7 @@ export default function SettingsPage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     maxLength={100}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
                   />
                 </div>
 
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                     placeholder={t('edit.bioPlaceholder')}
                     rows={4}
                     maxLength={300}
-                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
                   />
                 </div>
 
@@ -280,15 +280,18 @@ export default function SettingsPage() {
                   <label className="mb-1 block text-sm font-medium text-foreground">
                     {t('edit.languageLabel')}
                   </label>
-                  <select
-                    value={localeValue}
-                    onChange={(e) => setLocaleValue(e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="auto">{t('edit.languageAuto')}</option>
-                    <option value="en">English</option>
-                    <option value="zh-CN">中文（简体）</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={localeValue}
+                      onChange={(e) => setLocaleValue(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-input bg-background px-3 py-2 pr-9 text-sm text-foreground input-focus"
+                    >
+                      <option value="auto">{t('edit.languageAuto')}</option>
+                      <option value="en">English</option>
+                      <option value="zh-CN">中文（简体）</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
             </section>

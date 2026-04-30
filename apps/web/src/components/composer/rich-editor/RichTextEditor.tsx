@@ -253,7 +253,7 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
     return (
       <LexicalComposer initialConfig={initialConfig}>
-        <div className={`relative ${className}`} style={{ minHeight: `${minHeight}rem` }}>
+        <div className={`relative ${className}`} style={{ minHeight: className.includes('!min-h-') ? undefined : `${minHeight}rem` }}>
           <RichTextPlugin
             contentEditable={
               <ContentEditable

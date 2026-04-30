@@ -9,9 +9,9 @@
   :root {
     /* ── Surfaces ── */
     --background: 30 20% 98%;
-    --foreground: 20 14% 10%;
+    --foreground: 22 18% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 20 14% 10%;
+    --card-foreground: 22 18% 18%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 10%;
 
@@ -21,11 +21,11 @@
 
     /* ── Subtle surfaces ── */
     --secondary: 30 20% 94%;
-    --secondary-foreground: 20 14% 10%;
+    --secondary-foreground: 22 18% 18%;
     --muted: 30 15% 93%;
-    --muted-foreground: 25 10% 46%;
+    --muted-foreground: 24 12% 43%;
     --accent: 30 20% 94%;
-    --accent-foreground: 20 14% 10%;
+    --accent-foreground: 22 18% 18%;
 
     /* ── Semantic ── */
     --destructive: 0 84% 60%;
@@ -61,9 +61,9 @@
   /* ── Dark mode — warm dark tones ─────────────────────────────────────── */
   .dark {
     --background: 20 10% 9%;
-    --foreground: 30 15% 92%;
+    --foreground: 30 14% 88%;
     --card: 20 8% 14%;
-    --card-foreground: 30 15% 92%;
+    --card-foreground: 30 14% 88%;
     --popover: 20 8% 14%;
     --popover-foreground: 30 15% 92%;
 
@@ -71,11 +71,11 @@
     --primary-foreground: 20 10% 9%;
 
     --secondary: 20 8% 19%;
-    --secondary-foreground: 30 15% 92%;
+    --secondary-foreground: 30 14% 88%;
     --muted: 20 8% 19%;
-    --muted-foreground: 25 8% 58%;
+    --muted-foreground: 27 10% 62%;
     --accent: 20 8% 23%;
-    --accent-foreground: 30 15% 92%;
+    --accent-foreground: 30 14% 88%;
 
     --destructive: 0 62% 48%;
     --destructive-foreground: 0 0% 98%;

@@ -23,10 +23,10 @@ function Swatch({
       title={label}
       onClick={onClick}
       className={cn(
-        'relative w-12 h-12 rounded-lg shrink-0 border-2 transition-all duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+        'relative w-12 h-12 rounded-lg shrink-0 border-2 transition-[border-color,box-shadow,transform] duration-200',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15 focus-visible:ring-offset-1',
         selected
-          ? 'border-primary shadow-md scale-110'
+          ? 'selected-control'
           : 'border-transparent hover:border-muted-foreground/40 hover:scale-105',
       )}
       style={style}

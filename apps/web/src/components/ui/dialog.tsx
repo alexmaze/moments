@@ -27,21 +27,25 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   hideCloseButton?: boolean;
+  mobileSheet?: boolean;
 }
 
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, hideCloseButton, ...props }, ref) => (
+>(({ className, children, hideCloseButton, mobileSheet, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 p-0',
+        mobileSheet
+          ? 'fixed inset-x-0 bottom-0 z-50 w-full p-0 sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2'
+          : 'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 p-0',
         'surface-overlay rounded-xl shadow-lg border border-border',
-        'data-[state=open]:animate-[dialog-in_200ms_ease-out]',
-        'data-[state=closed]:animate-[dialog-out_150ms_ease-in]',
+        mobileSheet
+          ? 'data-[state=open]:animate-[sheet-in_220ms_cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:animate-[sheet-out_180ms_ease-in] sm:data-[state=open]:animate-[dialog-in_200ms_ease-out] sm:data-[state=closed]:animate-[dialog-out_150ms_ease-in]'
+          : 'data-[state=open]:animate-[dialog-in_200ms_ease-out] data-[state=closed]:animate-[dialog-out_150ms_ease-in]',
         'focus:outline-none',
         className,
       )}

@@ -21,6 +21,7 @@
   },
   "quickComposer": {
     "placeholder": "分享你的近况...",
+    "spacePlaceholder": "分享关于{{spaceName}}的近况...",
     "editPlaceholder": "更新这条动态...",
     "submit": "发布",
     "save": "保存",

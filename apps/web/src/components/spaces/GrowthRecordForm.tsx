@@ -82,7 +82,7 @@ export function GrowthRecordForm({ slug, open, onOpenChange }: GrowthRecordFormP
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground input-focus"
             />
           </div>
 
@@ -98,7 +98,7 @@ export function GrowthRecordForm({ slug, open, onOpenChange }: GrowthRecordFormP
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
               placeholder="65.5"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
             />
           </div>
 
@@ -114,7 +114,7 @@ export function GrowthRecordForm({ slug, open, onOpenChange }: GrowthRecordFormP
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
               placeholder="3.25"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
             />
           </div>
 
@@ -130,7 +130,7 @@ export function GrowthRecordForm({ slug, open, onOpenChange }: GrowthRecordFormP
               value={headCircumferenceCm}
               onChange={(e) => setHeadCircumferenceCm(e.target.value)}
               placeholder="34.2"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
             />
           </div>
 

@@ -53,21 +53,21 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
   };
 
   return (
-    <div>
+    <div className="overflow-hidden rounded-xl border border-border surface-card shadow-sm">
       {space.coverUrl ? (
         <FallbackImage
           src={space.coverUrl}
           alt={space.name}
-          className="h-32 w-full rounded-xl object-cover"
+          className="h-32 w-full object-cover"
           style={{ objectPosition: `center ${space.coverPositionY}%` }}
-          fallbackClassName="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"
+          fallbackClassName="h-32 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5"
         />
       ) : (
-        <div className="h-32 w-full rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
+        <div className="h-32 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
       )}
 
-      <div className="mt-4">
-        <div className="flex items-start justify-between gap-4">
+      <div className="p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h1 className="truncate text-xl font-bold text-foreground">
@@ -86,17 +86,17 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
               </p>
             )}
 
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/60 px-2.5 py-1">
                 <Users className="h-4 w-4" />
                 {t('detail.members', { count: space.memberCount })}
               </span>
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/60 px-2.5 py-1">
                 <FileText className="h-4 w-4" />
                 {t('detail.posts', { count: space.postCount })}
               </span>
               {space.type === 'baby' && space.babyBirthday && (
-                <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted/60 px-2.5 py-1">
                   <Cake className="h-4 w-4" />
                   {t('detail.babyAge', { age: i18n.language === 'zh-CN' ? formatBabyAge(space.babyBirthday, new Date().toISOString()) : formatBabyAgeEn(space.babyBirthday, new Date().toISOString()) })}
                 </span>
@@ -112,7 +112,7 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
                     if (!isOwner) setLeaveConfirmOpen(true);
                   }}
                   disabled={isOwner}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Check className="h-4 w-4" />
                   {t('detail.joined')}
@@ -123,14 +123,14 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
                     <button
                       onClick={() => joinSpace.mutate(undefined, { onSuccess: () => setJoinDropdownOpen(false) })}
                       disabled={joinSpace.isPending}
-                      className="rounded-l-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+                      className="rounded-l-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                       {t('detail.join')}
                     </button>
                     <button
                       onClick={() => setJoinDropdownOpen((v) => !v)}
                       disabled={joinSpace.isPending}
-                      className="rounded-r-lg border-l border-primary-foreground/20 bg-primary px-2 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                      className="rounded-r-full border-l border-primary-foreground/20 bg-primary px-2 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
                       <ChevronDown className="h-4 w-4" />
                     </button>
@@ -152,7 +152,7 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
                           onChange={(e) => setNickname(e.target.value)}
                           placeholder={t('nicknamePlaceholder')}
                           maxLength={10}
-                          className="mb-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="mb-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm input-focus"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleJoin();
                           }}
@@ -176,7 +176,7 @@ export function SpaceHeader({ space }: SpaceHeaderProps) {
               {canEdit && (
                 <Link
                   to={`/spaces/${space.slug}/edit`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border surface-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md"
                 >
                   <Settings className="h-4 w-4" />
                   {t('detail.edit')}

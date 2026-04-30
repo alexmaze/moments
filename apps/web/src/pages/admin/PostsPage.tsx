@@ -96,7 +96,7 @@ export default function PostsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by content..."
-            className="w-full pl-9 pr-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full pl-9 pr-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
           />
         </div>
         <button

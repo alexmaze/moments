@@ -49,7 +49,7 @@ export default function LoginPage() {
             type="text"
             autoComplete="username"
             {...register('username')}
-            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             placeholder={t('login.usernamePlaceholder')}
           />
           {errors.username && (
@@ -66,7 +66,7 @@ export default function LoginPage() {
             type="password"
             autoComplete="current-password"
             {...register('password')}
-            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border border-input rounded-lg px-3 py-2 bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             placeholder={t('login.passwordPlaceholder')}
           />
           {errors.password && (

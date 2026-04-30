@@ -115,7 +115,7 @@ export default function UsersPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search by username or display name..."
-              className="w-full pl-10 pr-4 py-2 border border-input rounded-lg bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full pl-10 pr-4 py-2 border border-input rounded-lg bg-background text-foreground text-sm placeholder:text-muted-foreground input-focus"
             />
           </div>
           <button
@@ -132,7 +132,7 @@ export default function UsersPage() {
             setStatusFilter(e.target.value as StatusFilter);
             setPage(1);
           }}
-          className="px-4 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-4 py-2 border border-input rounded-lg bg-background text-foreground text-sm input-focus"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>

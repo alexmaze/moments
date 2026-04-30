@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
 import { useInfiniteSpaces } from '@/hooks/useSpaces';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { SpaceCard } from '@/components/spaces/SpaceCard';
 import { CreateSpaceDialog } from '@/components/spaces/CreateSpaceDialog';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function SpacesPage() {
   const { t } = useTranslation('spaces');
@@ -46,13 +47,21 @@ export default function SpacesPage() {
   const spaces = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
+      <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl border border-border surface-card p-4 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/15 bg-primary/10 text-primary shadow-sm">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">{t('list.description')}</p>
+          </div>
+        </div>
         <button
           onClick={() => setCreateOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
           {t('create.submit')}
@@ -73,14 +82,20 @@ export default function SpacesPage() {
 
       {/* Empty state */}
       {!isLoading && spaces.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-medium text-muted-foreground">
-            {t('list.empty')}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('list.emptySubtitle')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Layers}
+          title={t('list.empty')}
+          description={t('list.emptySubtitle')}
+          action={
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              {t('create.submit')}
+            </button>
+          }
+        />
       )}
 
       {/* Space grid */}

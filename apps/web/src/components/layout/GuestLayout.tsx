@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Logo from '@/components/ui/Logo';
 
 export default function GuestLayout() {
   const { t } = useTranslation();
@@ -16,7 +17,8 @@ export default function GuestLayout() {
         aria-hidden="true"
       />
 
-      <header className="relative w-full py-10 text-center">
+      <header className="relative w-full py-10 text-center flex flex-col items-center gap-3">
+        <Logo size={56} />
         <h1 className="text-3xl font-bold tracking-tight text-primary">
           {t('brand')}
         </h1>

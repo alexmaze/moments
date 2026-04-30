@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
+import Logo from '@/components/ui/Logo';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -45,7 +46,8 @@ export default function AdminLayout() {
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-            <Link to="/admin" className="text-xl font-semibold text-primary">
+            <Link to="/admin" className="flex items-center gap-2 text-xl font-semibold text-primary">
+              <Logo size={24} />
               Moments Admin
             </Link>
             <button
@@ -104,7 +106,10 @@ export default function AdminLayout() {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="ml-3 text-lg font-semibold text-primary">Moments Admin</span>
+          <span className="ml-3 flex items-center gap-2 text-lg font-semibold text-primary">
+            <Logo size={22} />
+            Moments Admin
+          </span>
         </header>
 
         <main className="p-6">

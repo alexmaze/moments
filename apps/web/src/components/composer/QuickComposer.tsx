@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Loader2, Smile, Mic } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import { RichTextEditor, type RichTextEditorRef } from './rich-editor';
 
 interface QuickComposerProps {
   fixedSpaceId?: string;
+  fixedSpaceName?: string;
   mode?: 'create' | 'edit';
   initialPost?: PostDto;
   onCancel?: () => void;
@@ -42,6 +43,7 @@ function toExistingAudio(audio: PostDto['audio']): ExistingAudioState | null {
 
 export default function QuickComposer({
   fixedSpaceId,
+  fixedSpaceName,
   mode = 'create',
   initialPost,
   onCancel,
@@ -59,10 +61,13 @@ export default function QuickComposer({
   );
   const editorRef = useRef<RichTextEditorRef>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const collapsedBodyRef = useRef<HTMLDivElement>(null);
+  const expandedBodyRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const submittingRef = useRef(false);
   const didInitEditStateRef = useRef(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [composerBodyHeight, setComposerBodyHeight] = useState<number>();
 
   const createPost = useCreatePost();
   const updatePost = useUpdatePost(initialPost?.id ?? '');
@@ -72,6 +77,9 @@ export default function QuickComposer({
   const [isAudioUploading, setIsAudioUploading] = useState(false);
 
   const isSubmitting = createPost.isPending || updatePost.isPending || isAudioUploading;
+  const placeholder = fixedSpaceName
+    ? t('quickComposer.spacePlaceholder', { spaceName: fixedSpaceName })
+    : t('quickComposer.placeholder');
   const hasContent = content.trim().length > 0;
   const hasMedia = items.length > 0;
   const hasMediaReady = hasMedia && allUploaded;
@@ -89,6 +97,47 @@ export default function QuickComposer({
     if (!expanded) return;
     editorRef.current?.focus();
   }, [expanded]);
+
+  useEffect(() => {
+    if (expanded) return;
+    setEmojiPickerOpen(false);
+  }, [expanded]);
+
+  useLayoutEffect(() => {
+    if (isEditMode) return undefined;
+
+    const activeBody = expanded ? expandedBodyRef.current : collapsedBodyRef.current;
+    if (!activeBody) return undefined;
+
+    let frameId: number | undefined;
+    const syncHeight = () => {
+      frameId = undefined;
+      const nextHeight = Math.ceil(activeBody.getBoundingClientRect().height);
+      setComposerBodyHeight((currentHeight) => (
+        currentHeight === nextHeight ? currentHeight : nextHeight
+      ));
+    };
+    const scheduleSyncHeight = () => {
+      if (frameId !== undefined) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(syncHeight);
+    };
+
+    scheduleSyncHeight();
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(scheduleSyncHeight);
+    resizeObserver?.observe(activeBody);
+
+    return () => {
+      if (frameId !== undefined) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+    };
+  }, [expanded, isEditMode]);
 
   useEffect(() => {
     if (!isEditMode || !initialPost || didInitEditStateRef.current) return;
@@ -119,6 +168,9 @@ export default function QuickComposer({
     if (!expanded || isEditMode) return;
 
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target instanceof Element ? e.target : null;
+      if (target?.closest('[data-emoji-picker-popover]')) return;
+
       if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
         if (!isDirty) {
           setExpanded(false);
@@ -245,19 +297,23 @@ export default function QuickComposer({
           ref={editorRef}
           value={content}
           onChange={setContent}
-          placeholder={t(isEditMode ? 'quickComposer.editPlaceholder' : 'quickComposer.placeholder')}
+          placeholder={isEditMode ? t('quickComposer.editPlaceholder') : placeholder}
           className="flex-1 min-h-[72px]"
+          contentClassName="!px-0"
+          placeholderClassName="!px-0"
         />
       </div>
 
-      <div className="mt-3">
-        <MediaUploader
-          items={items}
-          addFiles={addFiles}
-          removeItem={removeItem}
-          reorderItems={reorderItems}
-        />
-      </div>
+      {items.length > 0 && (
+        <div className="mt-3">
+          <MediaUploader
+            items={items}
+            addFiles={addFiles}
+            removeItem={removeItem}
+            reorderItems={reorderItems}
+          />
+        </div>
+      )}
 
       {(audioRecorder.status !== 'idle' || hasLoadedAudio) && (
         <div className="mt-3">
@@ -357,6 +413,25 @@ export default function QuickComposer({
     </div>
   );
 
+  const renderCollapsedComposer = () => (
+    <button
+      onClick={handleExpand}
+      className="w-full flex items-center gap-3 p-4 text-left"
+    >
+      <UserAvatar
+        src={currentUser?.avatarUrl}
+        alt={currentUser?.displayName}
+        size="md"
+      />
+
+      <span className="text-sm text-muted-foreground flex-1">
+        {placeholder}
+      </span>
+
+      <Image className="w-5 h-5 text-muted-foreground shrink-0" />
+    </button>
+  );
+
   if (isEditMode) {
     return (
       <div className="surface-card rounded-xl shadow-sm border border-border">
@@ -366,27 +441,46 @@ export default function QuickComposer({
   }
 
   return (
-    <div ref={cardRef} className="surface-card rounded-xl shadow-sm border border-border mb-4">
-      {!expanded ? (
-        <button
-          onClick={handleExpand}
-          className="w-full flex items-center gap-3 p-4 text-left"
-        >
-          <UserAvatar
-            src={currentUser?.avatarUrl}
-            alt={currentUser?.displayName}
-            size="md"
-          />
+    <div
+      ref={cardRef}
+      className={`surface-card rounded-xl border mb-4 transition-[border-color,box-shadow] duration-200 ${
+        expanded
+          ? 'border-primary/50 shadow-md ring-2 ring-primary/15'
+          : 'border-border shadow-sm'
+      }`}
+    >
+      <div
+        className="overflow-hidden transition-[height] duration-300 ease-out"
+        style={composerBodyHeight === undefined ? undefined : { height: composerBodyHeight }}
+      >
+        <div className="relative">
+          <div
+            ref={collapsedBodyRef}
+            aria-hidden={expanded}
+            inert={expanded}
+            className={
+              expanded
+                ? 'invisible absolute inset-x-0 top-0 pointer-events-none'
+                : 'visible relative'
+            }
+          >
+            {renderCollapsedComposer()}
+          </div>
 
-          <span className="text-sm text-muted-foreground flex-1">
-            {t('quickComposer.placeholder')}
-          </span>
-
-          <Image className="w-5 h-5 text-muted-foreground shrink-0" />
-        </button>
-      ) : (
-        renderComposer()
-      )}
+          <div
+            ref={expandedBodyRef}
+            aria-hidden={!expanded}
+            inert={!expanded}
+            className={
+              expanded
+                ? 'visible relative'
+                : 'invisible absolute inset-x-0 top-0 pointer-events-none'
+            }
+          >
+            {renderComposer()}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

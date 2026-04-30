@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FileText } from 'lucide-react';
 import { useSpacePosts } from '@/hooks/useSpaces';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import PostCard from '@/components/feed/PostCard';
 import QuickComposer from '@/components/composer/QuickComposer';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface SpacePostsTabProps {
   slug: string;
   spaceId: string;
+  spaceName: string;
   isMember: boolean;
 }
 
-export function SpacePostsTab({ slug, spaceId, isMember }: SpacePostsTabProps) {
+export function SpacePostsTab({ slug, spaceId, spaceName, isMember }: SpacePostsTabProps) {
   const { t } = useTranslation('spaces');
 
   const {
@@ -64,15 +67,21 @@ export function SpacePostsTab({ slug, spaceId, isMember }: SpacePostsTabProps) {
 
   if (posts.length === 0) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-sm text-muted-foreground">{t('detail.noPosts')}</p>
+      <div className="space-y-4">
+        {isMember && <QuickComposer fixedSpaceId={spaceId} fixedSpaceName={spaceName} />}
+        <EmptyState
+          icon={FileText}
+          title={t('detail.noPosts')}
+          description={isMember ? t('detail.noPostsJoined') : undefined}
+          variant="compact"
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {isMember && <QuickComposer fixedSpaceId={spaceId} />}
+      {isMember && <QuickComposer fixedSpaceId={spaceId} fixedSpaceName={spaceName} />}
 
       {posts.map((post) => (
         <PostCard key={post.id} post={post} variant="feed" />

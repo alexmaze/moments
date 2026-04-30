@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Smile } from 'lucide-react';
+import { Smile, SendHorizonal } from 'lucide-react';
 import { useCreateComment } from '@/hooks/useComments';
 import { EmojiPickerPopover } from '@/components/composer/EmojiPickerPopover';
 import { RichTextEditor, type RichTextEditorRef } from '@/components/composer/rich-editor';
@@ -97,9 +97,9 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
              placeholder={replyTo ? t('comments.replyPlaceholder', { name: replyTo.author.displayName }) : t('comments.inputPlaceholder')}
              minRows={1}
              onKeyDown={handleKeyDown}
-             className="border border-input rounded-lg bg-background"
-             contentClassName="pr-11"
-             placeholderClassName="pr-11"
+             className="border border-input rounded-lg bg-background !min-h-9 input-focus-within"
+             contentClassName="pr-11 !py-1.5 !text-[13px]"
+             placeholderClassName="pr-11 !py-1.5 !text-[13px]"
            />
           <button
             ref={emojiButtonRef}
@@ -120,12 +120,12 @@ export default function CommentComposer({ postId, replyTo, onCancelReply }: Comm
         <button
           type="submit"
           disabled={!content.trim() || createComment.isPending}
-          className="rounded-lg px-4 py-2 leading-6 bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity shrink-0"
+          className="rounded-lg w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity shrink-0"
         >
           {createComment.isPending ? (
             <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
-            t('comments.submit')
+            <SendHorizonal className="w-4 h-4" />
           )}
         </button>
       </form>

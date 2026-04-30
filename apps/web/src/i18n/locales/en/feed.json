@@ -21,6 +21,7 @@
   },
   "quickComposer": {
     "placeholder": "Share what's on your mind...",
+    "spacePlaceholder": "Share an update about {{spaceName}}...",
     "editPlaceholder": "Update this post...",
     "submit": "Post",
     "save": "Save",

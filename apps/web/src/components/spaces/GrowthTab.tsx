@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Cake } from 'lucide-react';
+import { Plus, Cake, TrendingUp } from 'lucide-react';
 import { formatBabyAge, formatBabyAgeEn } from '@moments/shared';
 import i18n from '@/i18n';
 import { useGrowthRecords } from '@/hooks/useGrowthRecords';
 import { GrowthChart } from '@/components/spaces/GrowthChart';
 import { GrowthRecordsList } from '@/components/spaces/GrowthRecordsList';
 import { GrowthRecordForm } from '@/components/spaces/GrowthRecordForm';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface GrowthTabProps {
   slug: string;
@@ -69,11 +70,11 @@ export function GrowthTab({ slug, isMember, babyBirthday }: GrowthTabProps) {
 
       {/* Empty state */}
       {sortedRecords.length === 0 && (
-        <div className="py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t('growth.noRecords')}
-          </p>
-        </div>
+        <EmptyState
+          icon={TrendingUp}
+          title={t('growth.noRecords')}
+          variant="compact"
+        />
       )}
 
       {/* Chart */}

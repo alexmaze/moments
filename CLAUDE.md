@@ -140,7 +140,7 @@ Internal container scrolling, NOT page-level. Only `<main>` scrolls.
 - **Custom background**: texture presets in `lib/backgroundPresets.ts`. Rendered as fixed -z-10 layer inside AppLayout's `relative isolate` root.
 - **Hardcoded `bg-black/*` overlays**: Intentional on media thumbs, avatar hovers, dialog backdrops — must darken arbitrary user content.
 - **Radius**: Cards `rounded-xl`, buttons `rounded-lg`, avatars `rounded-full`.
-- **Fonts**: Inter + Noto Sans SC (Google Fonts CDN).
+- **Fonts**: System font stack only; do not load external font CDNs.
 
 ## Database Schema (`packages/db/src/schema/`)
 

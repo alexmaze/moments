@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>近况 / Moments - 品牌视觉与组件系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 模拟 Tailwind v4 CSS-first 配置与映射 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'media', // 跟随系统深浅色
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'hsl(var(--primary) / <alpha-value>)',
+                        like: 'hsl(var(--like) / <alpha-value>)',
+                        background: 'hsl(var(--background) / <alpha-value>)',
+                        card: 'hsl(var(--card) / <alpha-value>)',
+                        text: 'hsl(var(--text) / <alpha-value>)',
+                        muted: 'hsl(var(--text) / 0.6)',
+                        border: 'hsl(var(--text) / 0.1)',
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Tailwind v4 风格的 index.css 架构 -->
+    <style>
+        /* 1. Token 定义：:root 存裸 HSL 通道值 */
+        :root {
+            /* 亮色模式 (Light) */
+            --primary: 24 80% 50%;
+            --like: 5 85% 57%;
+            --background: 30 20% 98%; /* 暖白 */
+            --card: 0 0% 100%;
+            --text: 22 18% 18%; /* 柔和暖棕黑 */
+            
+            /* 毛玻璃系统参数 (亮色) */
+            --surface-card-opacity: 0.50;
+            --surface-overlay-opacity: 0.94;
+            --surface-toast-opacity: 0.88;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* 暗色模式 (Dark) */
+                --primary: 24 80% 62%;
+                --like: 5 75% 63%;
+                --background: 20 10% 9%; /* 暖黑 */
+                --card: 20 8% 14%;
+                --text: 30 14% 88%; /* 柔和暖白 */
+
+                /* 毛玻璃系统参数 (暗色) */
+                --surface-card-opacity: 0.42;
+                --surface-overlay-opacity: 0.90;
+                --surface-toast-opacity: 0.84;
+            }
+        }
+
+        /* 基础样式重置 */
+        body {
+            background-color: hsl(var(--background));
+            color: hsl(var(--text));
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* 2. 三层毛玻璃系统类名封装 */
+        .surface-card {
+            background-color: hsl(var(--card) / var(--surface-card-opacity));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid hsl(var(--text) / 0.06);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .surface-overlay {
+            background-color: hsl(var(--card) / var(--surface-overlay-opacity));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid hsl(var(--text) / 0.08);
+            box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        .surface-toast {
+            background-color: hsl(var(--card) / var(--surface-toast-opacity));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid hsl(var(--text) / 0.1);
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 隐藏原生滚动条但保留功能，用于水平列表 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 背景氛围光晕动画 */
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .ambient-blob {
+            position: absolute;
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 10s infinite ease-in-out;
+        }
+        @media (prefers-color-scheme: dark) {
+            .ambient-blob { opacity: 0.15; }
+        }
+
+        /* 模拟波形动画 */
+        @keyframes waveform {
+            0%, 100% { transform: scaleY(0.4); }
+            50% { transform: scaleY(1); }
+        }
+        .animate-waveform {
+            animation: waveform 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-20 relative overflow-x-hidden">
+
+    <!-- 氛围背景 (为了展现毛玻璃折射效果) -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="ambient-blob bg-primary w-96 h-96 top-0 left-10"></div>
+        <div class="ambient-blob bg-like w-80 h-80 top-40 right-10" style="animation-delay: -3s;"></div>
+        <div class="ambient-blob bg-primary w-64 h-64 top-1/2 left-1/3" style="animation-delay: -6s;"></div>
+        <div class="ambient-blob bg-like w-96 h-96 bottom-0 right-1/4" style="animation-delay: -2s;"></div>
+    </div>
+
+    <!-- 顶部导航条示范 (surface-card) -->
+    <header class="surface-card sticky top-0 z-50 px-6 py-4 flex items-center justify-between mb-12">
+        <div class="max-w-6xl mx-auto w-full flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg viewBox="0 0 100 100" class="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="80" height="80" rx="22" fill="hsl(var(--primary))" />
+                    <circle cx="34" cy="34" r="6.5" fill="hsl(var(--background))" />
+                    <path d="M 34 50 C 34 68 42 70 55 70 C 65 70 70 63 70 56" stroke="hsl(var(--background))" stroke-width="8.5" stroke-linecap="round" fill="none" />
+                </svg>
+                <span class="font-bold text-lg tracking-wide text-text">近况</span>
+            </div>
+            
+            <!-- 9. 胶囊 Switch 切换器 (Header 示范) -->
+            <div class="hidden md:flex p-1 bg-text/5 border border-text/5 rounded-full items-center">
+                <button class="px-5 py-1.5 rounded-full bg-primary text-white text-sm font-medium shadow-sm transition-transform active:scale-95">朋友</button>
+                <button class="px-5 py-1.5 rounded-full text-muted hover:text-text text-sm font-medium transition-all active:scale-95">回忆</button>
+            </div>
+            
+            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center cursor-pointer overflow-hidden border border-primary/30">
+                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=transparent" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 mb-12 text-center md:text-left relative z-10">
+        <div class="inline-block mb-4 px-4 py-1.5 surface-overlay text-primary rounded-full text-sm font-semibold tracking-wide">
+            v4 CSS-First / 暖琥珀主题 + 组件库
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-text">近况 <span class="text-primary font-normal">Moments</span></h1>
+        <p class="text-lg text-muted max-w-2xl leading-relaxed mx-auto md:mx-0">
+            基于三层物理级毛玻璃与动态 HSL 色彩系统构建。为亲密朋友与家人提供一个温暖、轻量、私密的自托管生活碎片分享空间。
+        </p>
+    </div>
+
+    <!-- Part 1: 品牌 Logo 与色彩系统 -->
+    <main class="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20 relative z-10">
+        <!-- 左侧：品牌 Logo 变体 -->
+        <div class="lg:col-span-7 space-y-8">
+            <!-- 1. 核心应用图标 -->
+            <section class="surface-card rounded-[2rem] p-10 flex flex-col items-center justify-center min-h-[320px] transition-transform hover:scale-[1.01] duration-300">
+                <p class="w-full text-left text-sm font-semibold text-primary mb-8 uppercase tracking-wider">01. 核心应用图标 (App Icon)</p>
+                <div class="w-40 h-40 transform hover:scale-105 transition-transform duration-300">
+                    <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-xl" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="hsl(var(--primary))" />
+                                <stop offset="100%" stop-color="hsl(var(--primary) / 0.85)" />
+                            </linearGradient>
+                        </defs>
+                        <rect x="10" y="10" width="80" height="80" rx="22" fill="url(#brandGrad)" />
+                        <circle cx="34" cy="34" r="6.5" fill="hsl(var(--background))" />
+                        <path d="M 34 50 C 34 68 42 70 55 70 C 65 70 70 63 70 56" stroke="hsl(var(--background))" stroke-width="8.5" stroke-linecap="round" fill="none" />
+                    </svg>
+                </div>
+                <p class="mt-8 text-sm text-muted text-center max-w-sm leading-relaxed">
+                    提取汉字「近」的「辶」旁意象。一点与一道温柔的承托曲线，如同一个温暖的怀抱，摒弃了传统冰冷的对话气泡，强调私域的亲密感。
+                </p>
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <button onclick="exportLogo('icon', 'svg')" class="px-4 py-2 text-xs font-semibold surface-overlay rounded-xl hover:bg-primary hover:text-white transition-all border border-text/10 shadow-sm flex items-center gap-2">
+                        ↓ 导出 SVG
+                    </button>
+                    <button onclick="exportLogo('icon', 'png')" class="px-4 py-2 text-xs font-semibold surface-overlay rounded-xl hover:bg-primary hover:text-white transition-all border border-text/10 shadow-sm flex items-center gap-2">
+                        ↓ 导出 高清 PNG
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- 右侧：设计系统与调色板 -->
+        <div class="lg:col-span-5 space-y-6">
+            <!-- 0. 全局色板 (暖琥珀色主题配置) -->
+            <div class="surface-overlay rounded-[2rem] p-8">
+                <h3 class="text-xl font-bold mb-6 text-text flex items-center gap-2">
+                    <span class="bg-primary text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">0</span>
+                    全局色板 <span class="text-xs font-normal text-muted ml-1">自适应亮/暗</span>
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 surface-card rounded-xl border border-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary shadow-sm border border-text/5"></div>
+                            <div>
+                                <div class="text-sm font-bold text-text">--primary 主品牌色</div>
+                                <div class="text-[11px] text-muted">24 80% 50%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 surface-card rounded-xl border border-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-like shadow-sm border border-text/5"></div>
+                            <div>
+                                <div class="text-sm font-bold text-text">--like 点赞/强调色</div>
+                                <div class="text-[11px] text-muted">5 85% 57%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 surface-card rounded-xl border border-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-background shadow-inner border border-text/10"></div>
+                            <div>
+                                <div class="text-sm font-bold text-text">--background 背景</div>
+                                <div class="text-[11px] text-muted">暖白 / 暖黑</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 毛玻璃层级系统复习 -->
+            <div class="surface-card rounded-[2rem] p-8 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-like/30 blur-2xl rounded-full z-0"></div>
+                <h3 class="text-xl font-bold mb-4 text-text relative z-10">层级架构</h3>
+                <div class="space-y-3 relative z-10 text-sm">
+                    <div class="p-3 border border-border rounded-xl"><b>1. surface-card:</b> 0.50 透明度, 基础层</div>
+                    <div class="p-3 surface-overlay rounded-xl shadow-lg transform translate-x-2"><b>2. surface-overlay:</b> 0.94 透明度, 浮层</div>
+                    <div class="p-3 surface-toast rounded-xl shadow-md transform translate-x-4"><b>3. surface-toast:</b> 0.88 透明度, 通知</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Part 2: 核心 UI 组件库 -->
+    <section class="max-w-6xl mx-auto px-6 mb-20 relative z-10">
+        <div class="mb-10 flex items-center justify-between">
+            <div>
+                <h2 class="text-3xl font-bold text-text">UI 组件库预览</h2>
+                <p class="text-muted mt-2">专为私密社交、生活碎片分享设计的统一组件集合</p>
+            </div>
+            <!-- 9. 胶囊 Switch 切换器 (页面级示范) -->
+            <div class="hidden sm:flex p-1 bg-text/5 rounded-full items-center backdrop-blur-sm">
+                <button class="px-4 py-1.5 rounded-full bg-background text-text text-sm font-medium shadow-sm">所有组件</button>
+                <button class="px-4 py-1.5 rounded-full text-muted hover:text-text text-sm transition-all">基础控件</button>
+                <button class="px-4 py-1.5 rounded-full text-muted hover:text-text text-sm transition-all">社交模块</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Column 1: Typography, Buttons, Avatars, Inputs -->
+            <div class="space-y-6">
+                <!-- 3. 文本 Typography -->
+                <div class="surface-card rounded-3xl p-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-primary mb-4">3. 文本排版 Typography</h3>
+                    <div class="space-y-4">
+                        <div class="text-3xl font-bold text-text">H1 标题文本</div>
+                        <div class="text-xl font-semibold text-text">H2 副标题文本</div>
+                        <div class="text-base text-text leading-relaxed">正文文本：记录生活的点滴，每一天都值得被珍藏。这里是朋友们的私密客厅。</div>
+                        <div class="text-sm text-muted">次要文本 / 时间戳 · 2小时前</div>
+                        <!-- 附带一个 Badge/Tag -->
+                        <div class="flex gap-2 pt-2">
+                            <span class="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"># 旅行日常</span>
+                            <span class="px-2.5 py-1 rounded-full surface-overlay border border-border text-muted text-xs font-medium">仅好友可见</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 按钮 Buttons -->
+                <div class="surface-card rounded-3xl p-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-primary mb-4">2. 按钮 Buttons</h3>
+                    <div class="flex flex-col gap-4">
+                        <button class="w-full py-3 px-4 bg-primary text-white font-semibold rounded-2xl hover:bg-primary/90 transition-all active:scale-[0.98] shadow-md shadow-primary/20">
+                            发布动态 (Primary)
+                        </button>
+                        <div class="flex gap-3">
+                            <button class="flex-1 py-2.5 px-4 surface-overlay text-text border border-border font-medium rounded-2xl hover:bg-text/5 transition-all active:scale-[0.98]">
+                                取消 (Secondary)
+                            </button>
+                            <button class="w-12 h-12 flex items-center justify-center surface-overlay text-primary border border-primary/20 rounded-2xl hover:bg-primary/10 transition-all active:scale-[0.98]">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                        <button class="text-sm font-medium text-muted hover:text-primary transition-colors text-center py-2">
+                            幽灵按钮 (Ghost) ->
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 10. 头像 Avatars -->
+                <div class="surface-card rounded-3xl p-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-primary mb-4">10. 头像与组 Avatars</h3>
+                    <div class="flex items-end gap-4 mb-6">
+                        <!-- Lg -->
+                        <div class="w-16 h-16 rounded-full border-2 border-background shadow-sm overflow-hidden bg-primary/10">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Annie" alt="Avatar">
+                        </div>
+                        <!-- Md -->
+                        <div class="w-12 h-12 rounded-full border-2 border-background shadow-sm overflow-hidden bg-like/10">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Jack" alt="Avatar">
+                        </div>
+                        <!-- Sm -->
+                        <div class="w-8 h-8 rounded-full border border-background shadow-sm overflow-hidden bg-text/10">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Luna" alt="Avatar">
+                        </div>
+                    </div>
+                    <!-- Avatar Group -->
+                    <div class="flex -space-x-3 relative z-0">
+                        <img class="w-10 h-10 rounded-full border-2 border-background shadow-sm bg-primary/10" src="https://api.dicebear.com/7.x/notionists/svg?seed=1" />
+                        <img class="w-10 h-10 rounded-full border-2 border-background shadow-sm bg-primary/20 relative z-10" src="https://api.dicebear.com/7.x/notionists/svg?seed=2" />
+                        <img class="w-10 h-10 rounded-full border-2 border-background shadow-sm bg-primary/30 relative z-20" src="https://api.dicebear.com/7.x/notionists/svg?seed=3" />
+                        <div class="w-10 h-10 rounded-full border-2 border-background shadow-sm bg-text/5 flex items-center justify-center text-xs font-medium text-muted relative z-30">
+                            +5
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输入框 (额外补充) -->
+                <div class="surface-card rounded-3xl p-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-primary mb-4">输入框 Inputs</h3>
+                    <textarea class="w-full bg-background border border-border rounded-2xl p-4 text-text placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all resize-none" rows="3" placeholder="最近发生了什么有趣的事？"></textarea>
+                </div>
+            </div>
+
+            <!-- Column 2: Cards, Images, Audio Player -->
+            <div class="space-y-6">
+                <!-- 1. 卡片 & 4. 图片 & 11. 音频播放器 (综合展示为一个 Post) -->
+                <div class="surface-card rounded-[2rem] p-5">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-primary mb-4 ml-1">1, 4, 11. 动态卡片完整视图</h3>
+                    
+                    <!-- Post Header -->
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <div class="flex items-center gap-3">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Sam" class="w-10 h-10 rounded-full bg-primary/10">
+                            <div>
+                                <div class="font-semibold text-text text-sm">林夕 (Sam)</div>
+                                <div class="text-xs text-muted">刚刚 · 仅密友可见</div>
+                            </div>
+                        </div>
+                        <button class="text-muted hover:text-text p-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Post Text -->
+                    <p class="text-sm text-text leading-relaxed mb-4 px-1">
+                        早春的周末，去湖边散了散步。听着这首很棒的 Demo，感觉整个世界都安静了下来。🌿 
+                    </p>
+
+                    <!-- 11. 带波形图的音频播放器 -->
+                    <div class="mb-4 bg-background border border-border rounded-2xl p-3 flex items-center gap-3 relative overflow-hidden group">
+                        <!-- Play Button -->
+                        <button class="w-10 h-10 shrink-0 rounded-full bg-primary text-white flex items-center justify-center shadow-md shadow-primary/20 transition-transform active:scale-95 z-10">
+                            <!-- Play Icon -->
+                            <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        
+                        <!-- Waveform (Simulated) -->
+                        <div class="flex-1 flex items-center gap-[3px] h-8 z-10">
+                            <!-- 静态线段，使用不同高度模拟声波 -->
+                            <div class="w-1 bg-primary/40 rounded-full h-2"></div>
+                            <div class="w-1 bg-primary/60 rounded-full h-4"></div>
+                            <div class="w-1 bg-primary rounded-full h-6 animate-waveform" style="animation-delay: 0.1s"></div>
+                            <div class="w-1 bg-primary rounded-full h-8 animate-waveform" style="animation-delay: 0.2s"></div>
+                            <div class="w-1 bg-primary rounded-full h-5 animate-waveform" style="animation-delay: 0.3s"></div>
+                            <div class="w-1 bg-primary/40 rounded-full h-3"></div>
+                            <div class="w-1 bg-primary/30 rounded-full h-2"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-4"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-6"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-3"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-2"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-5"></div>
+                            <div class="w-1 bg-text/10 rounded-full h-4"></div>
+                        </div>
+                        
+                        <div class="text-xs font-mono text-muted z-10">0:14 / 1:20</div>
+                        
+                        <!-- 播放器进度条背景填充模拟 -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1/3 bg-primary/5 z-0"></div>
+                    </div>
+
+                    <!-- 4. 图片排版 (九宫格/两宫格演示) -->
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div class="aspect-square bg-text/5 rounded-2xl overflow-hidden relative group">
+                            <!-- 用渐变块模拟图片，实际项目中为 img -->
+                            <div class="w-full h-full bg-gradient-to-tr from-primary/40 to-like/40"></div>
+                        </div>
+                        <div class="aspect-square bg-text/5 rounded-2xl overflow-hidden relative group">
+                            <div class="w-full h-full bg-gradient-to-bl from-green-400/30 to-blue-400/30"></div>
+                        </div>
+                    </div>
+
+                    <!-- Post Actions -->
+                    <div class="flex items-center gap-6 px-1 pt-2">
+                        <button class="flex items-center gap-1.5 text-muted hover:text-like transition-colors group">
+                            <div class="p-1.5 rounded-full group-hover:bg-like/10 transition-colors">
+                                <svg class="w-5 h-5 text-like" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <span class="text-sm font-medium text-like">12</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 text-muted hover:text-text transition-colors group">
+                            <div class="p-1.5 rounded-full group-hover:bg-text/5 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            </div>
+                            <span class="text-sm font-medium">评论</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Overlays (Menu, Modal, Toast, Drawer) -->
+            <div class="space-y-6">
+                
+                <!-- 6. Toast 通知 -->
+                <div class="surface-card rounded-3xl p-6 h-32 relative flex items-center justify-center overflow-hidden">
+                    <h3 class="absolute top-4 left-6 text-xs font-bold uppercase tracking-wider text-primary">6. Toast 提示</h3>
+                    
+                    <div class="surface-toast rounded-full px-5 py-3 flex items-center gap-3 shadow-lg transform translate-y-2 border border-border/50 max-w-full">
+                        <div class="w-6 h-6 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <span class="text-sm font-medium text-text truncate">发布成功，正在同步...</span>
+                    </div>
+                </div>
+
+                <!-- 8. Menu 下拉菜单 -->
+                <div class="surface-card rounded-3xl p-6 min-h-[220px] relative flex justify-center pt-12">
+                    <h3 class="absolute top-4 left-6 text-xs font-bold uppercase tracking-wider text-primary">8. 菜单 Menu</h3>
+                    
+                    <div class="surface-overlay w-48 rounded-2xl p-2 shadow-xl border border-border/50 flex flex-col gap-1">
+                        <button class="w-full text-left px-3 py-2 text-sm text-text font-medium rounded-xl hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            复制链接
+                        </button>
+                        <button class="w-full text-left px-3 py-2 text-sm text-text font-medium rounded-xl hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            转为私密
+                        </button>
+                        <div class="w-full h-px bg-border my-1"></div>
+                        <button class="w-full text-left px-3 py-2 text-sm text-red-500 font-medium rounded-xl hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            删除动态
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5. 弹窗 & 7. 抽屉 Modal & Drawer -->
+                <div class="surface-card rounded-3xl p-6 h-[320px] relative overflow-hidden bg-text/5 flex items-end justify-center">
+                    <h3 class="absolute top-4 left-6 text-xs font-bold uppercase tracking-wider text-primary z-20">5 & 7. 抽屉 / 弹窗 (Drawer/Modal)</h3>
+                    
+                    <!-- 模拟遮罩层 -->
+                    <div class="absolute inset-0 bg-background/40 backdrop-blur-sm z-10"></div>
+                    
+                    <!-- 底部抽屉 (Bottom Sheet) 模拟 -->
+                    <div class="surface-overlay w-[90%] rounded-t-3xl pt-2 pb-6 px-6 relative z-20 border border-border shadow-2xl transform translate-y-2">
+                        <!-- 抽屉把手 -->
+                        <div class="w-12 h-1.5 bg-text/20 rounded-full mx-auto mb-5"></div>
+                        
+                        <h4 class="text-base font-bold text-text mb-4 text-center">共有 12 位好友赞了</h4>
+                        
+                        <!-- 赞列表模拟 -->
+                        <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                            <div class="flex flex-col items-center gap-1 shrink-0">
+                                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=A" class="w-12 h-12 rounded-full border border-border bg-background">
+                                <span class="text-[10px] text-muted">Alice</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 shrink-0">
+                                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=B" class="w-12 h-12 rounded-full border border-border bg-background">
+                                <span class="text-[10px] text-muted">Bob</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 shrink-0">
+                                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=C" class="w-12 h-12 rounded-full border border-border bg-background">
+                                <span class="text-[10px] text-muted">Chris</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 shrink-0">
+                                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=D" class="w-12 h-12 rounded-full border border-border bg-background">
+                                <span class="text-[10px] text-muted">Dan</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 导出功能脚本 (保留) -->
+    <script>
+        function exportLogo(type, format) {
+            // 获取当前主题下的真实颜色以替换 CSS 变量，确保本地软件中能正常显示颜色
+            const styles = getComputedStyle(document.documentElement);
+            const primary = `hsl(${styles.getPropertyValue('--primary').trim()})`;
+            const bg = `hsl(${styles.getPropertyValue('--background').trim()})`;
+            const text = `hsl(${styles.getPropertyValue('--text').trim()})`;
+
+            let svgStr = '';
+            let width = 100, height = 100;
+
+            if (type === 'icon') {
+                svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+                    <rect x="10" y="10" width="80" height="80" rx="22" fill="${primary}" />
+                    <circle cx="34" cy="34" r="6.5" fill="${bg}" />
+                    <path d="M 34 50 C 34 68 42 70 55 70 C 65 70 70 63 70 56" stroke="${bg}" stroke-width="8.5" stroke-linecap="round" fill="none" />
+                </svg>`;
+            }
+
+            const filename = `Moments_Logo_${type}`;
+
+            if (format === 'svg') {
+                const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                triggerDownload(url, `${filename}.svg`);
+            } else if (format === 'png') {
+                const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = 4; // 4x 缩放，生成高质量透明背景 PNG
+                    canvas.width = width * scale;
+                    canvas.height = height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    triggerDownload(canvas.toDataURL('image/png'), `${filename}.png`);
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+            }
+        }
+
+        function triggerDownload(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

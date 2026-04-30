@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SendHorizonal } from 'lucide-react';
 import { useCreateComment } from '@/hooks/useComments';
 
 interface CommentInputProps {
@@ -33,17 +34,17 @@ export default function CommentInput({ postId }: CommentInputProps) {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={t('comments.inputPlaceholder')}
-        className="flex-1 border border-input rounded-lg px-3 py-2 bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="flex-1 border border-input rounded-lg px-3 h-9 bg-background text-[13px] text-foreground placeholder:text-muted-foreground input-focus"
       />
       <button
         type="submit"
         disabled={!content.trim() || createComment.isPending}
-        className="rounded-lg px-4 py-2 bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+        className="rounded-lg w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity shrink-0"
       >
         {createComment.isPending ? (
           <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
         ) : (
-          t('comments.submit')
+          <SendHorizonal className="w-4 h-4" />
         )}
       </button>
     </form>

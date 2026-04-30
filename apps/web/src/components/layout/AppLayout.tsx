@@ -10,6 +10,7 @@ import { MediaLightboxProvider } from '@/components/feed/MediaLightboxProvider';
 import { cn } from '@/lib/utils';
 import { Home, User, LogOut, Users, Bell, Shield } from 'lucide-react';
 import UserAvatar from '@/components/ui/UserAvatar';
+import Logo from '@/components/ui/Logo';
 import ThemeSegmentedControl from '@/components/ui/ThemeSegmentedControl';
 import {
   DropdownMenu,
@@ -73,10 +74,15 @@ export default function AppLayout() {
           sample, making the frosted effect match the mobile bottom tab. */}
       <header className="fixed top-0 left-0 right-0 z-40 surface-card border-b border-border/80 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-xl font-bold tracking-tight text-primary">
-              {t('brand')}
-            </Link>
+          <div className="flex min-w-0 items-center gap-3 md:gap-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <Link to="/" className="flex shrink-0 items-center">
+                <Logo size={36} />
+              </Link>
+              <h1 className="truncate text-base font-semibold text-foreground md:hidden">
+                {t('brand')}
+              </h1>
+            </div>
 
             {/* Desktop nav tabs */}
             <nav className="hidden md:flex items-center gap-1">
@@ -92,9 +98,15 @@ export default function AppLayout() {
               >
                 {t('nav.spaces')}
               </Link>
+            </nav>
+          </div>
+
+          {currentUser && (
+            <div className="flex items-center gap-2">
               <Link
                 to="/notifications"
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isNotifications ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
+                aria-label={t('nav.notifications')}
+                className={`relative hidden h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition-colors md:inline-flex ${isNotifications ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`}
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
@@ -103,41 +115,39 @@ export default function AppLayout() {
                   </span>
                 )}
               </Link>
-            </nav>
-          </div>
 
-          {currentUser && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
-                  <UserAvatar
-                    src={currentUser.avatarUrl}
-                    alt={currentUser.displayName}
-                    size="sm"
-                  />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => navigate(`/users/${currentUser.username}`)}>
-                  <User className="w-4 h-4" />
-                  {t('nav.profile')}
-                </DropdownMenuItem>
-                {currentUser.isAdmin && (
-                  <DropdownMenuItem onSelect={() => window.location.href = '/admin'}>
-                    <Shield className="w-4 h-4" />
-                    {t('nav.admin')}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
+                    <UserAvatar
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.displayName}
+                      size="sm"
+                    />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => navigate(`/users/${currentUser.username}`)}>
+                    <User className="w-4 h-4" />
+                    {t('nav.profile')}
                   </DropdownMenuItem>
-                )}
-                <div className="px-2 py-1.5">
-                  <ThemeSegmentedControl />
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleLogout} destructive>
-                  <LogOut className="w-4 h-4" />
-                  {t('nav.logout')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {currentUser.isAdmin && (
+                    <DropdownMenuItem onSelect={() => window.location.href = '/admin'}>
+                      <Shield className="w-4 h-4" />
+                      {t('nav.admin')}
+                    </DropdownMenuItem>
+                  )}
+                  <div className="px-2 py-1.5">
+                    <ThemeSegmentedControl />
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={handleLogout} destructive>
+                    <LogOut className="w-4 h-4" />
+                    {t('nav.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </header>

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Pencil, X, Check } from 'lucide-react';
+import { Pencil, X, Check, Users } from 'lucide-react';
 import { useSpaceMembers, useUpdateSpaceNickname } from '@/hooks/useSpaces';
 import { useAuthStore } from '@/store/auth.store';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
 import { formatRelativeTime } from '@/lib/utils';
 import type { SpaceMemberRole } from '@moments/shared';
 import UserAvatar from '@/components/ui/UserAvatar';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface SpaceMembersTabProps {
   slug: string;
@@ -70,7 +71,7 @@ function NicknameEditor({
         }}
         placeholder={t('nicknamePlaceholder')}
         maxLength={10}
-        className="h-8 w-28 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        className="h-8 w-40 rounded-md border border-input bg-background px-2 text-sm input-focus"
         disabled={isPending}
       />
       <button
@@ -148,9 +149,11 @@ export function SpaceMembersTab({ slug }: SpaceMembersTabProps) {
 
   if (members.length === 0) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-sm text-muted-foreground">{t('detail.noMembers')}</p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title={t('detail.noMembers')}
+        variant="compact"
+      />
     );
   }
 
@@ -161,7 +164,7 @@ export function SpaceMembersTab({ slug }: SpaceMembersTabProps) {
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {members.map((member) => {
         const isCurrentUser = member.user.id === currentUserId;
         const isEditing = editingMemberId === member.id;
@@ -171,62 +174,59 @@ export function SpaceMembersTab({ slug }: SpaceMembersTabProps) {
         return (
           <div
             key={member.id}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50"
+            className="rounded-xl border border-border surface-card shadow-sm transition-colors hover:bg-secondary/60"
           >
-            <Link
-              to={`/users/${member.user.username}`}
-              className="shrink-0"
-            >
-              <UserAvatar
-                src={member.user.avatarUrl}
-                alt={member.user.displayName}
-                size="md"
-              />
-            </Link>
-
-            <div className="min-w-0 flex-1">
-              {isEditing ? (
-                <NicknameEditor
-                  currentNickname={member.spaceNickname}
-                  onSave={(nickname) => handleSaveNickname(nickname)}
-                  onCancel={() => setEditingMemberId(null)}
-                  isPending={updateNickname.isPending}
+            <div className="flex items-center gap-3 p-4">
+              <Link
+                to={`/users/${member.user.username}`}
+                className="shrink-0"
+              >
+                <UserAvatar
+                  src={member.user.avatarUrl}
+                  alt={member.user.displayName}
+                  size="md"
                 />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link
-                    to={`/users/${member.user.username}`}
-                    className="truncate text-sm font-medium text-foreground hover:underline"
-                  >
-                    {displayName}
-                  </Link>
-                  <RoleBadge role={member.role} />
-                  {isCurrentUser && !isEditing && (
-                    <button
-                      onClick={() => setEditingMemberId(member.id)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                      title={hasNickname ? t('editNickname') : t('setNickname')}
+              </Link>
+
+              <div className="min-w-0 flex-1">
+                {isEditing ? (
+                  <NicknameEditor
+                    currentNickname={member.spaceNickname}
+                    onSave={(nickname) => handleSaveNickname(nickname)}
+                    onCancel={() => setEditingMemberId(null)}
+                    isPending={updateNickname.isPending}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/users/${member.user.username}`}
+                      className="truncate text-sm font-medium text-foreground hover:underline"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              )}
-              {hasNickname && !isEditing && (
-                <div className="text-xs text-muted-foreground">
-                  {member.user.displayName} · @{member.user.username}
-                </div>
-              )}
-              {!hasNickname && !isEditing && (
+                      {displayName}
+                    </Link>
+                    <RoleBadge role={member.role} />
+                    {isCurrentUser && !isEditing && (
+                      <button
+                        onClick={() => setEditingMemberId(member.id)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title={hasNickname ? t('editNickname') : t('setNickname')}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">
                   @{member.user.username}
                 </span>
-              )}
+                <span className="rounded-full bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+                  {formatRelativeTime(member.joinedAt)}
+                </span>
+              </div>
             </div>
-
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {formatRelativeTime(member.joinedAt)}
-            </span>
           </div>
         );
       })}

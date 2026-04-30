@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
 import { getUserProfileApi } from '@/api/users.api';
 import { useUserPosts } from '@/hooks/usePosts';
 import { useAuthStore } from '@/store/auth.store';
@@ -58,15 +57,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        {t('back')}
-      </button>
-
       <ProfileHeader
         profile={profile}
         isOwner={isOwnProfile}
@@ -74,8 +64,6 @@ export default function ProfilePage() {
       />
 
       <div className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground px-1">{t('postsSection')}</h2>
-
         {postsLoading ? (
           <div className="space-y-4">
             {[1, 2].map((i) => (

@@ -56,9 +56,9 @@ export default function PostDetailPage() {
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+        className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-border surface-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="h-4 w-4" />
         {t('back')}
       </button>
 

@@ -40,7 +40,7 @@
   "edit": {
     "title": "Edit Space",
     "description": "Manage the space name, description, and top cover.",
-    "backToSpace": "Back to space",
+    "backToSpace": "Back",
     "notFound": "Space not found.",
     "forbiddenTitle": "You do not have permission to edit this space",
     "forbiddenDescription": "Only the space owner and admins can update space details.",
@@ -79,6 +79,7 @@
   "list": {
     "empty": "No spaces yet",
     "emptySubtitle": "Create the first space!",
+    "description": "Keep moments from different themes in their own spaces.",
     "error": "Failed to load spaces."
   },
   "growth": {

@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useCreateSpace } from '@/hooks/useSpaces';
 import type { SpaceType } from '@moments/shared';
 
@@ -77,13 +78,16 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        mobileSheet
+        className="max-h-[calc(100dvh-4rem)] overflow-hidden rounded-b-none rounded-t-[1.75rem] border-b-0 sm:max-h-none sm:max-w-md sm:overflow-visible sm:rounded-xl sm:border-b"
+      >
         <DialogHeader>
           <DialogTitle>{t('create.title')}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 p-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+          <div className="max-h-[calc(100dvh-12rem)] space-y-4 overflow-y-auto overscroll-contain p-4 sm:max-h-none sm:overflow-visible">
           {/* Name */}
           <div>
             <label htmlFor="space-name" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -96,7 +100,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
               onChange={(e) => setName(e.target.value)}
               placeholder={t('create.namePlaceholder')}
               maxLength={100}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
               autoFocus
             />
           </div>
@@ -106,7 +110,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
             <label htmlFor="space-slug" className="mb-1.5 block text-sm font-medium text-foreground">
               {t('create.slug')}
             </label>
-            <div className="flex items-center rounded-lg border border-border bg-background text-sm">
+            <div className="flex items-center rounded-lg border border-border bg-background text-sm input-focus-within">
               <span className="shrink-0 px-3 text-muted-foreground">/spaces/</span>
               <input
                 id="space-slug"
@@ -133,7 +137,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
               placeholder={t('create.descriptionPlaceholder')}
               rows={3}
               maxLength={500}
-              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
             />
           </div>
 
@@ -142,30 +146,17 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               {t('create.type')}
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setType('general')}
-                className={`rounded-lg border-2 px-4 py-3 text-left transition-colors ${
-                  type === 'general'
-                    ? 'border-primary bg-primary/5 text-foreground'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/30'
-                }`}
-              >
-                <div className="text-sm font-medium">{t('create.typeGeneral')}</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setType('baby')}
-                className={`rounded-lg border-2 px-4 py-3 text-left transition-colors ${
-                  type === 'baby'
-                    ? 'border-primary bg-primary/5 text-foreground'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/30'
-                }`}
-              >
-                <div className="text-sm font-medium">{t('create.typeBaby')} 🍼</div>
-              </button>
-            </div>
+            <SegmentedControl
+              className="w-full justify-center"
+              buttonClassName="flex-1 text-center"
+              ariaLabel={t('create.type')}
+              options={[
+                { value: 'general', label: t('create.typeGeneral') },
+                { value: 'baby', label: `${t('create.typeBaby')} 🍼` },
+              ]}
+              value={type}
+              onValueChange={setType}
+            />
           </div>
 
           {type === 'baby' && (
@@ -179,7 +170,7 @@ export function CreateSpaceDialog({ open, onOpenChange }: CreateSpaceDialogProps
                 value={babyBirthday}
                 onChange={(e) => setBabyBirthday(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground input-focus"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 {t('create.babyBirthdayHint')}

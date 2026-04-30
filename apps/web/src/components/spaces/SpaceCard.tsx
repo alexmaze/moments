@@ -30,7 +30,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
       )}
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3">
         <div className="flex items-center gap-2">
           <h3 className="truncate text-base font-semibold text-foreground group-hover:text-primary transition-colors">
             {space.name}
@@ -43,13 +43,13 @@ export function SpaceCard({ space }: SpaceCardProps) {
         </div>
 
         {space.description && (
-          <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+          <p className="mt-1 line-clamp-1 text-sm leading-5 text-muted-foreground">
             {space.description}
           </p>
         )}
 
         {/* Stats */}
-        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
             {t('detail.members', { count: space.memberCount })}

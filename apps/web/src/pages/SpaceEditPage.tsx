@@ -14,6 +14,8 @@ export default function SpaceEditPage() {
   const navigate = useNavigate();
   const { data: space, isLoading } = useSpace(slug!);
   const updateSpace = useUpdateSpace(slug!);
+  const backButtonClass =
+    'inline-flex items-center gap-1.5 rounded-full border border-border surface-card px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-md';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -70,7 +72,7 @@ export default function SpaceEditPage() {
       <div className="space-y-4">
         <Link
           to={`/spaces/${space.slug}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className={backButtonClass}
         >
           <ArrowLeft className="h-4 w-4" />
           {t('edit.backToSpace')}
@@ -167,7 +169,7 @@ export default function SpaceEditPage() {
       <button
         type="button"
         onClick={() => navigate(`/spaces/${space.slug}`)}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className={backButtonClass}
       >
         <ArrowLeft className="h-4 w-4" />
         {t('edit.backToSpace')}
@@ -270,7 +272,7 @@ export default function SpaceEditPage() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   maxLength={100}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
                 />
               </div>
 
@@ -284,7 +286,7 @@ export default function SpaceEditPage() {
                   rows={4}
                   maxLength={500}
                   placeholder={t('create.descriptionPlaceholder')}
-                  className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground input-focus"
                 />
               </div>
 
@@ -307,7 +309,7 @@ export default function SpaceEditPage() {
                     value={babyBirthday}
                     onChange={(event) => setBabyBirthday(event.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground input-focus"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
                     {t('edit.babyBirthdayHint')}

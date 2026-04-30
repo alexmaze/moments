@@ -36,6 +36,7 @@ export default function CommentSection({
   }, [highlightCommentId, comments]);
 
   const isCard = variant === 'card';
+  const shouldSeparateComposer = isCard || comments.length > 0 || hasMore;
 
   if (isInitialLoad) {
     return (
@@ -106,7 +107,15 @@ export default function CommentSection({
         </div>
       )}
 
-      <div className={isCard ? 'border-t border-border' : 'border-t border-border/50'}>
+      <div
+        className={
+          shouldSeparateComposer
+            ? isCard
+              ? 'border-t border-border'
+              : 'border-t border-border/50'
+            : ''
+        }
+      >
         <CommentComposer
           postId={postId}
           replyTo={replyTo}

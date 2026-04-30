@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CircleAlert, Newspaper } from 'lucide-react';
 import { useInfiniteFeed } from '@/hooks/usePosts';
 import { useScrollContainer } from '@/components/layout/ScrollContainerContext';
+import { EmptyState } from '@/components/ui/EmptyState';
 import PostCard from './PostCard';
 
 export default function FeedList() {
@@ -61,20 +63,21 @@ export default function FeedList() {
 
   if (isError) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        {t('error')}
-      </div>
+      <EmptyState
+        icon={CircleAlert}
+        title={t('error')}
+        variant="compact"
+      />
     );
   }
 
   if (posts.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground text-lg">{t('empty.title')}</p>
-        <p className="text-muted-foreground text-sm mt-1">
-          {t('empty.subtitle')}
-        </p>
-      </div>
+      <EmptyState
+        icon={Newspaper}
+        title={t('empty.title')}
+        description={t('empty.subtitle')}
+      />
     );
   }
 

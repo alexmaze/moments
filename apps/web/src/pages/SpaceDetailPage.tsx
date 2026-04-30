@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSpace } from '@/hooks/useSpaces';
@@ -6,6 +6,7 @@ import { SpaceHeader } from '@/components/spaces/SpaceHeader';
 import { SpacePostsTab } from '@/components/spaces/SpacePostsTab';
 import { SpaceMembersTab } from '@/components/spaces/SpaceMembersTab';
 import { GrowthTab } from '@/components/spaces/GrowthTab';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 
 type Tab = 'posts' | 'members' | 'growth';
 
@@ -14,6 +15,16 @@ export default function SpaceDetailPage() {
   const { t } = useTranslation('spaces');
   const { data: space, isLoading, error } = useSpace(slug!);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
+  const [renderedTab, setRenderedTab] = useState<Tab>('posts');
+  const tabRenderTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tabRenderTimerRef.current !== null) {
+        window.clearTimeout(tabRenderTimerRef.current);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -45,37 +56,42 @@ export default function SpaceDetailPage() {
     ...(isBaby ? [{ key: 'growth' as Tab, label: t('detail.growthTab') }] : []),
   ];
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    if (tabRenderTimerRef.current !== null) {
+      window.clearTimeout(tabRenderTimerRef.current);
+    }
+    tabRenderTimerRef.current = window.setTimeout(() => {
+      setRenderedTab(tab);
+      tabRenderTimerRef.current = null;
+    }, 320);
+  };
+
   return (
     <div>
       <SpaceHeader space={space} />
 
       {/* Tab navigation */}
-      <div className="mt-6 flex border-b border-border">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab.label}
-            {activeTab === tab.key && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />
-            )}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        className="mt-6"
+        ariaLabel={t('detail.postsTab')}
+        options={tabs.map((tab) => ({ value: tab.key, label: tab.label }))}
+        value={activeTab}
+        onValueChange={handleTabChange}
+      />
 
       {/* Tab content */}
       <div className="mt-4">
-        {activeTab === 'posts' && (
-          <SpacePostsTab slug={slug!} spaceId={space.id} isMember={isMember} />
+        {renderedTab === 'posts' && (
+          <SpacePostsTab
+            slug={slug!}
+            spaceId={space.id}
+            spaceName={space.name}
+            isMember={isMember}
+          />
         )}
-        {activeTab === 'members' && <SpaceMembersTab slug={slug!} />}
-        {activeTab === 'growth' && isBaby && (
+        {renderedTab === 'members' && <SpaceMembersTab slug={slug!} />}
+        {renderedTab === 'growth' && isBaby && (
           <GrowthTab slug={slug!} isMember={isMember} babyBirthday={space.babyBirthday} />
         )}
       </div>

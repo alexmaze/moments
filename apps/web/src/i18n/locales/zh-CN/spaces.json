@@ -40,7 +40,7 @@
   "edit": {
     "title": "编辑空间",
     "description": "管理空间名称、简介和顶部封面。",
-    "backToSpace": "返回空间",
+    "backToSpace": "返回",
     "notFound": "空间不存在。",
     "forbiddenTitle": "你没有编辑这个空间的权限",
     "forbiddenDescription": "只有空间创建者和管理员可以修改空间信息。",
@@ -79,6 +79,7 @@
   "list": {
     "empty": "还没有空间",
     "emptySubtitle": "创建第一个空间吧！",
+    "description": "把不同主题的近况收进各自的小空间。",
     "error": "加载失败，请稍后重试。"
   },
   "growth": {
