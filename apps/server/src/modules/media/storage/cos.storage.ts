@@ -129,16 +129,11 @@ export class TencentCosStorageProvider implements IStorageProvider {
 
   async deleteObject(key: string): Promise<void> {
     this.evictCachedUrls(key);
-    try {
-      await this.cos.deleteObject({
-        Bucket: this.bucket,
-        Region: this.region,
-        Key: key,
-      });
-    } catch (error) {
-      // Log but don't throw — deletion is best-effort for cleanup
-      console.error(`Failed to delete COS object ${key}:`, error);
-    }
+    await this.cos.deleteObject({
+      Bucket: this.bucket,
+      Region: this.region,
+      Key: key,
+    });
   }
 
   getObjectUrl(key: string): string {

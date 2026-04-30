@@ -6,7 +6,7 @@
 - **ORM**: Drizzle ORM (`drizzle-orm/node-postgres`)
 - **连接池**: `pg.Pool`, 最大连接数 10
 - **表数量**: 11 张表
-- **自定义枚举**: 2 个 (`media_type`, `media_status`)
+- **自定义枚举**: 3 个 (`media_type`, `media_status`, `media_purpose`)
 - **Schema 定义位置**: `packages/db/src/schema/`
 
 ## 2. ER 关系图
@@ -256,6 +256,7 @@
 | --------- | ---------- |
 | `image`   | 图片       |
 | `video`   | 视频       |
+| `audio`   | 音频       |
 
 ### media_status
 
@@ -277,6 +278,16 @@ pending/orphaned ──(挂载到帖子/头像/封面)──▶ attached
                                                              │
                                                              └──(超过保留期 + 清理任务)──▶ 删除文件 + 数据库记录
 ```
+
+### media_purpose
+
+媒体资源用途，记录最近一次正式挂载的业务场景。
+
+| 值                | 说明           |
+| ----------------- | -------------- |
+| `post_attachment` | 帖子附件       |
+| `user_avatar`     | 用户头像       |
+| `space_cover`     | 空间封面       |
 
 ## 6. 迁移工作流
 

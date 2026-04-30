@@ -189,6 +189,23 @@ export class MediaService {
       .where(eq(mediaAssets.id, id));
   }
 
+  /**
+   * Mark an asset as attached without overwriting its purpose.
+   * Used by the cleanup worker when it discovers a pending asset that was
+   * concurrently attached by a business flow (avatar, cover, post).
+   */
+  async markAttachedWithoutPurpose(id: string, tx?: any) {
+    const executor = this.getExecutor(tx);
+    await executor
+      .update(mediaAssets)
+      .set({
+        status: 'attached',
+        orphanedAt: null,
+        cleanupError: null,
+      })
+      .where(eq(mediaAssets.id, id));
+  }
+
   async markOrphanedIfUnreferenced(id: string, tx?: any) {
     const executor = this.getExecutor(tx);
 
@@ -226,6 +243,24 @@ export class MediaService {
         lte(mediaAssets.orphanedAt, cutoff),
       ))
       .orderBy(mediaAssets.orphanedAt)
+      .limit(batchSize);
+  }
+
+  /**
+   * Find pending assets that were never attached (abandoned uploads).
+   * These are uploads where the user started but never completed the post creation.
+   */
+  async listStalePendingAssets(pendingMaxAgeHours: number, batchSize: number) {
+    const cutoff = new Date(Date.now() - pendingMaxAgeHours * 60 * 60 * 1000);
+
+    return this.db
+      .select()
+      .from(mediaAssets)
+      .where(and(
+        eq(mediaAssets.status, 'pending'),
+        lte(mediaAssets.createdAt, cutoff),
+      ))
+      .orderBy(mediaAssets.createdAt)
       .limit(batchSize);
   }
 
@@ -396,9 +431,17 @@ export class MediaService {
     };
   }
 
-  async deleteAssetRecord(id: string, tx?: any) {
+  async deleteAssetRecord(id: string, expectedStatus?: 'orphaned' | 'pending', tx?: any) {
     const executor = this.getExecutor(tx);
-    await executor.delete(mediaAssets).where(eq(mediaAssets.id, id));
+    const conditions = [eq(mediaAssets.id, id)];
+    if (expectedStatus) {
+      conditions.push(eq(mediaAssets.status, expectedStatus));
+    }
+    const [deleted] = await executor
+      .delete(mediaAssets)
+      .where(and(...conditions))
+      .returning({ id: mediaAssets.id });
+    return Boolean(deleted);
   }
 
   async recordCleanupFailure(id: string, error: unknown, tx?: any) {
@@ -419,13 +462,19 @@ export class MediaService {
   }
 
   private async hasAnyReference(id: string, executor: DbExecutor) {
+    // Check image/video attachments — only count relations where the parent post is not soft-deleted
     const [postRef] = await executor
       .select({ id: postMediaRelations.id })
       .from(postMediaRelations)
-      .where(eq(postMediaRelations.mediaId, id))
+      .innerJoin(posts, eq(posts.id, postMediaRelations.postId))
+      .where(and(
+        eq(postMediaRelations.mediaId, id),
+        eq(posts.isDeleted, false),
+      ))
       .limit(1);
     if (postRef) return true;
 
+    // Check audio attachments — only non-deleted posts
     const [postAudioRef] = await executor
       .select({ id: posts.id })
       .from(posts)

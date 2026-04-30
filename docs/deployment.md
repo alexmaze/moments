@@ -43,6 +43,7 @@ docker compose -f docker-compose.prod.yml up -d
 | `TENCENT_COS_SECRET_KEY` | **是** | 无 | COS SecretKey，用于配置文件插值 |
 | `MEDIA_CLEANUP_ENABLED` | 否 | `true` | 是否启用废弃媒体后台清理任务 |
 | `MEDIA_CLEANUP_RETENTION_DAYS` | 否 | `7` | `orphaned` 媒体保留天数 |
+| `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS` | 否 | `24` | `pending` 上传超过该时间未绑定则清理 |
 | `MEDIA_CLEANUP_BATCH_SIZE` | 否 | `100` | 每轮清理的最大条数 |
 | `MEDIA_CLEANUP_DRY_RUN` | 否 | `false` | 只输出命中日志，不实际删除文件和数据库记录 |
 | `PORT` | 否 | `3000` | 服务端口 |

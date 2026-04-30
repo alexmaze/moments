@@ -493,7 +493,7 @@ export class AdminService {
 
   async forceDeletePost(postId: string): Promise<void> {
     const [post] = await this.db
-      .select({ id: posts.id })
+      .select({ id: posts.id, audioMediaId: posts.audioMediaId, spaceId: posts.spaceId })
       .from(posts)
       .where(eq(posts.id, postId))
       .limit(1);
@@ -502,10 +502,40 @@ export class AdminService {
       throw new NotFoundException('Post not found');
     }
 
-    await this.db
-      .update(posts)
-      .set({ isDeleted: true, deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(posts.id, postId));
+    await this.db.transaction(async (tx) => {
+      // Find all attached media for this post
+      const attachedMediaIds = await tx
+        .select({ mediaId: postMediaRelations.mediaId })
+        .from(postMediaRelations)
+        .where(eq(postMediaRelations.postId, postId));
+
+      // Soft-delete the post
+      await tx
+        .update(posts)
+        .set({ isDeleted: true, deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(posts.id, postId));
+
+      // Decrement space post count if applicable
+      if (post.spaceId) {
+        await tx
+          .update(spaces)
+          .set({ postCount: sql`${spaces.postCount} - 1` })
+          .where(eq(spaces.id, post.spaceId));
+      }
+
+      // Remove media relations and mark media as orphaned
+      if (attachedMediaIds.length > 0) {
+        await tx.delete(postMediaRelations).where(eq(postMediaRelations.postId, postId));
+        for (const { mediaId } of attachedMediaIds) {
+          await this.mediaService.markOrphanedIfUnreferenced(mediaId, tx);
+        }
+      }
+
+      // Mark audio as orphaned
+      if (post.audioMediaId) {
+        await this.mediaService.markOrphanedIfUnreferenced(post.audioMediaId, tx);
+      }
+    });
   }
 
   // --- Statistics ---

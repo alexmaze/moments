@@ -77,6 +77,15 @@ Copy `.env.example` to `.env` at repo root. Server reads from `.env` and `../../
 | `PORT` | no | `3000` | NestJS port |
 | `NODE_ENV` | no | `development` | `production` enables SPA fallback serving |
 | `ADMIN_USERNAMES` | no | — | Comma-separated admin usernames (case-insensitive) |
+| `MEDIA_CLEANUP_ENABLED` | no | `true` | Master switch for background cleanup worker |
+| `MEDIA_CLEANUP_RETENTION_DAYS` | no | `7` | Days before orphaned assets are permanently deleted |
+| `MEDIA_CLEANUP_ENABLED` | no | `true` | Master switch for background cleanup worker |
+| `MEDIA_CLEANUP_RETENTION_DAYS` | no | `7` | Days before orphaned assets are permanently deleted |
+| `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS` | no | `24` | Hours before stale pending uploads are cleaned up |
+| `MEDIA_CLEANUP_BATCH_SIZE` | no | `100` | Max assets processed per cleanup run |
+| `MEDIA_CLEANUP_DRY_RUN` | no | `false` | Log-only mode — no actual deletes (for debugging) |
+| `MEDIA_CLEANUP_BATCH_SIZE` | no | `100` | Max assets processed per cleanup run |
+| `MEDIA_CLEANUP_DRY_RUN` | no | `false` | Log-only mode — no actual deletes (for debugging) |
 
 ## Architecture: Backend (`apps/server`)
 
