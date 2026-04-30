@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { loadConfig } from '@moments/config';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MediaModule } from './modules/media/media.module';
@@ -19,7 +20,18 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '../../.env'],
+      load: [
+        () => {
+          const cfg = loadConfig();
+          return {
+            app: cfg.app,
+            database: cfg.database,
+            auth: cfg.auth,
+            storage: cfg.storage,
+            media: cfg.media,
+          };
+        },
+      ],
     }),
     DatabaseModule,
     AuthModule,

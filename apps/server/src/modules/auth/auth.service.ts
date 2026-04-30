@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
+import type { AuthConfig } from '@moments/config';
 import { DRIZZLE } from '../../database/database.module';
 import { type DrizzleClient, mediaAssets, users, systemSettings } from '@moments/db';
 import { RegisterDto, LoginDto } from './dto';
@@ -18,14 +19,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mediaService: MediaService,
   ) {
-    // Parse ADMIN_USERNAMES from env (comma-separated, case-insensitive)
-    const adminUsernamesStr = this.configService.get<string>('ADMIN_USERNAMES', '');
-    this.adminUsernames = new Set(
-      adminUsernamesStr
-        .split(',')
-        .map((u) => u.trim().toLowerCase())
-        .filter((u) => u.length > 0),
-    );
+    const auth = this.configService.getOrThrow<AuthConfig>('auth');
+    this.adminUsernames = new Set(auth.adminUsernames);
   }
 
   isAdmin(username: string): boolean {

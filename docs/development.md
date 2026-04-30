@@ -18,46 +18,39 @@ pnpm install
 ## 环境配置
 
 ```bash
-cp .env.example .env
+cp config.example.yaml config.yaml
 ```
 
-编辑 `.env`，至少设置：
+编辑 `config.yaml`，至少设置：
 
-```env
-DATABASE_URL=postgresql://moments:moments_dev@localhost:5432/moments
-JWT_SECRET=dev_secret_at_least_32_characters_long
+```yaml
+database:
+  url: postgresql://moments:moments_dev@localhost:5432/moments
+
+auth:
+  jwtSecret: dev_secret_at_least_32_characters_long
+
+storage:
+  tencentCos:
+    secretId: your-dev-secret-id
+    secretKey: your-dev-secret-key
+    region: ap-shanghai
+    bucket: your-bucket-name
 ```
 
-再准备本地对象存储配置：
+如需验证废弃媒体回收，可在 `media.cleanup` 下调整：
 
-```bash
-mkdir -p config
-cp config/storage.example.json config/storage.json
+```yaml
+media:
+  cleanup:
+    enabled: true
+    retentionDays: 7
+    pendingMaxAgeHours: 24
+    batchSize: 100
+    dryRun: false       # 只打日志，不删文件和数据库记录
 ```
 
-并确保以下环境变量可用：
-
-```env
-TENCENT_COS_SECRET_ID=your-dev-secret-id
-TENCENT_COS_SECRET_KEY=your-dev-secret-key
-```
-
-如需验证废弃媒体回收，可额外配置：
-
-```env
-MEDIA_CLEANUP_ENABLED=true
-MEDIA_CLEANUP_RETENTION_DAYS=7
-MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS=24
-MEDIA_CLEANUP_BATCH_SIZE=100
-MEDIA_CLEANUP_DRY_RUN=false
-```
-
-说明：
-- `MEDIA_CLEANUP_ENABLED`：是否启用服务端后台清理 worker
-- `MEDIA_CLEANUP_RETENTION_DAYS`：`orphaned` 媒体保留期
-- `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS`：`pending` 上传超过该时间未绑定则清理
-- `MEDIA_CLEANUP_BATCH_SIZE`：每轮最多处理数量
-- `MEDIA_CLEANUP_DRY_RUN`：只打日志，不删文件和数据库记录
+`config.yaml` 已被 gitignore，不会提交到仓库。
 
 ## 启动数据库
 
@@ -67,7 +60,7 @@ MEDIA_CLEANUP_DRY_RUN=false
 docker compose up db -d
 ```
 
-或用已有 PostgreSQL，确保 `DATABASE_URL` 指向正确地址。
+或用已有 PostgreSQL，确保 `config.yaml` 中 `database.url` 指向正确地址。
 
 ## 数据库迁移
 
@@ -135,13 +128,15 @@ pnpm db:migrate
 ```
 @moments/shared   ← 共享类型 & Zod 校验器（无外部依赖）
      ↑
+@moments/config   ← YAML 配置加载 + 类型定义
+     ↑
 @moments/db       ← Drizzle schema + 迁移 + DB client
      ↑
-@moments/server   ← NestJS API（依赖 shared + db）
+@moments/server   ← NestJS API（依赖 shared + config + db）
 @moments/web      ← React SPA（依赖 shared，开发时 proxy 到 server）
 ```
 
-构建顺序由 Turborepo 自动处理：shared → db → server/web 并行。
+构建顺序由 Turborepo 自动处理：shared → config → db → server/web 并行。
 
 ## 创建测试账号
 

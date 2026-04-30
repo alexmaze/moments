@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { MediaConfig } from '@moments/config';
 import { MediaService } from './media.service';
 
 type CleanupSummary = {
@@ -253,23 +254,27 @@ export class MediaCleanupService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private get cleanupConfig() {
+    return this.configService.getOrThrow<MediaConfig>('media').cleanup;
+  }
+
   private isEnabled() {
-    return this.configService.get<string>('MEDIA_CLEANUP_ENABLED', 'true') === 'true';
+    return this.cleanupConfig.enabled;
   }
 
   private isDryRun() {
-    return this.configService.get<string>('MEDIA_CLEANUP_DRY_RUN', 'false') === 'true';
+    return this.cleanupConfig.dryRun;
   }
 
   private getRetentionDays() {
-    return Number.parseInt(this.configService.get<string>('MEDIA_CLEANUP_RETENTION_DAYS', '7'), 10) || 7;
+    return this.cleanupConfig.retentionDays;
   }
 
   private getPendingMaxAgeHours() {
-    return Number.parseInt(this.configService.get<string>('MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS', '24'), 10) || 24;
+    return this.cleanupConfig.pendingMaxAgeHours;
   }
 
   private getBatchSize() {
-    return Number.parseInt(this.configService.get<string>('MEDIA_CLEANUP_BATCH_SIZE', '100'), 10) || 100;
+    return this.cleanupConfig.batchSize;
   }
 }

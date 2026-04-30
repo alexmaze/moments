@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { DatabaseConfig } from '@moments/config';
 import { createMigratedDrizzleClient } from '@moments/db';
 
 export const DRIZZLE = Symbol('DRIZZLE');
@@ -11,8 +12,8 @@ export const DRIZZLE = Symbol('DRIZZLE');
       provide: DRIZZLE,
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        const url = config.getOrThrow<string>('DATABASE_URL');
-        return createMigratedDrizzleClient(url);
+        const db = config.getOrThrow<DatabaseConfig>('database');
+        return createMigratedDrizzleClient(db.url);
       },
     },
   ],

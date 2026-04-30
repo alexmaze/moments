@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json ./
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/config/package.json ./packages/config/
 COPY packages/db/package.json     ./packages/db/
 COPY apps/web/package.json        ./apps/web/
 COPY apps/server/package.json     ./apps/server/
@@ -30,6 +31,8 @@ COPY --from=builder /app/apps/server/dist        ./dist
 COPY --from=builder /app/apps/server/package.json ./package.json
 
 # Copy workspace package builds (needed at runtime by server)
+COPY --from=builder /app/packages/config/dist        ./node_modules/@moments/config/dist
+COPY --from=builder /app/packages/config/package.json ./node_modules/@moments/config/package.json
 COPY --from=builder /app/packages/db/dist         ./node_modules/@moments/db/dist
 COPY --from=builder /app/packages/db/package.json  ./node_modules/@moments/db/package.json
 COPY --from=builder /app/packages/shared/dist         ./node_modules/@moments/shared/dist
@@ -41,8 +44,7 @@ COPY --from=builder /app/node_modules             ./node_modules
 # Copy frontend build as public directory (served by NestJS)
 COPY --from=builder /app/apps/web/dist            ./public
 
-# Storage config mount point
-RUN mkdir -p /app/config
+# config.yaml is volume-mounted at runtime (not baked into the image)
 
 EXPOSE 3000
 ENV NODE_ENV=production

@@ -18,18 +18,13 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    environment:
-      DATABASE_URL: postgresql://${DB_USER:-moments}:${DB_PASSWORD:-moments_prod}@db:5432/moments
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      STORAGE_CONFIG_FILE: /app/config/storage.json
-      TENCENT_COS_SECRET_ID: ${TENCENT_COS_SECRET_ID:?TENCENT_COS_SECRET_ID is required}
-      TENCENT_COS_SECRET_KEY: ${TENCENT_COS_SECRET_KEY:?TENCENT_COS_SECRET_KEY is required}
-      NODE_ENV: production
-      PORT: 3000
+    # Container always listens on port 3000 (hardcoded below and in Dockerfile).
+    # Do NOT change app.port in config.yaml for Docker deployments —
+    # change the host-side port (left of ':') if you need a different external port.
     ports:
       - "${PORT:-3000}:3000"
     volumes:
-      - ../config:/app/config:ro
+      - ../config.yaml:/app/config.yaml:ro
     depends_on:
       db:
         condition: service_healthy

@@ -7,83 +7,77 @@
 - Docker 或 Podman
 - Docker Compose
 - 腾讯云 COS 私有桶
-- 一份存储配置文件，参考 [`config/storage.example.json`](/Users/alex/Dev/workspace/alex/moments/config/storage.example.json)
 
 ### 快速部署
 
 ```bash
 cd docker
 
-# 设置必需的环境变量
-export JWT_SECRET="your-secret-key-at-least-32-chars"
-export DB_PASSWORD="your-secure-db-password"
-export TENCENT_COS_SECRET_ID="your-secret-id"
-export TENCENT_COS_SECRET_KEY="your-secret-key"
+# 准备配置文件
+cp ../config.example.yaml ../config.yaml
+```
 
-# 准备存储配置文件
-mkdir -p ../config
-cp ../config/storage.example.json ../config/storage.json
+编辑 `../config.yaml`，填入实际值：
 
-# 启动
+```yaml
+app:
+  nodeEnv: production
+
+database:
+  url: postgresql://moments:your-secure-db-password@db:5432/moments
+
+auth:
+  jwtSecret: your-secret-key-at-least-32-chars
+  adminUsernames:
+    - admin
+
+storage:
+  driver: tencent-cos
+  tencentCos:
+    secretId: your-cos-secret-id
+    secretKey: your-cos-secret-key
+    region: ap-shanghai
+    bucket: your-bucket-1250000000
+```
+
+启动：
+
+```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
 
 首次启动会自动构建镜像并初始化数据库。
 
-### 环境变量
+### 配置文件
 
-| 变量 | 必需 | 默认值 | 说明 |
+所有配置统一存放在项目根目录的 `config.yaml`（gitignored）。Docker Compose 将该文件只读挂载到容器内 `/app/config.yaml`。
+
+完整配置结构请参考 [`config.example.yaml`](../config.example.yaml)。
+
+| 配置项 | 必需 | 默认值 | 说明 |
 |---|---|---|---|
-| `JWT_SECRET` | **是** | 无 | JWT 签名密钥，至少 32 字符 |
-| `DB_USER` | 否 | `moments` | PostgreSQL 用户名 |
-| `DB_PASSWORD` | 否 | `moments_prod` | PostgreSQL 密码，生产环境务必修改 |
-| `DATABASE_URL` | 否 | 自动拼接 | 数据库连接字符串（Docker 内部自动生成） |
-| `STORAGE_CONFIG_FILE` | 否 | `config/storage.json` | 存储配置文件路径 |
-| `TENCENT_COS_SECRET_ID` | **是** | 无 | COS SecretId，用于配置文件插值 |
-| `TENCENT_COS_SECRET_KEY` | **是** | 无 | COS SecretKey，用于配置文件插值 |
-| `MEDIA_CLEANUP_ENABLED` | 否 | `true` | 是否启用废弃媒体后台清理任务 |
-| `MEDIA_CLEANUP_RETENTION_DAYS` | 否 | `7` | `orphaned` 媒体保留天数 |
-| `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS` | 否 | `24` | `pending` 上传超过该时间未绑定则清理 |
-| `MEDIA_CLEANUP_BATCH_SIZE` | 否 | `100` | 每轮清理的最大条数 |
-| `MEDIA_CLEANUP_DRY_RUN` | 否 | `false` | 只输出命中日志，不实际删除文件和数据库记录 |
-| `PORT` | 否 | `3000` | 服务端口 |
-| `NODE_ENV` | 否 | `production` | 环境标识 |
+| `app.port` | 否 | `3000` | 服务端口 |
+| `app.nodeEnv` | 否 | `development` | 生产环境设为 `production` |
+| `database.url` | **是** | — | PostgreSQL 连接字符串 |
+| `auth.jwtSecret` | **是** | — | JWT 签名密钥，至少 32 字符 |
+| `auth.adminUsernames` | 否 | `[]` | 管理员用户名列表（YAML 数组） |
+| `storage.tencentCos.secretId` | **是** | — | COS SecretId |
+| `storage.tencentCos.secretKey` | **是** | — | COS SecretKey |
+| `storage.tencentCos.region` | **是** | — | COS 地域 |
+| `storage.tencentCos.bucket` | **是** | — | COS 桶名 |
+| `media.cleanup.enabled` | 否 | `true` | 是否启用废弃媒体后台清理任务 |
+| `media.cleanup.retentionDays` | 否 | `7` | `orphaned` 媒体保留天数 |
+| `media.cleanup.pendingMaxAgeHours` | 否 | `24` | `pending` 上传超过该时间未绑定则清理 |
+| `media.cleanup.batchSize` | 否 | `100` | 每轮清理的最大条数 |
+| `media.cleanup.dryRun` | 否 | `false` | 只输出命中日志，不实际删除 |
 
-### 存储配置文件
-
-当前生产环境只支持腾讯云 COS 私有桶。服务端在返回媒体数据时会动态签发临时 URL，默认有效期 8 小时。
-
-部署前需要在宿主机准备：
-
-- `config/storage.json`
-- `TENCENT_COS_SECRET_ID`
-- `TENCENT_COS_SECRET_KEY`
-
-示例：
-
-```json
-{
-  "storage": {
-    "driver": "tencent-cos",
-    "signedUrlTtlSeconds": 604800,
-    "keyPrefix": "moments",
-    "tencentCos": {
-      "secretId": "${TENCENT_COS_SECRET_ID}",
-      "secretKey": "${TENCENT_COS_SECRET_KEY}",
-      "region": "ap-shanghai",
-      "bucket": "your-bucket-1250000000",
-      "useHttps": true,
-      "timeoutMs": 30000
-    }
-  }
-}
-```
+Docker Compose 中 `db` 服务的 `POSTGRES_USER` / `POSTGRES_PASSWORD` 仍可通过 shell 变量设置（默认 `moments` / `moments_prod`），用于 PostgreSQL 自身初始化。
 
 ### Dockerfile 多阶段构建
 
 ```
 Stage 1 (deps)    → node:22-alpine, pnpm install --frozen-lockfile
-Stage 2 (builder) → 复制源码, pnpm turbo run build（构建全部 4 个包）
+Stage 2 (builder) → 复制源码, pnpm turbo run build（构建全部包）
 Stage 3 (runner)  → node:22-alpine + ffmpeg, 仅复制:
                      - apps/server/dist → /app/dist
                      - apps/web/dist → /app/public（NestJS serve 静态资源）
@@ -130,13 +124,15 @@ pnpm db:migrate
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-如果准备先观察命中范围，再正式启用删除，可先设置：
+如果准备先观察命中范围，再正式启用删除，可在 `config.yaml` 中设置：
 
-```env
-MEDIA_CLEANUP_DRY_RUN=true
+```yaml
+media:
+  cleanup:
+    dryRun: true
 ```
 
-确认日志输出符合预期后，再改回 `false` 并重启应用。
+确认日志输出符合预期后，改回 `false` 并重启应用。
 
 ### 反向代理（可选）
 

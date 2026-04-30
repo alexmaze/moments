@@ -8,6 +8,7 @@ build/
 .turbo/
 
 # Environment
+# (Legacy .env files no longer used — all config in config.yaml)
 .env
 .env.local
 .env.*.local
@@ -42,5 +43,6 @@ packages/db/src/migrations/meta/
 .playwright-mcp/
 
 config/storage.json
+config.yaml
 # Debug scripts
 apps/server/scripts/cos-debug-*

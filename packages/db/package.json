@@ -12,6 +12,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@moments/config": "workspace:*",
     "drizzle-orm": "^0.44.0",
     "pg": "^8.13.0"
   },

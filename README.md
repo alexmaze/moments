@@ -32,8 +32,8 @@
 # 安装依赖
 pnpm install
 
-# 配置环境变量
-cp .env.example .env  # 编辑 DATABASE_URL 和 JWT_SECRET
+# 配置
+cp config.example.yaml config.yaml  # 编辑 database.url 和 auth.jwtSecret
 
 # 启动数据库 + 迁移
 docker compose up db -d

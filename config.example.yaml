@@ -1,0 +1,41 @@
+# Moments 配置文件
+# 复制为 config.yaml 并填入实际值（config.yaml 已被 gitignore）
+
+app:
+  port: 3000                   # Docker 部署时勿改此值（Compose 硬编码了容器端口 3000）
+  nodeEnv: development # development | production | test
+
+database:
+  url: postgresql://moments:moments_dev@localhost:5432/moments
+
+auth:
+  jwtSecret: change_me_to_a_32_plus_char_random_string
+  adminUsernames:
+    - admin
+
+storage:
+  driver: tencent-cos
+  signedUrlTtlSeconds: 604800
+  keyPrefix: moments
+  ci:
+    enabled: false
+    feedImage: "imageMogr2/thumbnail/800x/format/webp/quality/80"
+    feedCover: "imageMogr2/thumbnail/800x/format/webp/quality/80"
+    smallThumb: "imageMogr2/thumbnail/200x200/format/webp/quality/80"
+    avatar: "imageMogr2/thumbnail/200x200/format/webp/quality/85"
+    spaceCover: "imageMogr2/thumbnail/800x/format/webp/quality/80"
+  tencentCos:
+    secretId: YOUR_COS_SECRET_ID
+    secretKey: YOUR_COS_SECRET_KEY
+    region: ap-shanghai
+    bucket: your-bucket-1250000000
+    useHttps: true
+    timeoutMs: 30000
+
+media:
+  cleanup:
+    enabled: true
+    dryRun: false
+    retentionDays: 7
+    pendingMaxAgeHours: 24
+    batchSize: 100

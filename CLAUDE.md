@@ -27,17 +27,19 @@ moments/
 │   └── server/       # @moments/server — NestJS API (port 3000)
 ├── packages/
 │   ├── shared/       # @moments/shared — Zod schemas + shared TS types (no runtime deps except zod)
+│   ├── config/       # @moments/config — YAML config loader + typed config interfaces
 │   └── db/           # @moments/db     — Drizzle schema, migrations, DB client factory
+├── config.yaml              # Real config (gitignored, contains secrets)
+├── config.example.yaml      # Template (committed)
 ├── docs/             # Architecture, API, DB, development, deployment, PRD docs
 ├── docker/           # Dockerfile (multi-stage) + docker-compose.prod.yml
 ├── docker-compose.yml # Dev: starts only `db` service (PostgreSQL 16)
-├── .env.example      # Environment variable reference
 ├── turbo.json        # Turborepo pipeline config
 ├── tsconfig.base.json # Shared TS compiler base
 └── pnpm-workspace.yaml
 ```
 
-**Dependency chain:** `shared → db → server/web` (Turborepo auto-resolves)
+**Dependency chain:** `shared → config → db → server/web` (Turborepo auto-resolves)
 
 ## Commands
 
@@ -63,29 +65,58 @@ docker compose up db -d   # Start PostgreSQL 16 container (port 5432)
 pnpm db:migrate            # Run migrations after starting DB
 ```
 
-## Environment Variables
+## Configuration
 
-Copy `.env.example` to `.env` at repo root. Server reads from `.env` and `../../.env`.
+All configuration lives in a single YAML file: `config.yaml` (gitignored). Copy from template:
 
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `DATABASE_URL` | yes | `postgresql://moments:moments_dev@localhost:5432/moments` | Postgres connection string |
-| `JWT_SECRET` | yes | — | Min 32 chars |
-| `STORAGE_CONFIG_FILE` | no | `config/storage.json` | Storage config file path |
-| `TENCENT_COS_SECRET_ID` | yes (prod) | — | COS credential |
-| `TENCENT_COS_SECRET_KEY` | yes (prod) | — | COS credential |
-| `PORT` | no | `3000` | NestJS port |
-| `NODE_ENV` | no | `development` | `production` enables SPA fallback serving |
-| `ADMIN_USERNAMES` | no | — | Comma-separated admin usernames (case-insensitive) |
-| `MEDIA_CLEANUP_ENABLED` | no | `true` | Master switch for background cleanup worker |
-| `MEDIA_CLEANUP_RETENTION_DAYS` | no | `7` | Days before orphaned assets are permanently deleted |
-| `MEDIA_CLEANUP_ENABLED` | no | `true` | Master switch for background cleanup worker |
-| `MEDIA_CLEANUP_RETENTION_DAYS` | no | `7` | Days before orphaned assets are permanently deleted |
-| `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS` | no | `24` | Hours before stale pending uploads are cleaned up |
-| `MEDIA_CLEANUP_BATCH_SIZE` | no | `100` | Max assets processed per cleanup run |
-| `MEDIA_CLEANUP_DRY_RUN` | no | `false` | Log-only mode — no actual deletes (for debugging) |
-| `MEDIA_CLEANUP_BATCH_SIZE` | no | `100` | Max assets processed per cleanup run |
-| `MEDIA_CLEANUP_DRY_RUN` | no | `false` | Log-only mode — no actual deletes (for debugging) |
+```bash
+cp config.example.yaml config.yaml
+```
+
+`@moments/config` package (`packages/config/`) loads, validates, and exports the typed config. Server uses NestJS `ConfigModule` with a `load:` factory; `drizzle.config.ts` calls `loadConfig()` directly.
+
+### Config structure (`config.yaml`)
+
+```yaml
+app:
+  port: 3000
+  nodeEnv: development          # development | production | test
+
+database:
+  url: postgresql://moments:moments_dev@localhost:5432/moments
+
+auth:
+  jwtSecret: <min 32 chars>
+  adminUsernames:               # YAML list, case-insensitive
+    - admin
+
+storage:
+  driver: tencent-cos
+  signedUrlTtlSeconds: 604800
+  keyPrefix: moments
+  ci:                           # 数据万象 — set enabled: true to activate
+    enabled: false
+    feedImage: "imageMogr2/..."
+    feedCover: "imageMogr2/..."
+    smallThumb: "imageMogr2/..."
+    avatar: "imageMogr2/..."
+    spaceCover: "imageMogr2/..."
+  tencentCos:
+    secretId: <COS secret ID>
+    secretKey: <COS secret key>
+    region: ap-shanghai
+    bucket: <bucket name>
+    useHttps: true
+    timeoutMs: 30000
+
+media:
+  cleanup:
+    enabled: true
+    dryRun: false
+    retentionDays: 7
+    pendingMaxAgeHours: 24
+    batchSize: 100
+```
 
 ## Architecture: Backend (`apps/server`)
 
@@ -96,7 +127,7 @@ Copy `.env.example` to `.env` at repo root. Server reads from `.env` and `../../
 - Soft deletes: `isDeleted` + `deletedAt` on posts/comments. Never hard-delete user content.
 - Denormalized `likeCount`/`commentCount` on `posts` table — update in-place.
 - DTOs: `class-validator` decorators. `ValidationPipe` with `whitelist: true, forbidNonWhitelisted: true`.
-- Admin: `@AdminOnly()` decorator. Routes under `/api/admin`. Checks `ADMIN_USERNAMES` env (case-insensitive).
+- Admin: `@AdminOnly()` decorator. Routes under `/api/admin`. Checks `auth.adminUsernames` config (case-insensitive).
 - Registration toggle: `system_settings` table key `registration_open`.
 - All routes prefixed `/api`. Production serves SPA with catch-all fallback.
 
@@ -107,9 +138,9 @@ Copy `.env.example` to `.env` at repo root. Server reads from `.env` and `../../
 Orphaned `pending` uploads need periodic cleanup.
 
 ### CI thumbnails (数据万象)
-- Optional: `ci.enabled` in `config/storage.json`. Signed URLs with CI params co-signed into HMAC.
+- Optional: `storage.ci.enabled` in `config.yaml`. Signed URLs with CI params co-signed into HMAC.
 - `MediaAssetDto.thumbnailUrl: string | null` — `null` when disabled. Frontend: `item.thumbnailUrl ?? item.publicUrl`.
-- Scenarios configurable in `storage.json`: `feedImage`, `feedCover`, `smallThumb`, `avatar`, `spaceCover`.
+- Scenarios configurable in `config.yaml`: `feedImage`, `feedCover`, `smallThumb`, `avatar`, `spaceCover`.
 
 ## Architecture: Frontend (`apps/web`)
 
@@ -205,7 +236,7 @@ pnpm db:migrate    # applies it to the database
 
 ## Admin (`/admin/*`)
 
-- `ADMIN_USERNAMES` env. `@AdminOnly()` backend guard. `AdminGuard` frontend redirect.
+- `auth.adminUsernames` config. `@AdminOnly()` backend guard. `AdminGuard` frontend redirect.
 - Pages: Dashboard (stats), Users (ban/unban), Posts (force delete), Settings (registration toggle).
 - `GET /api/admin/stats`: users, posts, comments, likes, storage bytes, DB size.
 
@@ -213,6 +244,7 @@ pnpm db:migrate    # applies it to the database
 
 - Single container: NestJS serves API + SPA.
 - Multi-stage: deps → builder → runner (node:22-alpine + ffmpeg).
+- Config: `config.yaml` volume-mounted read-only into `/app/config.yaml`.
 - Media: signed COS URLs returned by API (no local `/uploads` serving).
 
 ## 文档维护要求
@@ -220,7 +252,7 @@ pnpm db:migrate    # applies it to the database
 - `docs/` (架构、API、DB、部署)
 - `CLAUDE.md` (架构/命令/模式变化)
 - `README.md` (用户可见功能变化)
-- `.env.example` (新增/变更环境变量)
+- `config.example.yaml` (新增/变更配置项)
 
 ## TODO 工作流
 

@@ -8,7 +8,7 @@
 > - 统一通过 `MediaService` 做 attached/orphaned 状态流转
 > - 替换头像、替换空间封面、删除帖子、删除空间后会对旧空间封面触发无引用检查
 > - 服务端内置后台清理 worker，默认每小时执行一次
-> - 支持 `MEDIA_CLEANUP_ENABLED` / `RETENTION_DAYS` / `BATCH_SIZE` / `DRY_RUN`
+> - 支持 `media.cleanup.enabled` / `retentionDays` / `batchSize` / `dryRun` 配置
 
 ## 背景
 
@@ -289,27 +289,29 @@ purpose 保留
 
 ## 配置项
 
-建议增加环境变量：
+在 `config.yaml` 的 `media.cleanup` 段配置：
 
-```env
-MEDIA_CLEANUP_ENABLED=true
-MEDIA_CLEANUP_RETENTION_DAYS=7
-MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS=24
-MEDIA_CLEANUP_BATCH_SIZE=100
-MEDIA_CLEANUP_DRY_RUN=false
+```yaml
+media:
+  cleanup:
+    enabled: true
+    retentionDays: 7
+    pendingMaxAgeHours: 24
+    batchSize: 100
+    dryRun: false
 ```
 
 说明：
 
-- `MEDIA_CLEANUP_ENABLED`
+- `enabled`
   - 是否启用定时清理
-- `MEDIA_CLEANUP_RETENTION_DAYS`
+- `retentionDays`
   - 废弃资源保留天数
-- `MEDIA_CLEANUP_PENDING_MAX_AGE_HOURS`
+- `pendingMaxAgeHours`
   - `pending` 上传超过该时间未绑定则清理（默认 24 小时）
-- `MEDIA_CLEANUP_BATCH_SIZE`
+- `batchSize`
   - 单次清理上限
-- `MEDIA_CLEANUP_DRY_RUN`
+- `dryRun`
   - 只打印日志，不做实际删除
 
 ## 错误处理与重试

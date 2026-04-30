@@ -130,8 +130,8 @@ pending/orphaned ──(挂载到帖子/头像/空间封面)──▶ attached
 当前运行时只支持腾讯云 COS，但仍保留薄接口隔离：
 
 - `StorageConfigService`
-  - 加载 `config/storage.json`
-  - 支持 `${ENV_VAR}` 插值
+  - 从统一配置 `config.yaml` 的 `storage` 段读取
+  - 通过 `@moments/config` 包加载和校验
 - `TencentCosStorageProvider`
   - `putObject()`
   - `deleteObject()`

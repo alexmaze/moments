@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import type { AppConfig } from '@moments/config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -23,9 +24,11 @@ async function bootstrap() {
     }),
   );
 
+  const appConfig = configService.getOrThrow<AppConfig>('app');
+
   // In production, serve the frontend SPA
   const publicDir = join(__dirname, '..', 'public');
-  if (configService.get('NODE_ENV') === 'production' && existsSync(publicDir)) {
+  if (appConfig.nodeEnv === 'production' && existsSync(publicDir)) {
     app.useStaticAssets(publicDir);
 
     // SPA fallback: serve index.html for all non-API routes
@@ -35,9 +38,8 @@ async function bootstrap() {
     });
   }
 
-  const port = configService.get<number>('PORT', 3000);
-  await app.listen(port, '0.0.0.0');
-  console.log(`Server running on http://localhost:${port}`);
+  await app.listen(appConfig.port, '0.0.0.0');
+  console.log(`Server running on http://localhost:${appConfig.port}`);
 }
 
 bootstrap();
