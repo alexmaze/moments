@@ -25,7 +25,8 @@ ENV APP_VERSION=${APP_VERSION}
 COPY . .
 # Preserve the .npmrc we created (source COPY would overwrite it)
 RUN echo "shamefully-hoist=true" > .npmrc
-RUN pnpm install --frozen-lockfile && pnpm turbo run build
+# Pass APP_VERSION explicitly to ensure Docker cache invalidation on version change
+RUN APP_VERSION=${APP_VERSION} pnpm install --frozen-lockfile && pnpm turbo run build
 
 # ─── Stage 3: Production runtime ─────────────────────────────────────────────
 FROM node:22-alpine AS runner
